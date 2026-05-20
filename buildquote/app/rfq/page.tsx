@@ -66,7 +66,11 @@ const defaultPayload: Omit<RFQPayload, 'rfqId'> = {
 }
 
 export default function RFQPage() {
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1)
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(() => {
+    if (typeof window === 'undefined') return 1
+    const p = new URLSearchParams(window.location.search)
+    return (p.get('supplier') || p.get('job')) ? 2 : 1
+  })
   const [items, setItems] = useState<LineItem[]>([])
   const [payload, setPayload] = useState<Omit<RFQPayload, 'rfqId'>>(defaultPayload)
   const [rfqId, setRfqId] = useState('')
