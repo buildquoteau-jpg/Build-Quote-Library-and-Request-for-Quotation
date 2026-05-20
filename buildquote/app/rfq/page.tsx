@@ -77,7 +77,12 @@ export default function RFQPage() {
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
   const [draftLoaded, setDraftLoaded] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(() => {
+    if (typeof window === 'undefined') return true
+    const p = new URLSearchParams(window.location.search)
+    // Coming from supplier/job card — no existing draft to load, skip spinner
+    return !(p.get('supplier') || p.get('job'))
+  })
 
   async function saveDraft(items: LineItem[]) {
     try {
