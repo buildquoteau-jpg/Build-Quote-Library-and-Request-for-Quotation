@@ -1,174 +1,163 @@
 # BuildQuote — Session State
-_Last updated: 2026-05-20 (session 2) — builders-login branch_
+_Last updated: 2026-05-20 (session 3) — builders-login branch_
 
 ## Branch
-`builders-login` — committed and pushed. Ready to merge to main after RFQ integration.
+`builders-login` — all work committed. Ready to merge to main after end-to-end test pass.
+
+---
+
+## ⚠️ Critical: Run SQL migration before testing My Quotes
+
+The My Quotes tab, draft linking, and RFQ status tracking require schema changes
+that must be applied manually in the Supabase dashboard:
+
+```
+buildquote/supabase/migrations/20260520_my_quotes.sql
+```
+
+Go to: Supabase dashboard → SQL Editor → paste and run that file.
+Until this is done, the My Quotes tab will be empty and draft/RFQ linking won't work.
+
+---
 
 ## What's built and working ✅
-- Builder registration (`/register`) — 2-step form, server-side via `/api/auth/register`
-- Builder login (`/login`) — email + password, passkey/FaceID wired up
-- Auth middleware → `proxy.ts` (Next.js 16)
-- Dashboard (`/dashboard`) — 4 tabs: Current Jobs / Preferred Suppliers / Favourite Products / My Profile
-- **Current Jobs tab** — add/edit/delete, Google Places autocomplete, manual address fallback, build type, PM details, site notes, photo upload (`job-images` bucket)
-- **Preferred Suppliers tab** — Find on Map (Google Places Autocomplete, centred SW WA), add manually, RFQ email, phone + website (auto-filled from Maps), account number, credit/upfront, rep name/mobile, notes. Cards show Clearbit logo watermark.
-- **Favourite Products tab** — add/edit/delete products from manufacturer portal
-- **My Profile tab** — edit details, logo upload, change password, register passkey. Saves redirect to Current Jobs tab.
-- RFQ page (`/rfq`) — auth banner: "G'day [name]" if logged in, "Sign in" button if guest
-- GlobalNav — "Builder Portal" link added
-- Full schema documented in `buildquote/supabase/schema.sql`
-- Backup tables deleted from Supabase (backup_20260513_*)
 
-## What still needs doing ❌
-- **builder-logos bucket** — must be created manually in Supabase dashboard (Storage → New bucket → `builder-logos`, Public). Policies already exist in DB.
-- **Profile save** — added session check + `.select('id')` to detect silent RLS failures. Needs re-test after builder-logos bucket created (unrelated but test at same time).
-- WebAuthn passkey flow not tested end-to-end
-- Deploy to Vercel + update env vars
-- **RFQ integration** — built but needs end-to-end test (see Next session section)
+### Builder Auth
+- `/register` — 2-step form (details + password), server-side via `/api/auth/register`
+- `/login` — email + password; passkey/FaceID registered via `/api/auth/passkey/*`
+- Auth middleware → `proxy.ts` (Next.js 16 replacement for middleware.ts)
+- Session via `lib/supabase-browser.ts` (client) and `lib/supabase-server.ts` (SSR)
 
----
+### Dashboard (`/dashboard`)
+5 tabs total:
 
-## Next session: RFQ Integration ← START HERE
+**1. Current Jobs**
+- Add/edit/delete jobs
+- Google Places autocomplete for address, manual fallback
+- Build type, PM name + mobile, site notes, photo upload (`job-images` bucket)
+- "Send RFQ →" button per card → `/rfq?job=<uuid>`
+- RFQ count chip per card (counts `rfq_requests` by `project_reference`) — click → My Quotes tab
 
-### The architecture decision (agreed)
-Two supplier tables are correct and serve different purposes:
-- **`suppliers`** — platform-level directory of registered trade suppliers (manufacturer portal). Managed by buildquote admin.
-- **`builder_suppliers`** — each builder's personal preferred suppliers list. Private, holds their account numbers, credit terms, rep contacts.
+**2. Preferred Suppliers**
+- Find on Map (Google Places Autocomplete, centred SW WA)
+- Add manually: RFQ email, phone + website (auto-filled from Maps), account number, credit/upfront, rep name/mobile, notes
+- Cards show Clearbit logo watermark
+- "Send RFQ →" button per card → `/rfq?supplier=<uuid>`
 
-Future: match them via `supplier_place_id` to inherit verified emails. Not needed now.
+**3. Favourite Products**
+- Add/edit/delete products from manufacturer portal
 
-### What to build
+**4. My Profile**
+- Edit details, logo upload, change password, register passkey
+- Save redirects to Current Jobs tab
 
-**1. Add `builder_id` to `rfq_requests`** ✅ Done
-```sql
-ALTER TABLE rfq_requests ADD COLUMN IF NOT EXISTS builder_id uuid references builders(id);
-CREATE INDEX IF NOT EXISTS idx_rfq_requests_builder ON rfq_requests(builder_id);
-```
-Column is live. schema.sql updated to reflect.
-
-**2. Pre-fill SendScreen with builder profile**
-When builder is logged in, fetch their profile from `builders` table and pre-populate:
-- `builder.builderName` ← `profile.builder_name`
-- `builder.company` ← `profile.company_name`
-- `builder.abn` ← `profile.abn`
-- `builder.phone` ← `profile.office_phone || profile.mobile_phone`
-- `builder.email` ← `profile.email || user.email`
-
-Do this in `SendScreen.tsx` — check for session on mount, fetch profile, set payload fields.
-
-**3. Supplier autocomplete in SendScreen**
-When builder is logged in, fetch their `builder_suppliers` list.
-On the supplier name field: as they type, filter the list and show a dropdown.
-On selection, auto-fill: `supplierName`, `supplierEmail`, `accountNumber`.
-Fields remain editable after auto-fill (guest override).
-
-**4. Three RFQ entry points**
-
-**Entry point A — From Preferred Suppliers tab:**
-Add "Send RFQ →" button to each supplier card in `SuppliersTab.tsx`.
-On click: navigate to `/rfq` with a query param e.g. `?supplier=<uuid>`.
-In `rfq/page.tsx` or `SendScreen`: read `?supplier=` param, fetch that supplier's details, pre-fill SendScreen.
-
-**Entry point B — From Current Jobs tab:**
-Add "Send RFQ →" button to each job card in `JobsTab.tsx`.
-On click: navigate to `/rfq?job=<uuid>`.
-In SendScreen: read `?job=` param, fetch job details, pre-fill `projectReference` and `siteAddress`.
-
-**Entry point C — Generic (`/rfq`):**
-Already works. Builder types supplier name → typeahead from `builder_suppliers` → selects → fills.
-This is the fallback for guests and for builders who haven't saved that supplier yet.
-
-**5. Write to `rfq_requests` on send**
-In `/api/send/route.ts`, after sending the email successfully, insert into `rfq_requests`:
-```typescript
-await supabase.from('rfq_requests').insert({
-  builder_id: payload.builderId || null,
-  builder_name: payload.builder.builderName,
-  builder_email: payload.builder.email,
-  supplier_name: payload.supplier.supplierName,
-  supplier_email: payload.supplier.supplierEmail,
-  project_reference: payload.projectReference,
-  status: 'sent',
-  send_to_supplier: payload.sendToSupplier,
-  terms_confirmed: true,
-  terms_confirmed_at: new Date().toISOString(),
-})
-```
-
-### Implementation order — ALL COMPLETE ✅
-1. ✅ SQL: `ALTER TABLE rfq_requests ADD COLUMN builder_id` — run in Supabase, schema.sql updated
-2. ✅ SendScreen: pre-fill builder fields from profile (supabase session → builders table)
-3. ✅ SendScreen: supplier typeahead from `builder_suppliers` (personal "Saved" suppliers first, platform fallback)
-4. ✅ SuppliersTab + JobsTab: "Send RFQ →" buttons navigate to `/rfq?supplier=<id>` / `/rfq?job=<id>`
-5. ✅ rfq/page.tsx: reads `?supplier=` and `?job=` params, fetches and pre-fills payload, skips to step 4
-6. ✅ /api/send: writes `builder_id` to `rfq_requests` on send
-7. ✅ `/login` page: fixed missing Suspense boundary around `useSearchParams` (was breaking prod build)
-
-### What still needs end-to-end testing
-- Log in as a builder → go to `/rfq` → confirm builder fields auto-filled from profile
-- Type a supplier name → confirm personal "Saved" suppliers appear in dropdown, auto-fill email + account number
-- Go to Dashboard → Preferred Suppliers tab → click "Send RFQ →" on a card → confirm lands on SendScreen with supplier pre-filled
-- Go to Dashboard → Current Jobs tab → click "Send RFQ →" on a card → confirm projectReference + siteAddress pre-filled
-- Send an RFQ → check `rfq_requests` in Supabase has `builder_id` populated
-
----
-
-## Session 2 — My Quotes feature (commit TBD)
-
-### What was built
-**Dashboard — new "My Quotes" tab (5th tab)**
-- `components/builder/QuotesTab.tsx` — two sections: Drafts + Sent Quotes
-- **Drafts:** resume link, item count, supplier/project if known, Discard button
-- **Sent Quotes:** status badges (Sent / Won / Declined), supplier, project ref, RFQ ID, date
-- Status update: "Mark Won" / "Mark Declined" buttons → PATCH `/api/quotes/[id]`
-- "Undo" button to revert Won/Declined back to Sent
+**5. My Quotes** ← new in session 2
+- **Drafts section:** resume link (`/rfq?draft=<id>`), item count, supplier/project if known, Discard button
+- **Sent Quotes section:** status badge (Sent/Won/Declined), supplier, project ref, RFQ ID, sent date
+- Mark Won / Mark Declined → `PATCH /api/quotes/[id]`
+- Undo button to revert Won/Declined → Sent
 - Empty state with "+ New RFQ" CTA
 
-**Job cards — RFQ count chip**
-- `JobsTab.tsx` shows "[N] quotes" chip per job card (counts rfq_requests matching project_reference)
-- Clicking chip switches dashboard to My Quotes tab
+### RFQ Flow (`/rfq`) — 5 steps (step 3 skipped in active flow)
 
-**Schema additions** (run `supabase/migrations/20260520_my_quotes.sql` in Supabase dashboard):
-- `rfq_drafts`: `builder_id`, `supplier_name`, `supplier_email`, `project_reference`
-- `rfq_requests`: `rfq_id_short`, `draft_id`; RLS enabled
-- `rfq_items`: RLS enabled
+**Step 1 — Upload Screen**
+- Photo, PDF, spreadsheet, Word doc, or text file → AI parse → line items
+- Skip to manual entry
 
-**Wiring:**
-- `lib/rfqDraft.ts` — `getOrCreateDraft(builderId?)` now links draft to builder
-- `lib/types.ts` — `RFQPayload.draftId?: string` added
-- `rfq/page.tsx` — consolidated init effect fetches session + builder_id; saves draft meta (supplier, project ref) when proceeding to SendScreen; passes `draftId` in send payload
-- `api/send/route.ts` — saves `rfq_id_short`, `draft_id`; archives draft (`status = 'sent'`) on successful send
-- `app/api/quotes/[id]/route.ts` — PATCH endpoint for status updates
+**Step 2 — Enter Items Screen (ManualEntryScreen)**
+- Three options: Upload a list (inline, no navigation), Browse manufacturer portal, Add manually
+- Upload a list: hidden file input, inline parse spinner with rotating messages
+- Add items manually: focuses + scrolls to the new row's Product Name field (auto-focus)
+- Parse/upload merges into existing list (no overwrite on second upload)
+- Review/edit: Product, Specs, SKU, UOM, Qty — mobile cards + desktop table
+- Low-confidence and duplicate rows highlighted in amber
+- "Clear all & start over" removes draft items from Supabase
 
-### Still needs doing before this is live
-**⚠️ Run SQL migration in Supabase dashboard:**
-```
-supabase/migrations/20260520_my_quotes.sql
-```
+**Step 4 — Send Screen (SendScreen)**
+- **Your Details:** Builder Name, Company, ABN, Phone, Email — auto-filled from `builders` profile if logged in; falls back to localStorage
+- **Supplier Details:** Supplier Name (typeahead — personal "Saved" suppliers first, platform fallback), Supplier Email, Account Number — auto-filled from `builder_suppliers` on selection; pre-filled if arriving from supplier card
+- **Project Details:** Project Reference, PM Name, PM Phone — pre-filled from job card if arriving via `?job=` param
+- **Delivery:** Delivery/Pickup toggle; if Delivery: Google Places address lookup + manual fallback, Suburb, Site Access Notes (conditional on delivery); Date Required
+- **Message:** Free text to supplier
+- **Preferred Contact Method:** Triple toggle — Phone / Email / Either
+- **Send Options:** Send to supplier (on/off), Copy to self (on/off)
+- Sandbox mode: if no supplier set, defaults to "Sandbox — Test with your own email" → sends to builder's own email
+- Confirmation modal with terms checkbox before send
+
+**Step 5 — Success Screen**
+
+### RFQ Entry Points
+1. **Direct** — `/rfq` — fresh start; builder details auto-filled if logged in
+2. **From job card** — `/rfq?job=<uuid>` — skips to step 2; prefills: project reference, site address, PM name, PM phone, site access notes
+3. **From supplier card** — `/rfq?supplier=<uuid>` — skips to step 2; prefills: supplier name, email, account number
+
+### Draft System
+- Draft ID lives in `?draft=` URL param — no localStorage. New URL = clean session.
+- Draft auto-created on first visit via `lib/rfqDraft.ts` → `getOrCreateDraft(builderId?)`
+- Builder ID attached to draft if logged in
+- Items persisted to `rfq_draft_items` after each change
+- Supplier name + project reference saved to `rfq_drafts` when proceeding to SendScreen
+- On send: draft archived (`status = 'sent'`), removed from My Quotes Drafts section
+- Resume from My Quotes: `?draft=<id>` → always lands on step 2 (Enter Items)
+
+### On Send (`/api/send`)
+- Builds email HTML, PDF (pdf-lib), CSV
+- Emails supplier (or sandbox to builder); BCC to rfq@buildquote.com.au; optional CC to self
+- Saves to `rfq_requests` (see schema below)
+- Saves line items to `rfq_items`
+- Archives draft in `rfq_drafts`
+
+### Outputs — what each format includes
+All three (email/PDF/CSV) now include:
+- Builder details (name, company, ABN, phone, email)
+- PM name + PM phone (if set)
+- Supplier details + account number
+- Project reference
+- Delivery method + address (if delivery)
+- Site access notes (if delivery + notes set)
+- Date required
+- Preferred contact method
+- All line items (name, specs/desc, SKU, UOM, qty)
+- Message to supplier
+- RFQ reference + sent date
+- Disclaimer
+
+### Bug fixes (sessions 2–3)
+- Flash of Upload Screen on job/supplier card entry — fixed (React 18 batching, no lazy initialisers)
+- "Upload a list" on Enter Items was navigating to step 1 — fixed (inline hidden file input)
+- Second upload overwrote first — fixed (mergeItems deduplication)
+- Resume from draft was landing on Upload Screen — fixed (always step 2 when ?draft= present)
+- Mark Won/Declined silent fail for old RFQs with null builder_id — fixed (service role + email fallback)
+- Next.js 16 async params TS error in `/api/quotes/[id]` — fixed
 
 ---
 
-## Session 2 — Completed fixes (commit d298621)
+## What still needs doing ❌
 
-### Bug fixes landed
-**Bug 1 — Step 1 flash on job/supplier card entry (root cause found + fixed)**
-- React hydration does NOT re-run `useState` lazy initialisers — the server-rendered state (`step=1, initialLoading=true`) was adopted on the client
-- `loadDraftItems` effect then cleared `initialLoading` while `step` was still 1 → UploadScreen briefly visible
-- Fix: removed lazy initialisers entirely. Single consolidated `useEffect` now batches `setStep(2)` + `setInitialLoading(false)` together. React 18 automatic batching means one render, zero intermediate state, no flash.
+### Before testing (blocking)
+- **⚠️ Run SQL migration** — `supabase/migrations/20260520_my_quotes.sql` in Supabase dashboard
+- **builder-logos bucket** — create in Supabase dashboard: Storage → New bucket → `builder-logos`, Public. Policies already exist in DB.
 
-**Bug 2 — "Upload a list" on Enter Items screen routed back to step 1**
-- `onUploadList` callback called `setStep(1)`, navigating away from ManualEntryScreen
-- Fix: removed `onUploadList` prop. ManualEntryScreen now owns a hidden `<input type="file" ref={fileInputRef}>`. Clicking "Upload a list" triggers `fileInputRef.current.click()` — OS file picker opens immediately, no navigation.
-
-**Bug 3 — Second upload to same draft could overwrite existing items**
-- Added `handleParsedOnStep2` in `rfq/page.tsx` that runs new parsed items through `mergeItems()` before `setItems`. Second upload now merges into the existing list, not replaces.
-
-### Still needs testing (deferred — user testing later)
+### Needs end-to-end testing
 - All three entry points: direct `/rfq`, job card, supplier card
-- No flash of upload screen on job/supplier card entry
-- "Upload a list" on Enter Items opens inline file picker (does not navigate)
+- No flash of Upload Screen on job/supplier card entry
+- "Upload a list" on Enter Items opens inline file picker (does not navigate away)
 - Second file upload merges items correctly
-- Builder name + job reference auto-fill on quote details step
-- Builder name pre-filled on direct `/rfq` when logged in
+- Builder name auto-filled on direct `/rfq` when logged in
+- PM name + phone auto-fill from job card on SendScreen
+- Site access notes show only when Delivery is selected
+- Preferred contact triple toggle saves and sends correctly
+- PDF/CSV/email all include PM, site access, preferred contact
+- My Quotes tab: Drafts resume, Discard, Sent badges, Mark Won/Declined, Undo
+- RFQ count chip on job cards clicks through to My Quotes tab
+- Send RFQ → check `rfq_requests` in Supabase has `builder_id`, `rfq_id_short`, `draft_id`
+
+### Known gaps / future enhancements
+- WebAuthn passkey flow not tested end-to-end
+- Profile save needs re-test after builder-logos bucket created
+- `pmName`, `pmPhone`, `siteAccessNotes`, `preferredContact` are **not stored in `rfq_requests`** — they go into email/PDF/CSV only. If you ever want to display these in My Quotes detail view, add columns to `rfq_requests` and save them in `/api/send/route.ts`
+- Google Maps API key — restrict to `buildquote.com.au/*` and `localhost:3000/*` in Google Cloud Console
+- Deploy to Vercel + update env vars
 
 ---
 
@@ -177,33 +166,129 @@ supabase/migrations/20260520_my_quotes.sql
 **Full schema:** `buildquote/supabase/schema.sql`
 
 ### Key tables
+
 ```
-rfq_drafts          — builder_id, supplier_name, project_reference added (session 2)
-                      status: 'draft' | 'sent' (archived when RFQ is sent)
-rfq_draft_items     — draft_id is TEXT not uuid (already handled in code)
-rfq_requests        — rfq_id_short, draft_id added; RLS enabled (session 2)
-                      status: 'sent' | 'won' | 'declined'
-rfq_items           — RLS enabled (session 2)
-builder_suppliers   — source of truth for supplier autocomplete in SendScreen
-builders            — source of truth for builder auto-fill in SendScreen
-suppliers           — platform supplier directory (manufacturer portal, read-only from RFQ side)
+builders
+  id, email, builder_name, company_name, abn, office_phone, mobile_phone,
+  logo_url, created_at
+
+builder_jobs
+  id, builder_id, project_reference, project_address, project_address_manual,
+  build_type, pm_name, pm_mobile, site_access_notes, created_at
+
+builder_suppliers
+  id, builder_id, supplier_name, supplier_email, account_number,
+  phone, website, rep_name, rep_mobile, credit_terms, notes, created_at
+
+builder_favourite_products
+  id, builder_id, product_id, product_name, manufacturer, notes, created_at
+
+rfq_drafts
+  id (uuid), builder_id (FK → builders), supplier_name, supplier_email,
+  project_reference, status ('draft'|'sent'), created_at, updated_at
+  ⚠️ builder_id, supplier_name, supplier_email, project_reference added in
+     20260520_my_quotes.sql — must run migration
+
+rfq_draft_items
+  id, draft_id (TEXT — not uuid), component_id, manufacturer, system,
+  sku, name, description, uom, qty, added_at
+
+rfq_requests
+  id (uuid), builder_id (FK → builders), builder_name, builder_email,
+  project_name (= company), project_reference, delivery_location, notes (= message),
+  supplier_name, supplier_email, rfq_id_short, draft_id,
+  status ('sent'|'won'|'declined'),
+  send_to_supplier, terms_confirmed, terms_confirmed_at, created_at
+  ⚠️ rfq_id_short, draft_id, RLS added in 20260520_my_quotes.sql
+
+rfq_items
+  id, rfq_id (FK → rfq_requests), item_name, quantity, unit, specification,
+  notes (= sku), source, sort_order
+  ⚠️ RLS added in 20260520_my_quotes.sql
+
+suppliers        — platform directory (manufacturer portal, read-only from RFQ)
 ```
+
+### RLS summary
+- `rfq_drafts`: INSERT with `true` (anon OK); SELECT/UPDATE require `auth.uid() = builder_id`
+- `rfq_requests`: INSERT with `true`; SELECT/UPDATE require `auth.uid() = builder_id`
+- `rfq_items`: INSERT/SELECT via service role in send route
+- `builder_*` tables: all require `auth.uid() = builder_id`
 
 ### Storage buckets
 | Bucket | Status |
 |--------|--------|
-| `job-images` | Working |
-| `builder-logos` | **Policies exist — bucket still needs creating in dashboard** |
+| `job-images` | ✅ Working |
+| `builder-logos` | ⚠️ Policies exist in DB — **bucket still needs creating in dashboard** |
 
-## Key files for next session
+---
+
+## Key files
+
 ```
-buildquote/app/rfq/page.tsx                        ← add ?supplier= and ?job= param handling
-buildquote/components/screens/SendScreen.tsx        ← builder auto-fill + supplier typeahead
-buildquote/app/api/send/route.ts                   ← write to rfq_requests on send
-buildquote/components/builder/SuppliersTab.tsx      ← add Send RFQ button per card
-buildquote/components/builder/JobsTab.tsx           ← add Send RFQ button per card
-buildquote/lib/types.ts                            ← may need builderId added to RFQPayload
+buildquote/app/rfq/page.tsx
+  — RFQ wizard state machine (steps 1/2/4/5)
+  — init effect: session → builderId → draft load → step set (all batched, no flash)
+  — prefill effects: ?supplier= fetches builder_suppliers; ?job= fetches builder_jobs
+    (now includes pm_name, pm_mobile, site_access_notes)
+  — saveDraft(), saveDraftMeta(), mergeItems(), normaliseItems()
+
+buildquote/components/screens/ManualEntryScreen.tsx
+  — Enter Items (step 2)
+  — Hidden file input for "Upload a list" (no navigation)
+  — Full-screen parse spinner with rotating messages
+  — Auto-focus + scroll to new row Product Name on "Add items manually"
+  — Ref map pattern: nameInputRefs + pendingFocusId
+
+buildquote/components/screens/SendScreen.tsx
+  — Send (step 4) — 750+ lines
+  — Builder auto-fill from builders table (overrides localStorage)
+  — Supplier typeahead: personal builder_suppliers first, platform SUPPLIERS fallback
+  — Project Details card: Project Reference, PM Name, PM Phone
+  — Delivery card: toggle, address lookup + manual, suburb, Site Access Notes (delivery only), Date Required
+  — Preferred Contact card: triple toggle Phone/Email/Either
+  — Confirmation modal with terms checkbox
+
+buildquote/components/builder/QuotesTab.tsx
+  — My Quotes (5th dashboard tab)
+  — Two-phase fetch: drafts first, then parallel sent+itemCounts
+  — StatusBadge: amber=draft, blue=sent, green=won, grey=declined
+  — Mark Won/Declined → PATCH /api/quotes/[id]; Undo reverts to sent
+
+buildquote/components/builder/JobsTab.tsx
+  — rfqCounts state, loaded per job by project_reference
+  — "N quotes" chip → onViewQuotes callback → switches to My Quotes tab
+
+buildquote/app/dashboard/DashboardClient.tsx
+  — 5 tabs including 'quotes'; passes onViewQuotes to JobsTab
+
+buildquote/app/api/send/route.ts
+  — Resend email (HTML + PDF + CSV attachments)
+  — Saves to rfq_requests + rfq_items
+  — Archives draft on success
+
+buildquote/app/api/quotes/[id]/route.ts
+  — PATCH status (sent→won, sent→declined, back to sent)
+  — Service role after manual auth check; handles legacy null builder_id via email match
+
+buildquote/lib/rfqDraft.ts
+  — getOrCreateDraft(builderId?) — creates or reads draft from URL param
+
+buildquote/lib/types.ts
+  — RFQPayload: rfqId, builderId?, draftId?, builder, supplier, items,
+    delivery, dateRequired, message, projectReference, siteAddress?, siteSuburb?,
+    sendToSupplier, sendCopyToSelf, pmName?, pmPhone?, siteAccessNotes?,
+    preferredContact?
+
+buildquote/lib/emailTemplate.ts   — HTML email with PM, site access, preferred contact
+buildquote/lib/generateCSV.ts     — CSV with PROJECT DETAILS section (PM, site, contact)
+buildquote/lib/generatePDF.ts     — PDF with PM in header, dynamic delivery bar
+
+buildquote/supabase/migrations/20260520_my_quotes.sql   ← ⚠️ MUST RUN IN SUPABASE
+buildquote/supabase/schema.sql    — full current schema reference
 ```
+
+---
 
 ## Env vars
 ```
@@ -212,7 +297,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY
 ANTHROPIC_API_KEY
 RESEND_API_KEY
-RESEND_FROM_EMAIL
+RESEND_FROM_EMAIL          (default: rfq@buildquote.com.au)
 NEXT_PUBLIC_APP_URL
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY   ← AIzaSyCsyE_yaqU0a50XG6xggV60-aVkFoOmkYg
 VERCEL_OIDC_TOKEN
@@ -221,3 +306,10 @@ VERCEL_OIDC_TOKEN
 ## Google Maps API
 APIs enabled: Maps JavaScript API, Places API, Places API (New)
 **TODO:** Restrict key to `buildquote.com.au/*` and `localhost:3000/*` in Google Cloud Console.
+
+---
+
+## Session 3 commits
+- `bb93ec2` — feat: parsing spinner on Enter Items screen
+- `e32d084` — feat: PM details, site access notes, preferred contact + auto-focus new row
+- (STATE.md update — this commit)
