@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Button from '../ui/Button'
 import { LineItem } from '@/lib/types'
 import { getOrCreateDraft } from '@/lib/rfqDraft'
@@ -9,7 +9,7 @@ interface ManualEntryScreenProps {
   onChange: (items: LineItem[]) => void
   onBack?: () => void
   onNext: () => void
-  onUploadList: () => void
+  onParsed: (parsed: LineItem[]) => void
 }
 
 function generateId(): string {
@@ -84,10 +84,34 @@ export default function ManualEntryScreen({
   onChange,
   onBack,
   onNext,
-  onUploadList,
+  onParsed,
 }: ManualEntryScreenProps) {
   const [error, setError] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const duplicateIds = findDuplicates(items)
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setUploadError('')
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/parse', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || 'Parse failed')
+      if (!data.items?.length) throw new Error('No items found in that file. Try a clearer photo or a different format.')
+      onParsed(data.items)
+    } catch (err: any) {
+      setUploadError(err?.message || 'Could not read the file. Try a clearer photo or a different format.')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
   const lowCount = items.filter((item) => item.confidence === 'low').length
 
   const handleClearAll = async () => {
@@ -197,9 +221,9 @@ export default function ManualEntryScreen({
         </div>
       </div>
 
-      {error && (
+      {(error || uploadError) && (
         <div className="rounded-2xl border-2 border-error-border bg-error-bg px-4 py-3">
-          <p className="text-error text-sm font-semibold">{error}</p>
+          <p className="text-error text-sm font-semibold">{error || uploadError}</p>
         </div>
       )}
 
@@ -362,14 +386,23 @@ export default function ManualEntryScreen({
         </div>
       </div>
 
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept="image/*,.pdf,.csv,.xlsx,.xls,.docx,.doc,.txt"
+        onChange={handleFileSelected}
+      />
+
       <div className="flex flex-col sm:flex-row gap-3">
         <button
-          onClick={onUploadList}
-          className="sm:flex-1 rounded-2xl border-2 border-heading/20 border-l-[3px] border-l-teal ring-1 ring-inset ring-heading/10 bg-white hover:bg-[rgba(111,236,204,0.06)] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(24,93,122,0.10)] px-4 py-3.5 text-heading text-sm font-bold transition-all duration-200"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="sm:flex-1 rounded-2xl border-2 border-heading/20 border-l-[3px] border-l-teal ring-1 ring-inset ring-heading/10 bg-white hover:bg-[rgba(111,236,204,0.06)] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(24,93,122,0.10)] px-4 py-3.5 text-heading text-sm font-bold transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
           type="button"
         >
           <span className="text-[10px] tracking-[0.2em] font-semibold text-[var(--color-accent)] block">OPTION 1</span>
-          Upload a list
+          {uploading ? 'Reading list...' : 'Upload a list'}
         </button>
 
         <button

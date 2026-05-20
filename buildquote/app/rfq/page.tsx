@@ -66,23 +66,13 @@ const defaultPayload: Omit<RFQPayload, 'rfqId'> = {
 }
 
 export default function RFQPage() {
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(() => {
-    if (typeof window === 'undefined') return 1
-    const p = new URLSearchParams(window.location.search)
-    return (p.get('supplier') || p.get('job')) ? 2 : 1
-  })
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1)
   const [items, setItems] = useState<LineItem[]>([])
   const [payload, setPayload] = useState<Omit<RFQPayload, 'rfqId'>>(defaultPayload)
   const [rfqId, setRfqId] = useState('')
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
-  const [draftLoaded, setDraftLoaded] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(() => {
-    if (typeof window === 'undefined') return true
-    const p = new URLSearchParams(window.location.search)
-    // Coming from supplier/job card — no existing draft to load, skip spinner
-    return !(p.get('supplier') || p.get('job'))
-  })
+  const [initialLoading, setInitialLoading] = useState(true)
 
   async function saveDraft(items: LineItem[]) {
     try {
@@ -169,7 +159,16 @@ export default function RFQPage() {
     const merged = mergeItems(items, parsed)
     setItems(merged)
     setPayload((p) => ({ ...p, items: merged }))
-    await saveDraft(merged); setStep(2)
+    await saveDraft(merged)
+    setStep(2)
+  }
+
+  const handleParsedOnStep2 = async (parsed: LineItem[]) => {
+    const merged = mergeItems(items, parsed)
+    setItems(merged)
+    setPayload((p) => ({ ...p, items: merged }))
+    await saveDraft(merged)
+    // Stay on step 2 — already there
   }
 
   const handleManualEntry = () => {
@@ -204,15 +203,28 @@ export default function RFQPage() {
     }
   }
 
+  // Single init effect — sets step and initialLoading together so React 18
+  // batches them into one render, preventing any flash of the wrong screen.
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const supplierId = params.get('supplier')
+    const jobId = params.get('job')
+    const draftId = params.get('draft')
+
+    if (supplierId || jobId) {
+      // Prefill effect handles the async data fetch; jump straight to step 2 now.
+      setStep(2)
+      setInitialLoading(false)
+      return
+    }
+
+    if (!draftId) {
+      setInitialLoading(false)
+      return
+    }
+
     const loadDraftItems = async () => {
       try {
-        const draftId = new URLSearchParams(window.location.search).get('draft')
-        if (!draftId) {
-          setDraftLoaded(true)
-          setInitialLoading(false)
-          return
-        }
         const res = await fetch('/api/get-draft-items?draft=' + draftId)
         const data = await res.json()
         const mapped = (data.items || []).map((row: any) => ({
@@ -244,11 +256,9 @@ export default function RFQPage() {
           setPayload((p) => ({ ...p, items: cleaned }))
           setStep(2)
         }
-        setDraftLoaded(true)
         setInitialLoading(false)
       } catch (e) {
         console.error('draft load failed', e)
-        setDraftLoaded(true)
         setInitialLoading(false)
       }
     }
@@ -292,9 +302,8 @@ export default function RFQPage() {
               setItems(nextItems)
               setPayload((p) => ({ ...p, items: nextItems }))
             }}
-            /* onBack removed */
             onNext={async () => { await saveDraft(items); setStep(4); }}
-            onUploadList={async () => { await saveDraft(items); setStep(1); }}
+            onParsed={handleParsedOnStep2}
           />
         )}
 
