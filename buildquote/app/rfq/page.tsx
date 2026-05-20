@@ -144,7 +144,8 @@ export default function RFQPage() {
         return
       }
 
-      // Returning to an existing draft — load items
+      // Returning to an existing draft — always land on Enter Items (step 2),
+      // even if the draft has no items yet (e.g. resumed before adding anything).
       try {
         const res = await fetch('/api/get-draft-items?draft=' + existingDraftId)
         const data = await res.json()
@@ -173,8 +174,9 @@ export default function RFQPage() {
         if (cleaned.length) {
           setItems(cleaned)
           setPayload(p => ({ ...p, items: cleaned }))
-          setStep(2)
         }
+        // Always go to Enter Items — this is a resumed draft, not a fresh session
+        setStep(2)
       } catch (e) {
         console.error('Draft load failed', e)
       }
