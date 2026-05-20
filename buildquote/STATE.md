@@ -1,5 +1,5 @@
 # BuildQuote — Session State
-_Last updated: 2026-05-20 — builders-login branch_
+_Last updated: 2026-05-20 (session 2) — builders-login branch_
 
 ## Branch
 `builders-login` — committed and pushed. Ready to merge to main after RFQ integration.
@@ -109,6 +109,14 @@ await supabase.from('rfq_requests').insert({
 - Go to Dashboard → Preferred Suppliers tab → click "Send RFQ →" on a card → confirm lands on SendScreen with supplier pre-filled
 - Go to Dashboard → Current Jobs tab → click "Send RFQ →" on a card → confirm projectReference + siteAddress pre-filled
 - Send an RFQ → check `rfq_requests` in Supabase has `builder_id` populated
+
+---
+
+## Session 2 focus: Persistent Draft + Clean Loading
+
+### Goals
+1. **Persistent draft** — verify the `?draft=` param UUID survives navigation between RFQ steps (upload → items → send). Confirm draft items written to `rfq_draft_items` are re-loaded correctly on step return / page refresh.
+2. **Clean loading** — confirm no residual flash of step 1 or spinner blip when entering `/rfq` from a supplier card, job card, or direct link. Covers the fixes landed in the last session (e54781e, 2533975, cbdc97f, fc1b69b, 3cb8b2b).
 
 ---
 
