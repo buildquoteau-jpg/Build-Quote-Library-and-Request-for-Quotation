@@ -73,19 +73,40 @@ export default function RFQPage() {
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
   const [initialLoading, setInitialLoading] = useState(true)
+  const [builderId, setBuilderId] = useState<string | undefined>()
 
-  async function saveDraft(items: LineItem[]) {
+  function getDraftId() {
+    return new URLSearchParams(window.location.search).get('draft') ?? undefined
+  }
+
+  async function saveDraft(nextItems: LineItem[]) {
     try {
-      const draftId = new URLSearchParams(window.location.search).get('draft')
+      const draftId = getDraftId()
       if (!draftId) return
-
       await fetch('/api/save-draft-items', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ draftId, items: normaliseItems(items) }),
+        body: JSON.stringify({ draftId, items: normaliseItems(nextItems) }),
       })
     } catch (e) {
       console.error('Draft save failed', e)
+    }
+  }
+
+  async function saveDraftMeta(supplierName: string, projectRef: string) {
+    try {
+      const draftId = getDraftId()
+      if (!draftId) return
+      const supabase = createSupabaseBrowserClient()
+      await supabase
+        .from('rfq_drafts')
+        .update({
+          supplier_name: supplierName || null,
+          project_reference: projectRef || null,
+        })
+        .eq('id', draftId)
+    } catch (e) {
+      console.error('Draft meta save failed', e)
     }
   }
 
@@ -93,12 +114,73 @@ export default function RFQPage() {
     window.scrollTo(0, 0)
   }, [step])
 
-
+  // Single init effect — fetches session, creates/loads draft, sets step + loading
+  // together so React 18 batches into one render (no intermediate flash state).
   useEffect(() => {
-    const existingDraft = new URLSearchParams(window.location.search).get('draft')
-    if (existingDraft) return
+    const init = async () => {
+      const params = new URLSearchParams(window.location.search)
+      const supplierId = params.get('supplier')
+      const jobId = params.get('job')
+      const existingDraftId = params.get('draft')
 
-    getOrCreateDraft().catch(console.error)
+      // Resolve builder session
+      const supabase = createSupabaseBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const bId = session?.user?.id
+      if (bId) setBuilderId(bId)
+
+      // From supplier/job card — jump to step 2 immediately; prefill effect handles data
+      if (supplierId || jobId) {
+        if (!existingDraftId) await getOrCreateDraft(bId)
+        setStep(2)
+        setInitialLoading(false)
+        return
+      }
+
+      // Fresh session — create draft and show upload screen
+      if (!existingDraftId) {
+        await getOrCreateDraft(bId)
+        setInitialLoading(false)
+        return
+      }
+
+      // Returning to an existing draft — load items
+      try {
+        const res = await fetch('/api/get-draft-items?draft=' + existingDraftId)
+        const data = await res.json()
+        const mapped = (data.items || []).map((row: any) => ({
+          id: crypto.randomUUID(),
+          name: row.name || '',
+          sku: row.sku || '',
+          productId: row.component_id || '',
+          desc: row.description || '',
+          uom: row.uom || '',
+          qty: row.qty ? String(row.qty) : '',
+          confidence: 'high' as const,
+          length_mm: row.length_mm ?? null,
+          width_mm: row.width_mm ?? null,
+          height_mm: row.height_mm ?? null,
+          thickness_mm: row.thickness_mm ?? null,
+          depth_mm: row.depth_mm ?? null,
+          gauge_mm: row.gauge_mm ?? null,
+          diameter_mm: row.diameter_mm ?? null,
+          roll_m: row.roll_m ?? null,
+          weight_kg: row.weight_kg ?? null,
+          pieces: row.pieces ?? null,
+          coverage_m2: row.coverage_m2 ?? null,
+        }))
+        const cleaned = normaliseItems(mapped)
+        if (cleaned.length) {
+          setItems(cleaned)
+          setPayload(p => ({ ...p, items: cleaned }))
+          setStep(2)
+        }
+      } catch (e) {
+        console.error('Draft load failed', e)
+      }
+      setInitialLoading(false)
+    }
+    init()
   }, [])
 
   // Pre-populate from ?supplier= or ?job= query params (from dashboard cards)
@@ -129,7 +211,6 @@ export default function RFQPage() {
               accountNumber: data.account_number || '',
             },
           }))
-          setStep(2)
         }
       }
 
@@ -146,7 +227,6 @@ export default function RFQPage() {
             projectReference: data.project_reference || '',
             siteAddress: data.project_address || data.project_address_manual || '',
           }))
-          setStep(2)
         }
       }
     }
@@ -154,11 +234,10 @@ export default function RFQPage() {
     prefill().catch(console.error)
   }, [])
 
-
   const handleParsed = async (parsed: LineItem[]) => {
     const merged = mergeItems(items, parsed)
     setItems(merged)
-    setPayload((p) => ({ ...p, items: merged }))
+    setPayload(p => ({ ...p, items: merged }))
     await saveDraft(merged)
     setStep(2)
   }
@@ -166,20 +245,23 @@ export default function RFQPage() {
   const handleParsedOnStep2 = async (parsed: LineItem[]) => {
     const merged = mergeItems(items, parsed)
     setItems(merged)
-    setPayload((p) => ({ ...p, items: merged }))
+    setPayload(p => ({ ...p, items: merged }))
     await saveDraft(merged)
-    // Stay on step 2 — already there
   }
 
-  const handleManualEntry = () => {
-    setStep(2)
-  }
+  const handleManualEntry = () => setStep(2)
 
   const handleSend = async () => {
     setSending(true)
     setSendError('')
     const id = generateRFQId()
-    const fullPayload: RFQPayload = { ...payload, items, rfqId: id }
+    const fullPayload: RFQPayload = {
+      ...payload,
+      items,
+      rfqId: id,
+      builderId,
+      draftId: getDraftId(),
+    }
 
     try {
       const res = await fetch('/api/send', {
@@ -187,88 +269,21 @@ export default function RFQPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fullPayload),
       })
-
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         throw new Error(data.error || `Server error ${res.status}`)
       }
-
       setRfqId(id)
       setStep(5)
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Something went wrong sending the RFQ.'
-      setSendError(msg)
+      setSendError(e instanceof Error ? e.message : 'Something went wrong sending the RFQ.')
     } finally {
       setSending(false)
     }
   }
 
-  // Single init effect — sets step and initialLoading together so React 18
-  // batches them into one render, preventing any flash of the wrong screen.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const supplierId = params.get('supplier')
-    const jobId = params.get('job')
-    const draftId = params.get('draft')
-
-    if (supplierId || jobId) {
-      // Prefill effect handles the async data fetch; jump straight to step 2 now.
-      setStep(2)
-      setInitialLoading(false)
-      return
-    }
-
-    if (!draftId) {
-      setInitialLoading(false)
-      return
-    }
-
-    const loadDraftItems = async () => {
-      try {
-        const res = await fetch('/api/get-draft-items?draft=' + draftId)
-        const data = await res.json()
-        const mapped = (data.items || []).map((row: any) => ({
-          id: crypto.randomUUID(),
-          name: row.name || '',
-          sku: row.sku || '',
-          productId: row.component_id || '',
-          desc: row.description || '',
-          uom: row.uom || '',
-          qty: row.qty ? String(row.qty) : '',
-          confidence: 'high',
-          length_mm: row.length_mm ?? null,
-          width_mm: row.width_mm ?? null,
-          height_mm: row.height_mm ?? null,
-          thickness_mm: row.thickness_mm ?? null,
-          depth_mm: row.depth_mm ?? null,
-          gauge_mm: row.gauge_mm ?? null,
-          diameter_mm: row.diameter_mm ?? null,
-          roll_m: row.roll_m ?? null,
-          weight_kg: row.weight_kg ?? null,
-          pieces: row.pieces ?? null,
-          coverage_m2: row.coverage_m2 ?? null,
-        }))
-
-        const cleaned = normaliseItems(mapped)
-
-        if (cleaned.length) {
-          setItems(cleaned)
-          setPayload((p) => ({ ...p, items: cleaned }))
-          setStep(2)
-        }
-        setInitialLoading(false)
-      } catch (e) {
-        console.error('draft load failed', e)
-        setInitialLoading(false)
-      }
-    }
-    loadDraftItems()
-  }, [])
-
   const navigateToStep = async (nextStep: 1 | 2 | 3 | 4 | 5) => {
-    if (step === 2) {
-      await saveDraft(items)
-    }
+    if (step === 2) await saveDraft(items)
     setStep(nextStep)
   }
 
@@ -278,7 +293,6 @@ export default function RFQPage() {
     setPayload(defaultPayload)
     setRfqId('')
     setSendError('')
-    // Strip draft from URL so the next session starts clean
     const url = new URL(window.location.href)
     url.searchParams.delete('draft')
     window.history.replaceState({}, '', url.toString())
@@ -302,7 +316,11 @@ export default function RFQPage() {
               setItems(nextItems)
               setPayload((p) => ({ ...p, items: nextItems }))
             }}
-            onNext={async () => { await saveDraft(items); setStep(4); }}
+            onNext={async () => {
+              await saveDraft(items)
+              await saveDraftMeta(payload.supplier.supplierName, payload.projectReference)
+              setStep(4)
+            }}
             onParsed={handleParsedOnStep2}
           />
         )}

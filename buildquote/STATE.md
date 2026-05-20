@@ -112,6 +112,41 @@ await supabase.from('rfq_requests').insert({
 
 ---
 
+## Session 2 — My Quotes feature (commit TBD)
+
+### What was built
+**Dashboard — new "My Quotes" tab (5th tab)**
+- `components/builder/QuotesTab.tsx` — two sections: Drafts + Sent Quotes
+- **Drafts:** resume link, item count, supplier/project if known, Discard button
+- **Sent Quotes:** status badges (Sent / Won / Declined), supplier, project ref, RFQ ID, date
+- Status update: "Mark Won" / "Mark Declined" buttons → PATCH `/api/quotes/[id]`
+- "Undo" button to revert Won/Declined back to Sent
+- Empty state with "+ New RFQ" CTA
+
+**Job cards — RFQ count chip**
+- `JobsTab.tsx` shows "[N] quotes" chip per job card (counts rfq_requests matching project_reference)
+- Clicking chip switches dashboard to My Quotes tab
+
+**Schema additions** (run `supabase/migrations/20260520_my_quotes.sql` in Supabase dashboard):
+- `rfq_drafts`: `builder_id`, `supplier_name`, `supplier_email`, `project_reference`
+- `rfq_requests`: `rfq_id_short`, `draft_id`; RLS enabled
+- `rfq_items`: RLS enabled
+
+**Wiring:**
+- `lib/rfqDraft.ts` — `getOrCreateDraft(builderId?)` now links draft to builder
+- `lib/types.ts` — `RFQPayload.draftId?: string` added
+- `rfq/page.tsx` — consolidated init effect fetches session + builder_id; saves draft meta (supplier, project ref) when proceeding to SendScreen; passes `draftId` in send payload
+- `api/send/route.ts` — saves `rfq_id_short`, `draft_id`; archives draft (`status = 'sent'`) on successful send
+- `app/api/quotes/[id]/route.ts` — PATCH endpoint for status updates
+
+### Still needs doing before this is live
+**⚠️ Run SQL migration in Supabase dashboard:**
+```
+supabase/migrations/20260520_my_quotes.sql
+```
+
+---
+
 ## Session 2 — Completed fixes (commit d298621)
 
 ### Bug fixes landed
@@ -141,10 +176,14 @@ await supabase.from('rfq_requests').insert({
 **Project ref:** `oxvhmulxuvlfjyjzleki`
 **Full schema:** `buildquote/supabase/schema.sql`
 
-### Key tables for next session
+### Key tables
 ```
-rfq_requests        — add builder_id column (see SQL above)
+rfq_drafts          — builder_id, supplier_name, project_reference added (session 2)
+                      status: 'draft' | 'sent' (archived when RFQ is sent)
 rfq_draft_items     — draft_id is TEXT not uuid (already handled in code)
+rfq_requests        — rfq_id_short, draft_id added; RLS enabled (session 2)
+                      status: 'sent' | 'won' | 'declined'
+rfq_items           — RLS enabled (session 2)
 builder_suppliers   — source of truth for supplier autocomplete in SendScreen
 builders            — source of truth for builder auto-fill in SendScreen
 suppliers           — platform supplier directory (manufacturer portal, read-only from RFQ side)

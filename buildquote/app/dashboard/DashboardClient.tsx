@@ -6,8 +6,9 @@ import JobsTab from '@/components/builder/JobsTab'
 import SuppliersTab from '@/components/builder/SuppliersTab'
 import FavouriteProductsTab from '@/components/builder/FavouriteProductsTab'
 import ProfilePanel from '@/components/builder/ProfilePanel'
+import QuotesTab from '@/components/builder/QuotesTab'
 
-type Tab = 'jobs' | 'suppliers' | 'products' | 'profile'
+type Tab = 'jobs' | 'suppliers' | 'products' | 'profile' | 'quotes'
 
 interface Props {
   user: User
@@ -58,6 +59,7 @@ export default function DashboardClient({ user, profile }: Props) {
             { key: 'jobs',      label: 'Current Jobs' },
             { key: 'suppliers', label: 'Preferred Suppliers' },
             { key: 'products',  label: 'Favourite Products' },
+            { key: 'quotes',    label: 'My Quotes' },
             { key: 'profile',   label: 'My Profile' },
           ] as { key: Tab; label: string }[]).map(t => (
             <button
@@ -77,9 +79,10 @@ export default function DashboardClient({ user, profile }: Props) {
 
       {/* Tab content */}
       <div className="max-w-5xl mx-auto px-4 py-8">
-        {tab === 'jobs'      && <JobsTab builderId={user.id} />}
+        {tab === 'jobs'      && <JobsTab builderId={user.id} onViewQuotes={() => setTab('quotes')} />}
         {tab === 'suppliers' && <SuppliersTab builderId={user.id} />}
         {tab === 'products'  && <FavouriteProductsTab builderId={user.id} />}
+        {tab === 'quotes'    && <QuotesTab builderId={user.id} />}
         {tab === 'profile'   && (
           <ProfilePanel user={user} profile={profile} onClose={() => setTab('jobs')} inline />
         )}

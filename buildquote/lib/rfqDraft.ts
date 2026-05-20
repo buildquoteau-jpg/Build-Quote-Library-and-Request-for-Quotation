@@ -7,13 +7,16 @@ export function getDraftIdFromBrowser(): string | null {
   return new URLSearchParams(window.location.search).get("draft");
 }
 
-export async function getOrCreateDraft(): Promise<string> {
+export async function getOrCreateDraft(builderId?: string): Promise<string> {
   const existing = getDraftIdFromBrowser();
   if (existing) return existing;
 
+  const insertData: Record<string, string> = {}
+  if (builderId) insertData.builder_id = builderId
+
   const { data, error } = await supabase
     .from("rfq_drafts")
-    .insert({})
+    .insert(insertData)
     .select()
     .single();
 

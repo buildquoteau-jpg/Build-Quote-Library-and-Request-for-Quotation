@@ -37,6 +37,7 @@ export interface SupplierDetails {
 export interface RFQPayload {
   rfqId: string
   builderId?: string
+  draftId?: string
   builder: BuilderDetails
   supplier: SupplierDetails
   items: LineItem[]

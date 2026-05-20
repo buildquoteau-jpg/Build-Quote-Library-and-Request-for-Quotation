@@ -77,6 +77,8 @@ export async function POST(req: NextRequest) {
         terms_confirmed_at: new Date().toISOString(),
         supplier_name: payload.supplier.supplierName,
         supplier_email: payload.supplier.supplierEmail,
+        rfq_id_short: payload.rfqId || null,
+        draft_id: payload.draftId || null,
       })
       .select('id')
       .single()
@@ -105,6 +107,15 @@ export async function POST(req: NextRequest) {
         console.error('Supabase rfq_items error:', itemsError)
       } else {
         console.log('RFQ saved to Supabase:', rfqRow.id)
+      }
+
+      // Archive the originating draft so it disappears from My Quotes > Drafts
+      if (payload.draftId) {
+        const { error: archiveErr } = await supabase
+          .from('rfq_drafts')
+          .update({ status: 'sent' })
+          .eq('id', payload.draftId)
+        if (archiveErr) console.error('Draft archive error:', archiveErr)
       }
     }
 

@@ -26,10 +26,11 @@ const empty: Omit<Job, 'id'> = {
   site_access_notes: '', build_type: '', image_url: '',
 }
 
-export default function JobsTab({ builderId }: { builderId: string }) {
+export default function JobsTab({ builderId, onViewQuotes }: { builderId: string; onViewQuotes?: () => void }) {
   const supabase = createSupabaseBrowserClient()
   const router = useRouter()
   const [jobs, setJobs] = useState<Job[]>([])
+  const [rfqCounts, setRfqCounts] = useState<Record<string, number>>({})
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Job | null>(null)
   const [form, setForm] = useState(empty)
@@ -42,8 +43,17 @@ export default function JobsTab({ builderId }: { builderId: string }) {
   useEffect(() => { loadJobs() }, [])
 
   async function loadJobs() {
-    const { data } = await supabase.from('builder_jobs').select('*').eq('builder_id', builderId).order('created_at', { ascending: false })
-    setJobs(data || [])
+    const [{ data: jobRows }, { data: rfqRows }] = await Promise.all([
+      supabase.from('builder_jobs').select('*').eq('builder_id', builderId).order('created_at', { ascending: false }),
+      supabase.from('rfq_requests').select('project_reference').eq('builder_id', builderId).not('project_reference', 'is', null),
+    ])
+    setJobs(jobRows || [])
+    const counts: Record<string, number> = {}
+    for (const row of rfqRows || []) {
+      const key = row.project_reference || ''
+      if (key) counts[key] = (counts[key] || 0) + 1
+    }
+    setRfqCounts(counts)
   }
 
   useEffect(() => {
@@ -159,12 +169,23 @@ export default function JobsTab({ builderId }: { builderId: string }) {
               <p className="text-sm text-text-secondary">{job.project_address || job.project_address_manual || '—'}</p>
               {job.pm_name && <p className="text-sm text-text-muted mt-1">PM: {job.pm_name}{job.pm_mobile ? ` · ${job.pm_mobile}` : ''}</p>}
               {job.site_access_notes && <p className="text-xs text-text-muted mt-2 italic">{job.site_access_notes}</p>}
-              <button
-                onClick={() => router.push(`/rfq?job=${job.id}`)}
-                className="mt-3 w-full text-center text-xs font-semibold text-brand border border-brand/30 rounded-lg py-1.5 hover:bg-brand hover:text-white transition-colors"
-              >
-                Send RFQ →
-              </button>
+              <div className="mt-3 flex items-center gap-2">
+                {rfqCounts[job.project_reference] > 0 && (
+                  <button
+                    onClick={onViewQuotes}
+                    className="text-xs font-semibold text-text-muted bg-surface-subtle border border-border-subtle px-2.5 py-1 rounded-full hover:text-navy hover:border-navy/30 transition-colors"
+                    type="button"
+                  >
+                    {rfqCounts[job.project_reference]} quote{rfqCounts[job.project_reference] !== 1 ? 's' : ''}
+                  </button>
+                )}
+                <button
+                  onClick={() => router.push(`/rfq?job=${job.id}`)}
+                  className="flex-1 text-center text-xs font-semibold text-brand border border-brand/30 rounded-lg py-1.5 hover:bg-brand hover:text-white transition-colors"
+                >
+                  Send RFQ →
+                </button>
+              </div>
             </div>
           </div>
         ))}

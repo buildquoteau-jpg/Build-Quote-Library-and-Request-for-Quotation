@@ -226,10 +226,15 @@ create table if not exists embed_widget_systems (
 -- Anonymous draft sessions (id is uuid stored as text in rfq_draft_items)
 create table if not exists rfq_drafts (
   id uuid primary key default gen_random_uuid(),
-  status text default 'draft',
+  builder_id uuid references builders(id),   -- null for guest drafts
+  status text default 'draft',               -- 'draft' | 'sent' (archived after send)
+  supplier_name text,
+  supplier_email text,
+  project_reference text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+create index if not exists idx_rfq_drafts_builder on rfq_drafts(builder_id);
 
 -- draft_id stored as text (not FK) for flexibility with anonymous sessions
 create table if not exists rfq_draft_items (
@@ -268,13 +273,21 @@ create table if not exists rfq_requests (
   supplier_name text,
   supplier_email text,
   notes text,
-  status text default 'draft',
+  status text default 'sent',              -- 'sent' | 'won' | 'declined'
+  rfq_id_short text,                       -- user-visible RFQ-YYYY-NNNN
+  draft_id text,                           -- originating rfq_drafts.id (text, not FK)
   send_to_supplier boolean default true,
   terms_confirmed boolean default false,
   terms_confirmed_at timestamptz,
   created_at timestamptz default now()
 );
 create index if not exists idx_rfq_requests_builder on rfq_requests(builder_id);
+
+-- RLS: builders see/update only their own; anon key can insert (send route)
+alter table rfq_requests enable row level security;
+create policy "Builders can view own rfq requests"   on rfq_requests for select using (auth.uid() = builder_id);
+create policy "Anyone can insert rfq requests"       on rfq_requests for insert with check (true);
+create policy "Builders can update own rfq requests" on rfq_requests for update using (auth.uid() = builder_id);
 
 create table if not exists rfq_items (
   id uuid primary key default gen_random_uuid(),
@@ -289,6 +302,13 @@ create table if not exists rfq_items (
   sort_order integer default 0,
   created_at timestamptz default now()
 );
+
+-- RLS: accessible only via parent rfq_request ownership
+alter table rfq_items enable row level security;
+create policy "Builders can view own rfq items" on rfq_items for select using (
+  exists (select 1 from rfq_requests where rfq_requests.id = rfq_items.rfq_id and rfq_requests.builder_id = auth.uid())
+);
+create policy "Anyone can insert rfq items" on rfq_items for insert with check (true);
 
 -- Enquiries from manufacturer portal embed widgets
 create table if not exists rfq_enquiries (
