@@ -4,6 +4,15 @@ import Button from '../ui/Button'
 import { LineItem } from '@/lib/types'
 import { getOrCreateDraft } from '@/lib/rfqDraft'
 
+const PARSE_MESSAGES = [
+  'Reading your list...',
+  'Identifying the items...',
+  'Organising your lines...',
+  'Checking quantities...',
+  'Almost done...',
+  'Nearly there...',
+]
+
 interface ManualEntryScreenProps {
   items: LineItem[]
   onChange: (items: LineItem[]) => void
@@ -89,8 +98,22 @@ export default function ManualEntryScreen({
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
+  const [msgIndex, setMsgIndex] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const duplicateIds = findDuplicates(items)
+
+  useEffect(() => {
+    if (uploading) {
+      setMsgIndex(0)
+      intervalRef.current = setInterval(() => {
+        setMsgIndex(i => (i + 1) % PARSE_MESSAGES.length)
+      }, 2800)
+    } else if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
+  }, [uploading])
 
   const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -433,6 +456,20 @@ export default function ManualEntryScreen({
           <span className="text-white font-bold">Continue — add quote details →</span>
         </Button>
       </div>
+
+      {uploading && (
+        <div className="fixed inset-0 bg-[rgba(255,255,255,0.92)] backdrop-blur-[2px] flex items-center justify-center z-50">
+          <div className="w-full max-w-sm rounded-2xl border-2 border-border bg-white px-6 py-8 text-center shadow-[0_18px_40px_rgba(24,93,122,0.16)]">
+            <div className="w-12 h-12 border-4 border-heading border-t-transparent rounded-full animate-spin mx-auto mb-5" />
+            <p className="text-heading font-bold text-lg tracking-tight" key={msgIndex}>
+              {PARSE_MESSAGES[msgIndex]}
+            </p>
+            <p className="text-text-secondary text-sm mt-3 font-medium">
+              This usually takes 15–30 seconds
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
