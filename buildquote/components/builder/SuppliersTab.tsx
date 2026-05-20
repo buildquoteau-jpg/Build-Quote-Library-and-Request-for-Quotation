@@ -189,19 +189,21 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {suppliers.map(s => (
+        {suppliers.map(s => {
+          const logoUrl = s.supplier_website ? getLogoUrl(s.supplier_website) : null
+          const displayDomain = s.supplier_website
+            ? (() => { try { return new URL(s.supplier_website).hostname.replace('www.', '') } catch { return s.supplier_website } })()
+            : null
+          return (
           <div key={s.id} className="relative bg-surface border border-border-subtle rounded-2xl p-5 shadow-sm overflow-hidden">
-            {s.supplier_website && (() => {
-              const logo = getLogoUrl(s.supplier_website)
-              return logo ? (
-                <img
-                  src={logo}
-                  alt=""
-                  className="absolute -right-3 -top-3 w-28 h-28 object-contain opacity-[0.08] pointer-events-none select-none"
-                  onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-                />
-              ) : null
-            })()}
+            {logoUrl && (
+              <img
+                src={logoUrl}
+                alt=""
+                className="absolute right-3 top-3 w-20 h-20 object-contain opacity-[0.12] pointer-events-none select-none"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
+            )}
             <div className="flex items-start justify-between gap-2 mb-2">
               <div>
                 <p className="font-bold text-navy text-base">{s.supplier_name}</p>
@@ -223,15 +225,16 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
               )}
               {s.supplier_email && <p className="text-sm text-text-muted">{s.supplier_email}</p>}
             </div>
-            {s.supplier_website && (
-              <a href={s.supplier_website} target="_blank" rel="noopener noreferrer"
-                className="text-xs text-navy hover:underline mt-0.5 block truncate">{s.supplier_website.replace(/^https?:\/\//, '')}</a>
+            {displayDomain && (
+              <a href={s.supplier_website!} target="_blank" rel="noopener noreferrer"
+                className="text-xs text-navy hover:underline mt-0.5 block">{displayDomain}</a>
             )}
             {s.account_number && <p className="text-sm text-text-muted mt-1">Account: {s.account_number}</p>}
             {s.rep_name && <p className="text-sm text-text-muted">Rep: {s.rep_name}{s.rep_mobile ? ` · ${s.rep_mobile}` : ''}</p>}
             {s.notes && <p className="text-xs text-text-muted mt-2 italic">{s.notes}</p>}
           </div>
-        ))}
+        )})}
+
       </div>
 
       {/* Map modal */}
