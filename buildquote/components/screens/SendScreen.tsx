@@ -158,13 +158,15 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
   }, [builderProfile, rfqPayload])
 
   // Restore send-screen details if user leaves and comes back
+  // Pre-filled values from ?supplier= / ?job= URL params take priority over localStorage
   useEffect(() => {
     try {
       const saved = localStorage.getItem('bq_send_screen_details')
       if (!saved) return
       const parsed = JSON.parse(saved)
-      const restoredSiteAddress = parsed.siteAddress ?? rfqPayload.siteAddress
-      let restoredSiteSuburb = parsed.siteSuburb ?? rfqPayload.siteSuburb
+      // rfqPayload fields already set (from URL params) win; fall back to localStorage
+      const restoredSiteAddress = rfqPayload.siteAddress || parsed.siteAddress
+      let restoredSiteSuburb = rfqPayload.siteSuburb || parsed.siteSuburb
 
       if (
         restoredSiteSuburb &&
@@ -177,11 +179,15 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
       onChange({
         ...rfqPayload,
         builder: { ...rfqPayload.builder, ...(parsed.builder || {}) },
-        supplier: { ...rfqPayload.supplier, ...(parsed.supplier || {}) },
+        supplier: {
+          supplierName: rfqPayload.supplier.supplierName || parsed.supplier?.supplierName || '',
+          supplierEmail: rfqPayload.supplier.supplierEmail || parsed.supplier?.supplierEmail || '',
+          accountNumber: rfqPayload.supplier.accountNumber || parsed.supplier?.accountNumber || '',
+        },
         delivery: parsed.delivery ?? rfqPayload.delivery,
         dateRequired: parsed.dateRequired ?? rfqPayload.dateRequired,
         message: parsed.message ?? rfqPayload.message,
-        projectReference: parsed.projectReference ?? rfqPayload.projectReference,
+        projectReference: rfqPayload.projectReference || parsed.projectReference || '',
         siteAddress: restoredSiteAddress,
         siteSuburb: restoredSiteSuburb,
         sendToSupplier: parsed.sendToSupplier ?? rfqPayload.sendToSupplier,
