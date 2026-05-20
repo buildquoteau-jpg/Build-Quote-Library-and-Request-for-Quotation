@@ -1,11 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 
-declare global {
-  interface Window {
-    google?: any
-  }
-}
 import Card from '../ui/Card'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
