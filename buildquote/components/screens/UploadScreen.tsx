@@ -167,9 +167,8 @@ export default function UploadScreen({ onNext, onSkip }: UploadScreenProps) {
         builderName ? (
           <div className="max-w-2xl mx-auto w-full flex items-center justify-between gap-4 bg-[rgba(24,93,122,0.06)] border border-[rgba(24,93,122,0.18)] rounded-2xl px-5 py-3.5">
             <div className="flex items-center gap-2.5 min-w-0">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#185D7A" strokeWidth="2" className="shrink-0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               <p className="text-sm font-semibold text-heading truncate">
-                G'day, {builderName} — your details will auto-fill at request for quotation.
+                G'day, {builderName?.split(' ')[0] || builderName} — your details will auto-fill at request for quotation.
               </p>
             </div>
             <a href="/dashboard" className="shrink-0 text-xs font-bold text-[#185D7A] border border-[rgba(24,93,122,0.3)] rounded-xl px-3 py-1.5 hover:bg-[rgba(24,93,122,0.08)] transition whitespace-nowrap">
