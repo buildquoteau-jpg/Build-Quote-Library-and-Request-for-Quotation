@@ -112,11 +112,28 @@ await supabase.from('rfq_requests').insert({
 
 ---
 
-## Session 2 focus: Persistent Draft + Clean Loading
+## Session 2 — Completed fixes (commit d298621)
 
-### Goals
-1. **Persistent draft** — verify the `?draft=` param UUID survives navigation between RFQ steps (upload → items → send). Confirm draft items written to `rfq_draft_items` are re-loaded correctly on step return / page refresh.
-2. **Clean loading** — confirm no residual flash of step 1 or spinner blip when entering `/rfq` from a supplier card, job card, or direct link. Covers the fixes landed in the last session (e54781e, 2533975, cbdc97f, fc1b69b, 3cb8b2b).
+### Bug fixes landed
+**Bug 1 — Step 1 flash on job/supplier card entry (root cause found + fixed)**
+- React hydration does NOT re-run `useState` lazy initialisers — the server-rendered state (`step=1, initialLoading=true`) was adopted on the client
+- `loadDraftItems` effect then cleared `initialLoading` while `step` was still 1 → UploadScreen briefly visible
+- Fix: removed lazy initialisers entirely. Single consolidated `useEffect` now batches `setStep(2)` + `setInitialLoading(false)` together. React 18 automatic batching means one render, zero intermediate state, no flash.
+
+**Bug 2 — "Upload a list" on Enter Items screen routed back to step 1**
+- `onUploadList` callback called `setStep(1)`, navigating away from ManualEntryScreen
+- Fix: removed `onUploadList` prop. ManualEntryScreen now owns a hidden `<input type="file" ref={fileInputRef}>`. Clicking "Upload a list" triggers `fileInputRef.current.click()` — OS file picker opens immediately, no navigation.
+
+**Bug 3 — Second upload to same draft could overwrite existing items**
+- Added `handleParsedOnStep2` in `rfq/page.tsx` that runs new parsed items through `mergeItems()` before `setItems`. Second upload now merges into the existing list, not replaces.
+
+### Still needs testing (deferred — user testing later)
+- All three entry points: direct `/rfq`, job card, supplier card
+- No flash of upload screen on job/supplier card entry
+- "Upload a list" on Enter Items opens inline file picker (does not navigate)
+- Second file upload merges items correctly
+- Builder name + job reference auto-fill on quote details step
+- Builder name pre-filled on direct `/rfq` when logged in
 
 ---
 
