@@ -23,6 +23,7 @@ _Last updated: 2026-05-20 — builders-login branch_
 - **Profile save** — added session check + `.select('id')` to detect silent RLS failures. Needs re-test after builder-logos bucket created (unrelated but test at same time).
 - WebAuthn passkey flow not tested end-to-end
 - Deploy to Vercel + update env vars
+- **RFQ integration** — built but needs end-to-end test (see Next session section)
 
 ---
 
@@ -37,13 +38,12 @@ Future: match them via `supplier_place_id` to inherit verified emails. Not neede
 
 ### What to build
 
-**1. Add `builder_id` to `rfq_requests`**
-Run in Supabase SQL editor:
+**1. Add `builder_id` to `rfq_requests`** ✅ Done
 ```sql
 ALTER TABLE rfq_requests ADD COLUMN IF NOT EXISTS builder_id uuid references builders(id);
 CREATE INDEX IF NOT EXISTS idx_rfq_requests_builder ON rfq_requests(builder_id);
 ```
-This links sent RFQs to the logged-in builder for audit trail.
+Column is live. schema.sql updated to reflect.
 
 **2. Pre-fill SendScreen with builder profile**
 When builder is logged in, fetch their profile from `builders` table and pre-populate:
@@ -94,13 +94,21 @@ await supabase.from('rfq_requests').insert({
 })
 ```
 
-### Implementation order
-1. SQL: `ALTER TABLE rfq_requests ADD COLUMN builder_id`
-2. SendScreen: pre-fill builder fields from profile
-3. SendScreen: supplier typeahead from `builder_suppliers`
-4. SuppliersTab + JobsTab: add "Send RFQ" buttons with query params
-5. rfq/page.tsx: read `?supplier=` and `?job=` params, pass to SendScreen
-6. /api/send: write to `rfq_requests` with builder_id
+### Implementation order — ALL COMPLETE ✅
+1. ✅ SQL: `ALTER TABLE rfq_requests ADD COLUMN builder_id` — run in Supabase, schema.sql updated
+2. ✅ SendScreen: pre-fill builder fields from profile (supabase session → builders table)
+3. ✅ SendScreen: supplier typeahead from `builder_suppliers` (personal "Saved" suppliers first, platform fallback)
+4. ✅ SuppliersTab + JobsTab: "Send RFQ →" buttons navigate to `/rfq?supplier=<id>` / `/rfq?job=<id>`
+5. ✅ rfq/page.tsx: reads `?supplier=` and `?job=` params, fetches and pre-fills payload, skips to step 4
+6. ✅ /api/send: writes `builder_id` to `rfq_requests` on send
+7. ✅ `/login` page: fixed missing Suspense boundary around `useSearchParams` (was breaking prod build)
+
+### What still needs end-to-end testing
+- Log in as a builder → go to `/rfq` → confirm builder fields auto-filled from profile
+- Type a supplier name → confirm personal "Saved" suppliers appear in dropdown, auto-fill email + account number
+- Go to Dashboard → Preferred Suppliers tab → click "Send RFQ →" on a card → confirm lands on SendScreen with supplier pre-filled
+- Go to Dashboard → Current Jobs tab → click "Send RFQ →" on a card → confirm projectReference + siteAddress pre-filled
+- Send an RFQ → check `rfq_requests` in Supabase has `builder_id` populated
 
 ---
 

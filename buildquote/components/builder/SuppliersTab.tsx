@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
 
@@ -28,6 +29,7 @@ const emptySupplier: Omit<Supplier, 'id'> = {
 
 export default function SuppliersTab({ builderId }: { builderId: string }) {
   const supabase = createSupabaseBrowserClient()
+  const router = useRouter()
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [showForm, setShowForm] = useState(false)
   const [showMap, setShowMap] = useState(false)
@@ -232,6 +234,12 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
             {s.account_number && <p className="text-sm text-text-muted mt-1">Account: {s.account_number}</p>}
             {s.rep_name && <p className="text-sm text-text-muted">Rep: {s.rep_name}{s.rep_mobile ? ` · ${s.rep_mobile}` : ''}</p>}
             {s.notes && <p className="text-xs text-text-muted mt-2 italic">{s.notes}</p>}
+            <button
+              onClick={() => router.push(`/rfq?supplier=${s.id}`)}
+              className="mt-3 w-full text-center text-xs font-semibold text-brand border border-brand/30 rounded-lg py-1.5 hover:bg-brand hover:text-white transition-colors"
+            >
+              Send RFQ →
+            </button>
           </div>
         )})}
 

@@ -8,6 +8,7 @@ import RFQScreen from '@/components/screens/RFQScreen'
 import SendScreen from '@/components/screens/SendScreen'
 import SuccessScreen from '@/components/screens/SuccessScreen'
 import { LineItem, RFQPayload } from '@/lib/types'
+import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
 function generateRFQId() {
   const year = new Date().getFullYear()
@@ -99,6 +100,59 @@ export default function RFQPage() {
     if (existingDraft) return
 
     getOrCreateDraft().catch(console.error)
+  }, [])
+
+  // Pre-populate from ?supplier= or ?job= query params (from dashboard cards)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const supplierId = params.get('supplier')
+    const jobId = params.get('job')
+    if (!supplierId && !jobId) return
+
+    const prefill = async () => {
+      const supabase = createSupabaseBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      if (supplierId) {
+        const { data } = await supabase
+          .from('builder_suppliers')
+          .select('supplier_name, supplier_email, account_number')
+          .eq('id', supplierId)
+          .eq('builder_id', session.user.id)
+          .single()
+        if (data) {
+          setPayload(p => ({
+            ...p,
+            supplier: {
+              supplierName: data.supplier_name || '',
+              supplierEmail: data.supplier_email || '',
+              accountNumber: data.account_number || '',
+            },
+          }))
+          setStep(4)
+        }
+      }
+
+      if (jobId) {
+        const { data } = await supabase
+          .from('builder_jobs')
+          .select('project_reference, project_address, project_address_manual')
+          .eq('id', jobId)
+          .eq('builder_id', session.user.id)
+          .single()
+        if (data) {
+          setPayload(p => ({
+            ...p,
+            projectReference: data.project_reference || '',
+            siteAddress: data.project_address || data.project_address_manual || '',
+          }))
+          setStep(4)
+        }
+      }
+    }
+
+    prefill().catch(console.error)
   }, [])
 
 

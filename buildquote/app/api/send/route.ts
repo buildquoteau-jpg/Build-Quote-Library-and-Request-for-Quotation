@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
     const { data: rfqRow, error: rfqError } = await supabase
       .from('rfq_requests')
       .insert({
+        builder_id: payload.builderId || null,
         builder_name: payload.builder.builderName,
         builder_email: payload.builder.email,
         project_name: payload.builder.company,

@@ -1,11 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 import { startAuthentication } from '@simplewebauthn/browser'
 
 export default function LoginPage() {
+  return <Suspense><LoginForm /></Suspense>
+}
+
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const next = searchParams.get('next') || '/dashboard'
@@ -165,3 +169,4 @@ export default function LoginPage() {
     </main>
   )
 }
+

@@ -259,6 +259,7 @@ create table if not exists rfq_draft_items (
 -- Sent RFQ requests (logged on send)
 create table if not exists rfq_requests (
   id uuid primary key default gen_random_uuid(),
+  builder_id uuid references builders(id),  -- null for guest sends
   builder_name text not null,
   builder_email text not null,
   project_name text,
@@ -273,6 +274,7 @@ create table if not exists rfq_requests (
   terms_confirmed_at timestamptz,
   created_at timestamptz default now()
 );
+create index if not exists idx_rfq_requests_builder on rfq_requests(builder_id);
 
 create table if not exists rfq_items (
   id uuid primary key default gen_random_uuid(),

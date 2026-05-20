@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
 
@@ -27,6 +28,7 @@ const empty: Omit<Job, 'id'> = {
 
 export default function JobsTab({ builderId }: { builderId: string }) {
   const supabase = createSupabaseBrowserClient()
+  const router = useRouter()
   const [jobs, setJobs] = useState<Job[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Job | null>(null)
@@ -157,6 +159,12 @@ export default function JobsTab({ builderId }: { builderId: string }) {
               <p className="text-sm text-text-secondary">{job.project_address || job.project_address_manual || '—'}</p>
               {job.pm_name && <p className="text-sm text-text-muted mt-1">PM: {job.pm_name}{job.pm_mobile ? ` · ${job.pm_mobile}` : ''}</p>}
               {job.site_access_notes && <p className="text-xs text-text-muted mt-2 italic">{job.site_access_notes}</p>}
+              <button
+                onClick={() => router.push(`/rfq?job=${job.id}`)}
+                className="mt-3 w-full text-center text-xs font-semibold text-brand border border-brand/30 rounded-lg py-1.5 hover:bg-brand hover:text-white transition-colors"
+              >
+                Send RFQ →
+              </button>
             </div>
           </div>
         ))}

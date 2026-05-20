@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 
 import Card from '../ui/Card'
 import Input from '../ui/Input'
@@ -8,7 +8,24 @@ import CheckRow from '../ui/CheckRow'
 import SectionLabel from '../ui/SectionLabel'
 import Toggle from '../ui/Toggle'
 import { BuilderDetails, SupplierDetails, RFQPayload } from '@/lib/types'
-import { SUPPLIERS, SupplierEntry } from '@/lib/suppliers'
+import { SUPPLIERS } from '@/lib/suppliers'
+import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+
+interface BuilderSupplierRow {
+  id: string
+  supplier_name: string | null
+  supplier_email: string | null
+  account_number: string | null
+}
+
+interface SupplierOption {
+  id: string
+  name: string
+  email: string
+  accountNumber: string
+  sandbox?: boolean
+  isPersonal: boolean
+}
 
 interface SendScreenProps {
   rfqPayload: Omit<RFQPayload, 'rfqId'>
@@ -52,6 +69,9 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
   const [addressSelected, setAddressSelected] = useState(false)
   const addressInputRef = useRef<HTMLInputElement | null>(null)
   const googleAutocompleteRef = useRef<any>(null)
+  const [builderSuppliers, setBuilderSuppliers] = useState<BuilderSupplierRow[]>([])
+  const [builderProfile, setBuilderProfile] = useState<any>(null)
+  const profileApplied = useRef(false)
 
   // Load saved builder details from localStorage
   useEffect(() => {
@@ -89,6 +109,53 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
       console.error('Failed to save builder details', e)
     }
   }, [rfqPayload.builder])
+
+  // Fetch builder profile + personal suppliers if logged in
+  useEffect(() => {
+    const loadBuilderData = async () => {
+      const supabase = createSupabaseBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      const [profileRes, suppliersRes] = await Promise.all([
+        supabase
+          .from('builders')
+          .select('builder_name, company_name, abn, office_phone, mobile_phone, email')
+          .eq('id', session.user.id)
+          .single(),
+        supabase
+          .from('builder_suppliers')
+          .select('id, supplier_name, supplier_email, account_number')
+          .eq('builder_id', session.user.id)
+          .order('supplier_name'),
+      ])
+
+      if (profileRes.data) {
+        setBuilderProfile({ ...profileRes.data, userId: session.user.id, userEmail: session.user.email })
+      }
+      if (suppliersRes.data) {
+        setBuilderSuppliers(suppliersRes.data)
+      }
+    }
+    loadBuilderData()
+  }, [])
+
+  // Apply builder profile once it loads (overrides localStorage — profile is authoritative)
+  useEffect(() => {
+    if (!builderProfile || profileApplied.current) return
+    profileApplied.current = true
+    onChange({
+      ...rfqPayload,
+      builderId: builderProfile.userId,
+      builder: {
+        builderName: builderProfile.builder_name || rfqPayload.builder.builderName,
+        company: builderProfile.company_name || rfqPayload.builder.company,
+        abn: builderProfile.abn || rfqPayload.builder.abn,
+        phone: builderProfile.office_phone || builderProfile.mobile_phone || rfqPayload.builder.phone,
+        email: builderProfile.email || builderProfile.userEmail || rfqPayload.builder.email,
+      },
+    })
+  }, [builderProfile, rfqPayload])
 
   // Restore send-screen details if user leaves and comes back
   useEffect(() => {
@@ -231,9 +298,20 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
   const phoneError = validatePhone(rfqPayload.builder.phone)
   const builderEmailError = validateEmail(rfqPayload.builder.email)
 
-  const filteredSuppliers = supplierQuery.trim().length >= 2 && !selectedFromList
-    ? SUPPLIERS.filter(s => !s.hidden && s.name.toLowerCase().includes(supplierQuery.toLowerCase())).slice(0, 6)
-    : []
+  const filteredOptions: SupplierOption[] = useMemo(() => {
+    if (supplierQuery.trim().length < 2 || selectedFromList) return []
+    const q = supplierQuery.toLowerCase()
+    const personal: SupplierOption[] = builderSuppliers
+      .filter(s => s.supplier_name?.toLowerCase().includes(q))
+      .slice(0, 6)
+      .map(s => ({ id: s.id, name: s.supplier_name || '', email: s.supplier_email || '', accountNumber: s.account_number || '', isPersonal: true }))
+    const personalNames = new Set(personal.map(p => p.name.toLowerCase()))
+    const platform: SupplierOption[] = SUPPLIERS
+      .filter(s => !s.hidden && s.name.toLowerCase().includes(q) && !personalNames.has(s.name.toLowerCase()))
+      .slice(0, Math.max(0, 6 - personal.length))
+      .map(s => ({ id: s.name, name: s.name, email: s.email || '', accountNumber: '', sandbox: !!(s as any).sandbox, isPersonal: false }))
+    return [...personal, ...platform]
+  }, [supplierQuery, selectedFromList, builderSuppliers])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -249,13 +327,15 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
     return () => { if (previewUrl) URL.revokeObjectURL(previewUrl) }
   }, [previewUrl])
 
-  const selectSupplier = (s: SupplierEntry) => {
-    setSupplierQuery(s.name)
+  const selectSupplier = (opt: SupplierOption) => {
+    setSupplierQuery(opt.name)
     setSelectedFromList(true)
     setShowSuggestions(false)
-    // If sandbox supplier, autofill supplier email with builder's own email
-    const supplierEmail = rfqPayload.builder.email
-    onChange({ ...rfqPayload, supplier: { supplierName: s.name, supplierEmail, accountNumber: rfqPayload.supplier.accountNumber } })
+    if (opt.sandbox) {
+      onChange({ ...rfqPayload, supplier: { supplierName: opt.name, supplierEmail: rfqPayload.builder.email, accountNumber: rfqPayload.supplier.accountNumber } })
+    } else {
+      onChange({ ...rfqPayload, supplier: { supplierName: opt.name, supplierEmail: opt.email, accountNumber: opt.accountNumber || rfqPayload.supplier.accountNumber } })
+    }
   }
 
   const handleSupplierNameChange = (val: string) => {
@@ -423,14 +503,17 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
               placeholder="Start typing a supplier name..."
               className="bg-white border border-border rounded-lg px-3 py-2 text-text-primary placeholder-text-muted focus:outline-none focus:border-brand w-full max-w-full box-border text-sm"
             />
-            {showSuggestions && filteredSuppliers.length > 0 && (
+            {showSuggestions && filteredOptions.length > 0 && (
               <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-ui-dark border border-border-subtle rounded-lg overflow-hidden shadow-xl max-h-64 overflow-y-auto">
-                {filteredSuppliers.map(s => (
-                  <button key={s.name} onMouseDown={e => { e.preventDefault(); selectSupplier(s) }}
+                {filteredOptions.map(opt => (
+                  <button key={opt.id} onMouseDown={e => { e.preventDefault(); selectSupplier(opt) }}
                     className="w-full text-left px-4 py-3 hover:bg-ui border-b border-border last:border-0 transition-colors">
-                    <p className="text-text-primary text-sm font-medium">{s.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-text-primary text-sm font-medium">{opt.name}</p>
+                      {opt.isPersonal && <span className="text-xs bg-brand/10 text-brand px-1.5 py-0.5 rounded font-medium">Saved</span>}
+                    </div>
                     <p className="text-text-faint text-xs mt-0.5">
-                      {s.sandbox ? 'Sends RFQ to your own email for testing' : `${s.email}${s.phone ? ' · ' + s.phone : ''}`}
+                      {opt.sandbox ? 'Sends RFQ to your own email for testing' : opt.email || 'No email on file'}
                     </p>
                   </button>
                 ))}
