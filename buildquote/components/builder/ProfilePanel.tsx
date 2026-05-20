@@ -75,7 +75,15 @@ export default function ProfilePanel({ user, profile, onClose, inline = false }:
     e.preventDefault()
     setSaving(true)
     setSaveMsg('')
-    const { error } = await supabase.from('builders').update({
+
+    const { data: { user: currentUser } } = await supabase.auth.getUser()
+    if (!currentUser) {
+      setSaveMsg('Error: Session not found — please sign out and sign back in.')
+      setSaving(false)
+      return
+    }
+
+    const { data, error } = await supabase.from('builders').update({
       builder_name: builderName,
       company_name: companyName,
       abn,
@@ -84,10 +92,16 @@ export default function ProfilePanel({ user, profile, onClose, inline = false }:
       office_phone: officePhone,
       mobile_phone: mobilePhone,
       updated_at: new Date().toISOString(),
-    }).eq('id', user.id)
+    }).eq('id', currentUser.id).select('id')
     setSaving(false)
-    setSaveMsg(error ? `Error: ${error.message}` : 'Profile saved!')
-    setTimeout(() => setSaveMsg(''), 3000)
+    if (error) {
+      setSaveMsg(`Error: ${error.message}`)
+    } else if (!data || data.length === 0) {
+      setSaveMsg(`Error: No row matched — builder id ${currentUser.id}`)
+    } else {
+      setSaveMsg('Profile saved!')
+      setTimeout(() => { setSaveMsg(''); onClose() }, 1500)
+    }
   }
 
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -96,11 +110,18 @@ export default function ProfilePanel({ user, profile, onClose, inline = false }:
     setLogoUploading(true)
     const ext = file.name.split('.').pop()
     const path = `${user.id}/logo.${ext}`
-    const { error } = await supabase.storage.from('builder-logos').upload(path, file, { upsert: true })
-    if (!error) {
-      const { data } = supabase.storage.from('builder-logos').getPublicUrl(path)
-      const url = data.publicUrl
-      await supabase.from('builders').update({ logo_url: url }).eq('id', user.id)
+    const { error: uploadError } = await supabase.storage.from('builder-logos').upload(path, file, { upsert: true })
+    if (uploadError) {
+      alert('Logo upload failed: ' + uploadError.message)
+      setLogoUploading(false)
+      return
+    }
+    const { data } = supabase.storage.from('builder-logos').getPublicUrl(path)
+    const url = data.publicUrl
+    const { error: updateError } = await supabase.from('builders').update({ logo_url: url }).eq('id', user.id)
+    if (updateError) {
+      alert('Failed to save logo: ' + updateError.message)
+    } else {
       setLogoUrl(url)
     }
     setLogoUploading(false)

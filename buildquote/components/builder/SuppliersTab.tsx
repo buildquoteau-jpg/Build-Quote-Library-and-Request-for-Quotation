@@ -10,6 +10,8 @@ interface Supplier {
   supplier_address: string
   supplier_place_id: string
   supplier_email: string
+  supplier_phone: string
+  supplier_website: string
   account_number: string
   payment_type: 'credit' | 'upfront' | ''
   notes: string
@@ -19,7 +21,8 @@ interface Supplier {
 
 const emptySupplier: Omit<Supplier, 'id'> = {
   supplier_name: '', supplier_address: '', supplier_place_id: '',
-  supplier_email: '', account_number: '', payment_type: '',
+  supplier_email: '', supplier_phone: '', supplier_website: '',
+  account_number: '', payment_type: '',
   notes: '', rep_name: '', rep_mobile: '',
 }
 
@@ -70,7 +73,7 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
       // Use Autocomplete (single result) — selecting immediately pre-fills the form
       const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
         componentRestrictions: { country: 'au' },
-        fields: ['name', 'formatted_address', 'place_id', 'geometry'],
+        fields: ['name', 'formatted_address', 'place_id', 'geometry', 'formatted_phone_number', 'website'],
       })
       autocomplete.bindTo('bounds', map)
       autocomplete.addListener('place_changed', () => {
@@ -113,6 +116,8 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
       supplier_name: place.name || '',
       supplier_address: place.formatted_address || place.vicinity || '',
       supplier_place_id: place.place_id || '',
+      supplier_phone: place.formatted_phone_number || '',
+      supplier_website: place.website || '',
     }))
     setMapResults([])
     setShowMap(false)
@@ -147,6 +152,15 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
     setSaving(false)
   }
 
+  function getLogoUrl(website: string) {
+    try {
+      const domain = new URL(website).hostname.replace('www.', '')
+      return `https://logo.clearbit.com/${domain}`
+    } catch {
+      return null
+    }
+  }
+
   async function handleDelete(id: string) {
     if (!confirm('Remove this supplier?')) return
     await supabase.from('builder_suppliers').delete().eq('id', id)
@@ -176,7 +190,18 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {suppliers.map(s => (
-          <div key={s.id} className="bg-surface border border-border-subtle rounded-2xl p-5 shadow-sm">
+          <div key={s.id} className="relative bg-surface border border-border-subtle rounded-2xl p-5 shadow-sm overflow-hidden">
+            {s.supplier_website && (() => {
+              const logo = getLogoUrl(s.supplier_website)
+              return logo ? (
+                <img
+                  src={logo}
+                  alt=""
+                  className="absolute -right-3 -top-3 w-28 h-28 object-contain opacity-[0.08] pointer-events-none select-none"
+                  onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+              ) : null
+            })()}
             <div className="flex items-start justify-between gap-2 mb-2">
               <div>
                 <p className="font-bold text-navy text-base">{s.supplier_name}</p>
@@ -192,7 +217,16 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
               </div>
             </div>
             {s.supplier_address && <p className="text-sm text-text-secondary">{s.supplier_address}</p>}
-            {s.supplier_email && <p className="text-sm text-text-muted mt-0.5">{s.supplier_email}</p>}
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
+              {s.supplier_phone && (
+                <a href={`tel:${s.supplier_phone}`} className="text-sm text-text-muted hover:text-navy transition">{s.supplier_phone}</a>
+              )}
+              {s.supplier_email && <p className="text-sm text-text-muted">{s.supplier_email}</p>}
+            </div>
+            {s.supplier_website && (
+              <a href={s.supplier_website} target="_blank" rel="noopener noreferrer"
+                className="text-xs text-navy hover:underline mt-0.5 block truncate">{s.supplier_website.replace(/^https?:\/\//, '')}</a>
+            )}
             {s.account_number && <p className="text-sm text-text-muted mt-1">Account: {s.account_number}</p>}
             {s.rep_name && <p className="text-sm text-text-muted">Rep: {s.rep_name}{s.rep_mobile ? ` · ${s.rep_mobile}` : ''}</p>}
             {s.notes && <p className="text-xs text-text-muted mt-2 italic">{s.notes}</p>}
@@ -243,10 +277,25 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
                     className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-navy focus:ring-2 focus:ring-navy/10 transition" />
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-text-secondary mb-1.5">Phone</label>
+                    <input type="tel" value={form.supplier_phone ?? ''} onChange={e => setForm(f => ({ ...f, supplier_phone: e.target.value }))}
+                      placeholder="(08) 9754 0000"
+                      className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-navy transition" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-text-secondary mb-1.5">Account Number</label>
+                    <input value={form.account_number} onChange={e => setForm(f => ({ ...f, account_number: e.target.value }))}
+                      placeholder="BLD-12345"
+                      className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-navy transition" />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-sm font-semibold text-text-secondary mb-1.5">Account Number</label>
-                  <input value={form.account_number} onChange={e => setForm(f => ({ ...f, account_number: e.target.value }))}
-                    placeholder="BLD-12345"
+                  <label className="block text-sm font-semibold text-text-secondary mb-1.5">Website</label>
+                  <input type="url" value={form.supplier_website ?? ''} onChange={e => setForm(f => ({ ...f, supplier_website: e.target.value }))}
+                    placeholder="https://www.supplier.com.au"
                     className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-navy transition" />
                 </div>
 
