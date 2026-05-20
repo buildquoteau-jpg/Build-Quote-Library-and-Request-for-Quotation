@@ -101,6 +101,8 @@ export default function ManualEntryScreen({
   const [msgIndex, setMsgIndex] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const nameInputRefs = useRef<Map<string, HTMLInputElement | null>>(new Map())
+  const pendingFocusId = useRef<string | null>(null)
   const duplicateIds = findDuplicates(items)
 
   useEffect(() => {
@@ -178,7 +180,22 @@ export default function ManualEntryScreen({
     )
   }
 
-  const addRow = () => onChange([...(items.length ? items : [blankItem()]), blankItem()])
+  const addRow = () => {
+    const newItem = blankItem()
+    pendingFocusId.current = newItem.id
+    onChange([...(items.length ? items : [blankItem()]), newItem])
+  }
+
+  // Focus + scroll to the newly added row's Product Name field after render
+  useEffect(() => {
+    if (!pendingFocusId.current) return
+    const el = nameInputRefs.current.get(pendingFocusId.current)
+    if (el) {
+      el.focus()
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      pendingFocusId.current = null
+    }
+  })
 
   const removeRow = (id: string) => {
     if (items.length <= 1) {
@@ -276,6 +293,7 @@ export default function ManualEntryScreen({
 
             <div className="flex flex-col gap-2.5">
               <input
+                ref={(el) => { nameInputRefs.current.set(item.id, el) }}
                 value={item.name}
                 title={item.name || ''}
                 onChange={(e) => update(item.id, 'name', e.target.value)}
@@ -343,6 +361,7 @@ export default function ManualEntryScreen({
 
                 <div className="flex items-center">
                   <input
+                    ref={(el) => { nameInputRefs.current.set(item.id, el) }}
                     value={item.name}
                     title={item.name || ''}
                     onChange={(e) => update(item.id, 'name', e.target.value)}

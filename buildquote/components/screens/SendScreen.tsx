@@ -555,13 +555,32 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
         </Card>
 
         <Card className="flex flex-col gap-3 w-full overflow-hidden">
-          <SectionLabel>Project Reference</SectionLabel>
+          <SectionLabel>Project Details</SectionLabel>
           <Input
             label="Project Reference"
             value={rfqPayload.projectReference || ''}
             onChange={v => onChange({ ...rfqPayload, projectReference: v })}
             placeholder="e.g. Smith Residence — Wall Framing Stage"
           />
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Input
+              label="PM Name"
+              value={rfqPayload.pmName || ''}
+              onChange={v => onChange({ ...rfqPayload, pmName: v })}
+              placeholder="Project manager name"
+              className="flex-1"
+            />
+            <div className="flex flex-col gap-1 flex-1 min-w-0">
+              <label className="text-xs text-text-secondary font-semibold uppercase tracking-wide">PM Phone</label>
+              <input
+                type="tel"
+                value={rfqPayload.pmPhone || ''}
+                onChange={e => onChange({ ...rfqPayload, pmPhone: e.target.value })}
+                placeholder="PM contact number"
+                className="bg-white border border-border rounded-lg px-3 py-2 text-text-primary placeholder-text-muted focus:outline-none focus:border-brand transition-colors w-full max-w-full box-border text-sm"
+              />
+            </div>
+          </div>
         </Card>
 
         <Card className="flex flex-col gap-3 w-full overflow-hidden">
@@ -623,6 +642,16 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
                 onChange={v => onChange({ ...rfqPayload, siteSuburb: v } as any)}
                 placeholder="e.g. Dunsborough"
               />
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-text-secondary font-semibold uppercase tracking-wide">Site Access Notes</label>
+                <textarea
+                  value={rfqPayload.siteAccessNotes || ''}
+                  onChange={e => onChange({ ...rfqPayload, siteAccessNotes: e.target.value })}
+                  placeholder="e.g. Gate code 1234, call PM on arrival, no trucks over 8t..."
+                  rows={3}
+                  className="bg-white border border-border rounded-lg px-3 py-2 text-text-primary placeholder-text-muted focus:outline-none focus:border-brand w-full max-w-full box-border resize-none text-sm"
+                />
+              </div>
             </>
           )}
           <div className="flex flex-col gap-1">
@@ -647,6 +676,27 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
             rows={4}
             className="bg-white border border-border rounded-lg px-3 py-2 text-text-primary placeholder-text-muted focus:outline-none focus:border-brand w-full max-w-full box-border resize-none text-sm"
           />
+        </Card>
+
+        <Card className="flex flex-col gap-3 w-full overflow-hidden">
+          <SectionLabel>Preferred Contact Method</SectionLabel>
+          <p className="text-text-muted text-xs -mt-1">How would you like the supplier to reach you if they have questions?</p>
+          <div className="flex rounded-lg border border-border overflow-hidden">
+            {(['phone', 'email', 'either'] as const).map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => onChange({ ...rfqPayload, preferredContact: opt })}
+                className={`flex-1 py-2.5 text-xs font-semibold transition-colors border-r border-border last:border-r-0 ${
+                  (rfqPayload.preferredContact ?? 'either') === opt
+                    ? 'bg-brand text-white'
+                    : 'bg-white text-text-secondary hover:bg-surface-subtle'
+                }`}
+              >
+                {opt === 'phone' ? '📞 Phone' : opt === 'email' ? '✉️ Email' : '👍 Either'}
+              </button>
+            ))}
+          </div>
         </Card>
 
         <Card className="flex flex-col gap-1 w-full overflow-hidden">

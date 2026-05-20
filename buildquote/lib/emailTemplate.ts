@@ -1,7 +1,7 @@
 import { RFQPayload } from './types'
 
 export function buildEmailHtml(payload: RFQPayload): string {
-  const { builder, supplier, items, delivery, dateRequired, message, rfqId } = payload
+  const { builder, supplier, items, delivery, dateRequired, message, rfqId, pmName, pmPhone, siteAccessNotes, preferredContact } = payload
 
   const itemRows = items.map((item, i) => {
     const bg = i % 2 === 0 ? '#ffffff' : '#f5f7f9'
@@ -63,7 +63,8 @@ export function buildEmailHtml(payload: RFQPayload): string {
             <p style="margin:0 0 1px;font-size:12px;color:#64748b;">${builder.company}</p>
             <p style="margin:0 0 1px;font-size:12px;color:#64748b;">ABN: ${builder.abn}</p>
             <p style="margin:0 0 1px;font-size:12px;color:#64748b;">${builder.phone}</p>
-            <p style="margin:0;font-size:12px;color:#64748b;">${builder.email}</p>
+            <p style="margin:0 0 1px;font-size:12px;color:#64748b;">${builder.email}</p>
+            ${pmName ? `<p style="margin:4px 0 1px;font-size:12px;color:#334155;"><strong>PM:</strong> ${pmName}${pmPhone ? ' · ' + pmPhone : ''}</p>` : ''}
           </td>
           <td style="width:50%;vertical-align:top;">
             <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#f97316;text-transform:uppercase;letter-spacing:1.5px;">To</p>
@@ -86,7 +87,9 @@ export function buildEmailHtml(payload: RFQPayload): string {
         <tr>
           <td style="padding:12px 16px;">
             <p style="margin:0 0 4px;font-size:12px;color:#64748b;"><strong style="color:#334155;">Delivery:</strong> ${deliveryLine}</p>
-            <p style="margin:0;font-size:12px;color:#64748b;"><strong style="color:#334155;">Date Required:</strong> ${dateRequired || 'ASAP'}${projectRef}</p>
+            <p style="margin:0 0 4px;font-size:12px;color:#64748b;"><strong style="color:#334155;">Date Required:</strong> ${dateRequired || 'ASAP'}${projectRef}</p>
+            ${siteAccessNotes && delivery === 'delivery' ? `<p style="margin:0 0 4px;font-size:12px;color:#64748b;"><strong style="color:#334155;">Site Access:</strong> ${siteAccessNotes}</p>` : ''}
+            ${preferredContact ? `<p style="margin:0;font-size:12px;color:#64748b;"><strong style="color:#334155;">Preferred Contact:</strong> ${preferredContact === 'phone' ? 'Phone' : preferredContact === 'email' ? 'Email' : 'Phone or Email'}</p>` : ''}
           </td>
         </tr>
       </table>

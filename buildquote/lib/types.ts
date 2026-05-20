@@ -49,4 +49,8 @@ export interface RFQPayload {
   siteSuburb?: string
   sendToSupplier: boolean
   sendCopyToSelf: boolean
+  pmName?: string
+  pmPhone?: string
+  siteAccessNotes?: string
+  preferredContact?: 'phone' | 'email' | 'either'
 }

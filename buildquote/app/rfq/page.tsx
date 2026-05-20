@@ -63,6 +63,10 @@ const defaultPayload: Omit<RFQPayload, 'rfqId'> = {
   projectReference: '',
   sendToSupplier: true,
   sendCopyToSelf: true,
+  pmName: '',
+  pmPhone: '',
+  siteAccessNotes: '',
+  preferredContact: 'either',
 }
 
 export default function RFQPage() {
@@ -219,7 +223,7 @@ export default function RFQPage() {
       if (jobId) {
         const { data } = await supabase
           .from('builder_jobs')
-          .select('project_reference, project_address, project_address_manual')
+          .select('project_reference, project_address, project_address_manual, pm_name, pm_mobile, site_access_notes')
           .eq('id', jobId)
           .eq('builder_id', session.user.id)
           .single()
@@ -228,6 +232,9 @@ export default function RFQPage() {
             ...p,
             projectReference: data.project_reference || '',
             siteAddress: data.project_address || data.project_address_manual || '',
+            pmName: data.pm_name || '',
+            pmPhone: data.pm_mobile || '',
+            siteAccessNotes: data.site_access_notes || '',
           }))
         }
       }
