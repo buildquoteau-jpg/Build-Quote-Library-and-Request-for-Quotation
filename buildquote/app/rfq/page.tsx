@@ -130,7 +130,7 @@ export default function RFQPage() {
               accountNumber: data.account_number || '',
             },
           }))
-          // Stay on step 1 — user adds items first, supplier is pre-filled when they reach step 4
+          setStep(2)
         }
       }
 
@@ -147,7 +147,7 @@ export default function RFQPage() {
             projectReference: data.project_reference || '',
             siteAddress: data.project_address || data.project_address_manual || '',
           }))
-          // Stay on step 1 — user adds items first, job details are pre-filled when they reach step 4
+          setStep(2)
         }
       }
     }
