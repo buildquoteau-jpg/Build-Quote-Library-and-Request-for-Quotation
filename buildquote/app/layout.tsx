@@ -51,6 +51,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${barlow.variable} ${barlowCondensed.variable} antialiased`}
+        suppressHydrationWarning
       >
         <div className="w-full">
           <GlobalNav />

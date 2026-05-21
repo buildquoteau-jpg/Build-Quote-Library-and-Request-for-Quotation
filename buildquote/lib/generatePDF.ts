@@ -2,7 +2,7 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import { RFQPayload } from './types'
 
 export async function generatePDFBuffer(payload: RFQPayload): Promise<Buffer> {
-  const { builder, supplier, items, delivery, siteAddress, siteSuburb, dateRequired, message, rfqId } = payload
+  const { builder, supplier, items, delivery, siteAddress, siteSuburb, dateRequired, message, rfqId, pmName, pmPhone, siteAccessNotes, preferredContact } = payload
 
   const doc = await PDFDocument.create()
   const bold = await doc.embedFont(StandardFonts.HelveticaBold)
@@ -74,18 +74,29 @@ export async function generatePDFBuffer(payload: RFQPayload): Promise<Buffer> {
     page.drawText(builder.phone, { x: 32, y, size: 10, font: regular, color: grey })
     y -= 12
     page.drawText(builder.email, { x: 32, y, size: 10, font: regular, color: grey })
+    if (pmName) {
+      y -= 12
+      const pmLine = `PM: ${pmName}${pmPhone ? '  ·  ' + pmPhone : ''}`
+      page.drawText(pmLine.substring(0, 60), { x: 32, y, size: 10, font: regular, color: grey })
+    }
     y -= 20
 
-    // Delivery / Date bar
-    page.drawRectangle({ x: 32, y: y - 24, width: W - 64, height: 40, color: lightgrey })
+    // Delivery / Date bar — dynamic height based on visible lines
     const projectRef = payload.projectReference ? `  |  Ref: ${payload.projectReference}` : ''
     const deliveryLine = delivery === 'delivery'
       ? `Delivery${siteAddress ? ': ' + siteAddress : ''}${siteSuburb ? ', ' + siteSuburb : ''}`
       : 'Store Pick-up'
     const dateLine = `Date Required: ${dateRequired || 'ASAP'}${projectRef}`
-    page.drawText(deliveryLine.substring(0, 95), { x: 40, y: y + 2, size: 9, font: regular, color: grey })
-    page.drawText(dateLine.substring(0, 95), { x: 40, y: y - 10, size: 9, font: regular, color: grey })
-    y -= 42
+    const contactLabel = preferredContact === 'phone' ? 'Phone' : preferredContact === 'email' ? 'Email' : 'Phone or Email'
+    const barLines: string[] = [deliveryLine, dateLine]
+    if (siteAccessNotes && delivery === 'delivery') barLines.push(`Site Access: ${siteAccessNotes}`)
+    if (preferredContact) barLines.push(`Preferred Contact: ${contactLabel}`)
+    const barHeight = Math.max(40, barLines.length * 12 + 16)
+    page.drawRectangle({ x: 32, y: y - barHeight + 16, width: W - 64, height: barHeight, color: lightgrey })
+    barLines.forEach((line, idx) => {
+      page.drawText(line.substring(0, 95), { x: 40, y: y + 2 - idx * 12, size: 9, font: regular, color: grey })
+    })
+    y -= barHeight - 12
 
     return y
   }

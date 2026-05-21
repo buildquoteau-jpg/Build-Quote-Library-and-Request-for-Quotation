@@ -4,12 +4,13 @@ import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 
 const NAV_LINKS = [
-  { label: 'Home',                  href: '/',         external: false },
-  { label: 'Send a Quote',          href: '/rfq',      external: false },
-  { label: 'Products',              href: '/products', external: false },
+  { label: 'Home',                  href: '/',           external: false },
+  { label: 'Send a Quote',          href: '/rfq',        external: false },
+  { label: 'Products',              href: '/products',   external: false },
+  { label: 'Builder Portal',        href: '/dashboard',  external: false },
   { label: 'Manufacturers Portal',  href: 'https://mfp.buildquote.com.au', external: true },
-  { label: 'Privacy Policy',        href: '/privacy',  external: false },
-  { label: 'Terms of Use',          href: '/terms',    external: false },
+  { label: 'Privacy Policy',        href: '/privacy',    external: false },
+  { label: 'Terms of Use',          href: '/terms',      external: false },
 ]
 
 export function GlobalNav() {
@@ -37,6 +38,8 @@ export function GlobalNav() {
 
   // Close menu on route change
   useEffect(() => { setOpen(false) }, [pathname])
+
+  if (pathname === '/coming-soon') return null
 
   return (
     <div

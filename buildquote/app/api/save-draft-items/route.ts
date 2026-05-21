@@ -42,7 +42,6 @@ export async function POST(req: Request) {
       roll_m: item.roll_m ?? null,
       weight_kg: item.weight_kg ?? null,
       pieces: item.pieces ?? null,
-      coverage_m2: item.coverage_m2 ?? null,
     }));
 
     const { error } = await supabase

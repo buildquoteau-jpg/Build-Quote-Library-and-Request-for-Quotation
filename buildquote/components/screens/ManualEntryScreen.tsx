@@ -1,20 +1,36 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Button from '../ui/Button'
 import { LineItem } from '@/lib/types'
 import { getOrCreateDraft } from '@/lib/rfqDraft'
+
+const PARSE_MESSAGES = [
+  'Reading your list...',
+  'Identifying the items...',
+  'Organising your lines...',
+  'Checking quantities...',
+  'Almost done...',
+  'Nearly there...',
+]
 
 interface ManualEntryScreenProps {
   items: LineItem[]
   onChange: (items: LineItem[]) => void
   onBack?: () => void
   onNext: () => void
-  onUploadList: () => void
+  onParsed: (parsed: LineItem[]) => void
+}
+
+function generateId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return Date.now().toString(36) + Math.random().toString(36).slice(2)
 }
 
 function blankItem(): LineItem {
   return {
-    id: crypto.randomUUID(),
+    id: generateId(),
     name: '',
     sku: '',
     productId: '',
@@ -77,10 +93,50 @@ export default function ManualEntryScreen({
   onChange,
   onBack,
   onNext,
-  onUploadList,
+  onParsed,
 }: ManualEntryScreenProps) {
   const [error, setError] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  const [msgIndex, setMsgIndex] = useState(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const nameInputRefs = useRef<Map<string, HTMLInputElement | null>>(new Map())
+  const pendingFocusId = useRef<string | null>(null)
   const duplicateIds = findDuplicates(items)
+
+  useEffect(() => {
+    if (uploading) {
+      setMsgIndex(0)
+      intervalRef.current = setInterval(() => {
+        setMsgIndex(i => (i + 1) % PARSE_MESSAGES.length)
+      }, 2800)
+    } else if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
+  }, [uploading])
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setUploadError('')
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/parse', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || 'Parse failed')
+      if (!data.items?.length) throw new Error('No items found in that file. Try a clearer photo or a different format.')
+      onParsed(data.items)
+    } catch (err: any) {
+      setUploadError(err?.message || 'Could not read the file. Try a clearer photo or a different format.')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
   const lowCount = items.filter((item) => item.confidence === 'low').length
 
   const handleClearAll = async () => {
@@ -124,7 +180,22 @@ export default function ManualEntryScreen({
     )
   }
 
-  const addRow = () => onChange([...(items.length ? items : [blankItem()]), blankItem()])
+  const addRow = () => {
+    const newItem = blankItem()
+    pendingFocusId.current = newItem.id
+    onChange([...(items.length ? items : [blankItem()]), newItem])
+  }
+
+  // Focus + scroll to the newly added row's Product Name field after render
+  useEffect(() => {
+    if (!pendingFocusId.current) return
+    const el = nameInputRefs.current.get(pendingFocusId.current)
+    if (el) {
+      el.focus()
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      pendingFocusId.current = null
+    }
+  })
 
   const removeRow = (id: string) => {
     if (items.length <= 1) {
@@ -138,7 +209,8 @@ export default function ManualEntryScreen({
     try {
       setError('')
       const draft = await getOrCreateDraft()
-      window.open('https://mfp.buildquote.com.au/?draft=' + draft, '_blank')
+      const mfpBase = process.env.NEXT_PUBLIC_MFP_URL ?? 'https://mfp.buildquote.com.au'
+      window.open(`${mfpBase}/manufacturers?draft=` + draft, '_blank')
     } catch (err: any) {
       setError(err?.message || 'Could not open Manufacturer Components.')
     }
@@ -190,9 +262,9 @@ export default function ManualEntryScreen({
         </div>
       </div>
 
-      {error && (
+      {(error || uploadError) && (
         <div className="rounded-2xl border-2 border-error-border bg-error-bg px-4 py-3">
-          <p className="text-error text-sm font-semibold">{error}</p>
+          <p className="text-error text-sm font-semibold">{error || uploadError}</p>
         </div>
       )}
 
@@ -222,6 +294,7 @@ export default function ManualEntryScreen({
 
             <div className="flex flex-col gap-2.5">
               <input
+                ref={(el) => { nameInputRefs.current.set(item.id, el) }}
                 value={item.name}
                 title={item.name || ''}
                 onChange={(e) => update(item.id, 'name', e.target.value)}
@@ -289,6 +362,7 @@ export default function ManualEntryScreen({
 
                 <div className="flex items-center">
                   <input
+                    ref={(el) => { nameInputRefs.current.set(item.id, el) }}
                     value={item.name}
                     title={item.name || ''}
                     onChange={(e) => update(item.id, 'name', e.target.value)}
@@ -355,14 +429,23 @@ export default function ManualEntryScreen({
         </div>
       </div>
 
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept="image/*,.pdf,.csv,.xlsx,.xls,.docx,.doc,.txt"
+        onChange={handleFileSelected}
+      />
+
       <div className="flex flex-col sm:flex-row gap-3">
         <button
-          onClick={onUploadList}
-          className="sm:flex-1 rounded-2xl border-2 border-heading/20 border-l-[3px] border-l-teal ring-1 ring-inset ring-heading/10 bg-white hover:bg-[rgba(111,236,204,0.06)] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(24,93,122,0.10)] px-4 py-3.5 text-heading text-sm font-bold transition-all duration-200"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="sm:flex-1 rounded-2xl border-2 border-heading/20 border-l-[3px] border-l-teal ring-1 ring-inset ring-heading/10 bg-white hover:bg-[rgba(111,236,204,0.06)] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(24,93,122,0.10)] px-4 py-3.5 text-heading text-sm font-bold transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
           type="button"
         >
           <span className="text-[10px] tracking-[0.2em] font-semibold text-[var(--color-accent)] block">OPTION 1</span>
-          Upload a list
+          {uploading ? 'Reading list...' : 'Upload a list'}
         </button>
 
         <button
@@ -393,6 +476,20 @@ export default function ManualEntryScreen({
           <span className="text-white font-bold">Continue — add quote details →</span>
         </Button>
       </div>
+
+      {uploading && (
+        <div className="fixed inset-0 bg-[rgba(255,255,255,0.92)] backdrop-blur-[2px] flex items-center justify-center z-50">
+          <div className="w-full max-w-sm rounded-2xl border-2 border-border bg-white px-6 py-8 text-center shadow-[0_18px_40px_rgba(24,93,122,0.16)]">
+            <div className="w-12 h-12 border-4 border-heading border-t-transparent rounded-full animate-spin mx-auto mb-5" />
+            <p className="text-heading font-bold text-lg tracking-tight" key={msgIndex}>
+              {PARSE_MESSAGES[msgIndex]}
+            </p>
+            <p className="text-text-secondary text-sm mt-3 font-medium">
+              This usually takes 15–30 seconds
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

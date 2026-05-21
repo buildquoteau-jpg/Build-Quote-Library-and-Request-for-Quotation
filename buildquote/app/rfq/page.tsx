@@ -8,6 +8,7 @@ import RFQScreen from '@/components/screens/RFQScreen'
 import SendScreen from '@/components/screens/SendScreen'
 import SuccessScreen from '@/components/screens/SuccessScreen'
 import { LineItem, RFQPayload } from '@/lib/types'
+import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
 function generateRFQId() {
   const year = new Date().getFullYear()
@@ -62,6 +63,10 @@ const defaultPayload: Omit<RFQPayload, 'rfqId'> = {
   projectReference: '',
   sendToSupplier: true,
   sendCopyToSelf: true,
+  pmName: '',
+  pmPhone: '',
+  siteAccessNotes: '',
+  preferredContact: 'either',
 }
 
 export default function RFQPage() {
@@ -71,21 +76,41 @@ export default function RFQPage() {
   const [rfqId, setRfqId] = useState('')
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
-  const [draftLoaded, setDraftLoaded] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
+  const [builderId, setBuilderId] = useState<string | undefined>()
 
-  async function saveDraft(items: LineItem[]) {
+  function getDraftId() {
+    return new URLSearchParams(window.location.search).get('draft') ?? undefined
+  }
+
+  async function saveDraft(nextItems: LineItem[]) {
     try {
-      const draftId = new URLSearchParams(window.location.search).get('draft')
+      const draftId = getDraftId()
       if (!draftId) return
-
       await fetch('/api/save-draft-items', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ draftId, items: normaliseItems(items) }),
+        body: JSON.stringify({ draftId, items: normaliseItems(nextItems) }),
       })
     } catch (e) {
       console.error('Draft save failed', e)
+    }
+  }
+
+  async function saveDraftMeta(supplierName: string, projectRef: string) {
+    try {
+      const draftId = getDraftId()
+      if (!draftId) return
+      const supabase = createSupabaseBrowserClient()
+      await supabase
+        .from('rfq_drafts')
+        .update({
+          supplier_name: supplierName || null,
+          project_reference: projectRef || null,
+        })
+        .eq('id', draftId)
+    } catch (e) {
+      console.error('Draft meta save failed', e)
     }
   }
 
@@ -93,64 +118,40 @@ export default function RFQPage() {
     window.scrollTo(0, 0)
   }, [step])
 
-
+  // Single init effect — fetches session, creates/loads draft, sets step + loading
+  // together so React 18 batches into one render (no intermediate flash state).
   useEffect(() => {
-    const existingDraft = new URLSearchParams(window.location.search).get('draft')
-    if (existingDraft) return
+    const init = async () => {
+      const params = new URLSearchParams(window.location.search)
+      const supplierId = params.get('supplier')
+      const jobId = params.get('job')
+      const existingDraftId = params.get('draft')
 
-    getOrCreateDraft().catch(console.error)
-  }, [])
+      // Resolve builder session
+      const supabase = createSupabaseBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const bId = session?.user?.id
+      if (bId) setBuilderId(bId)
 
-
-  const handleParsed = async (parsed: LineItem[]) => {
-    const merged = mergeItems(items, parsed)
-    setItems(merged)
-    setPayload((p) => ({ ...p, items: merged }))
-    await saveDraft(merged); setStep(2)
-  }
-
-  const handleManualEntry = () => {
-    setStep(2)
-  }
-
-  const handleSend = async () => {
-    setSending(true)
-    setSendError('')
-    const id = generateRFQId()
-    const fullPayload: RFQPayload = { ...payload, items, rfqId: id }
-
-    try {
-      const res = await fetch('/api/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fullPayload),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || `Server error ${res.status}`)
+      // From supplier/job card — jump to step 2 immediately; prefill effect handles data
+      if (supplierId || jobId) {
+        if (!existingDraftId) await getOrCreateDraft(bId)
+        setStep(2)
+        setInitialLoading(false)
+        return
       }
 
-      setRfqId(id)
-      setStep(5)
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Something went wrong sending the RFQ.'
-      setSendError(msg)
-    } finally {
-      setSending(false)
-    }
-  }
+      // Fresh session — create draft and show upload screen
+      if (!existingDraftId) {
+        await getOrCreateDraft(bId)
+        setInitialLoading(false)
+        return
+      }
 
-  useEffect(() => {
-    const loadDraftItems = async () => {
+      // Returning to an existing draft — always land on Enter Items (step 2),
+      // even if the draft has no items yet (e.g. resumed before adding anything).
       try {
-        const draftId = new URLSearchParams(window.location.search).get('draft')
-        if (!draftId) {
-          setDraftLoaded(true)
-          setInitialLoading(false)
-          return
-        }
-        const res = await fetch('/api/get-draft-items?draft=' + draftId)
+        const res = await fetch('/api/get-draft-items?draft=' + existingDraftId)
         const data = await res.json()
         const mapped = (data.items || []).map((row: any) => ({
           id: crypto.randomUUID(),
@@ -160,7 +161,7 @@ export default function RFQPage() {
           desc: row.description || '',
           uom: row.uom || '',
           qty: row.qty ? String(row.qty) : '',
-          confidence: 'high',
+          confidence: 'high' as const,
           length_mm: row.length_mm ?? null,
           width_mm: row.width_mm ?? null,
           height_mm: row.height_mm ?? null,
@@ -173,29 +174,125 @@ export default function RFQPage() {
           pieces: row.pieces ?? null,
           coverage_m2: row.coverage_m2 ?? null,
         }))
-
         const cleaned = normaliseItems(mapped)
-
         if (cleaned.length) {
           setItems(cleaned)
-          setPayload((p) => ({ ...p, items: cleaned }))
-          setStep(2)
+          setPayload(p => ({ ...p, items: cleaned }))
         }
-        setDraftLoaded(true)
-        setInitialLoading(false)
+        // Always go to Enter Items — this is a resumed draft, not a fresh session
+        setStep(2)
       } catch (e) {
-        console.error('draft load failed', e)
-        setDraftLoaded(true)
-        setInitialLoading(false)
+        console.error('Draft load failed', e)
       }
+      setInitialLoading(false)
     }
-    loadDraftItems()
+    init()
   }, [])
 
-  const navigateToStep = async (nextStep: 1 | 2 | 3 | 4 | 5) => {
-    if (step === 2) {
-      await saveDraft(items)
+  // Pre-populate from ?supplier= or ?job= query params (from dashboard cards)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const supplierId = params.get('supplier')
+    const jobId = params.get('job')
+    if (!supplierId && !jobId) return
+
+    const prefill = async () => {
+      const supabase = createSupabaseBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      if (supplierId) {
+        const { data } = await supabase
+          .from('builder_suppliers')
+          .select('supplier_name, supplier_email, account_number')
+          .eq('id', supplierId)
+          .eq('builder_id', session.user.id)
+          .single()
+        if (data) {
+          setPayload(p => ({
+            ...p,
+            supplier: {
+              supplierName: data.supplier_name || '',
+              supplierEmail: data.supplier_email || '',
+              accountNumber: data.account_number || '',
+            },
+          }))
+        }
+      }
+
+      if (jobId) {
+        const { data } = await supabase
+          .from('builder_jobs')
+          .select('project_reference, project_address, project_address_manual, pm_name, pm_mobile, site_access_notes')
+          .eq('id', jobId)
+          .eq('builder_id', session.user.id)
+          .single()
+        if (data) {
+          setPayload(p => ({
+            ...p,
+            projectReference: data.project_reference || '',
+            siteAddress: data.project_address || data.project_address_manual || '',
+            pmName: data.pm_name || '',
+            pmPhone: data.pm_mobile || '',
+            siteAccessNotes: data.site_access_notes || '',
+          }))
+        }
+      }
     }
+
+    prefill().catch(console.error)
+  }, [])
+
+  const handleParsed = async (parsed: LineItem[]) => {
+    const merged = mergeItems(items, parsed)
+    setItems(merged)
+    setPayload(p => ({ ...p, items: merged }))
+    await saveDraft(merged)
+    setStep(2)
+  }
+
+  const handleParsedOnStep2 = async (parsed: LineItem[]) => {
+    const merged = mergeItems(items, parsed)
+    setItems(merged)
+    setPayload(p => ({ ...p, items: merged }))
+    await saveDraft(merged)
+  }
+
+  const handleManualEntry = () => setStep(2)
+
+  const handleSend = async () => {
+    setSending(true)
+    setSendError('')
+    const id = generateRFQId()
+    const fullPayload: RFQPayload = {
+      ...payload,
+      items,
+      rfqId: id,
+      builderId,
+      draftId: getDraftId(),
+    }
+
+    try {
+      const res = await fetch('/api/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fullPayload),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || `Server error ${res.status}`)
+      }
+      setRfqId(id)
+      setStep(5)
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : 'Something went wrong sending the RFQ.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const navigateToStep = async (nextStep: 1 | 2 | 3 | 4 | 5) => {
+    if (step === 2) await saveDraft(items)
     setStep(nextStep)
   }
 
@@ -205,7 +302,6 @@ export default function RFQPage() {
     setPayload(defaultPayload)
     setRfqId('')
     setSendError('')
-    // Strip draft from URL so the next session starts clean
     const url = new URL(window.location.href)
     url.searchParams.delete('draft')
     window.history.replaceState({}, '', url.toString())
@@ -229,9 +325,12 @@ export default function RFQPage() {
               setItems(nextItems)
               setPayload((p) => ({ ...p, items: nextItems }))
             }}
-            /* onBack removed */
-            onNext={async () => { await saveDraft(items); setStep(4); }}
-            onUploadList={async () => { await saveDraft(items); setStep(1); }}
+            onNext={async () => {
+              await saveDraft(items)
+              await saveDraftMeta(payload.supplier.supplierName, payload.projectReference)
+              setStep(4)
+            }}
+            onParsed={handleParsedOnStep2}
           />
         )}
 

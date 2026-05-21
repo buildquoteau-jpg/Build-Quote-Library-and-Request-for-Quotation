@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { getOrCreateDraft } from '@/lib/rfqDraft'
 import Button from '../ui/Button'
 import { LineItem } from '@/lib/types'
+import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
 interface UploadScreenProps {
   onNext: (items: LineItem[]) => void
@@ -23,9 +24,26 @@ export default function UploadScreen({ onNext, onSkip }: UploadScreenProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [msgIndex, setMsgIndex] = useState(0)
+  const [builderName, setBuilderName] = useState<string | null>(null)
+  const [authChecked, setAuthChecked] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const MAX_FILES = 5
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (user) {
+        const { data: profile } = await supabase
+          .from('builders')
+          .select('builder_name, company_name')
+          .eq('id', user.id)
+          .single()
+        setBuilderName(profile?.builder_name || profile?.company_name || user.email || 'Builder')
+      }
+      setAuthChecked(true)
+    })
+  }, [])
 
   useEffect(() => {
     if (loading) {
@@ -145,6 +163,33 @@ export default function UploadScreen({ onNext, onSkip }: UploadScreenProps) {
         </p>
       </div>
 
+      {authChecked && (
+        builderName ? (
+          <div className="max-w-2xl mx-auto w-full flex items-center justify-between gap-4 bg-[rgba(24,93,122,0.06)] border border-[rgba(24,93,122,0.18)] rounded-2xl px-5 py-3.5">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <p className="text-sm font-semibold text-heading truncate">
+                G'day, {builderName?.split(' ')[0] || builderName} — your details will auto-fill at request for quotation.
+              </p>
+            </div>
+            <a href="/dashboard" className="shrink-0 text-xs font-bold text-[#185D7A] border border-[rgba(24,93,122,0.3)] rounded-xl px-3 py-1.5 hover:bg-[rgba(24,93,122,0.08)] transition whitespace-nowrap">
+              Dashboard
+            </a>
+          </div>
+        ) : (
+          <div className="max-w-2xl mx-auto w-full flex items-center justify-between gap-4 bg-surface border border-border-subtle rounded-2xl px-5 py-3.5">
+            <p className="text-sm font-semibold text-text-secondary">
+              Builder account? Sign in to auto-fill your details.
+            </p>
+            <div className="flex items-center gap-3 shrink-0">
+              <a href="/login?next=/rfq" className="text-xs font-bold text-white bg-[#185D7A] rounded-xl px-4 py-1.5 hover:opacity-90 transition whitespace-nowrap">
+                Sign in
+              </a>
+              <span className="text-xs text-text-muted font-medium whitespace-nowrap hidden sm:block">or continue below</span>
+            </div>
+          </div>
+        )
+      )}
+
       {error && (
         <div className="rounded-2xl border-2 border-error-border bg-error-bg px-4 py-3">
           <p className="text-error text-sm font-semibold">{error}</p>
@@ -163,9 +208,8 @@ export default function UploadScreen({ onNext, onSkip }: UploadScreenProps) {
             }}
             className="block w-full text-left"
           >
-            <div className="flex items-center gap-2 mb-1.5">
+            <div className="mb-1.5">
               <div className="text-[10px] tracking-[0.2em] font-semibold text-[var(--color-accent)]">OPTION 1</div>
-              <span className="text-[10px] tracking-wide font-bold text-white bg-brand px-2 py-0.5 rounded-full uppercase">Most popular</span>
             </div>
 
             <h3 className="text-heading text-xl font-extrabold tracking-tight leading-tight">

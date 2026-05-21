@@ -36,6 +36,8 @@ export interface SupplierDetails {
 
 export interface RFQPayload {
   rfqId: string
+  builderId?: string
+  draftId?: string
   builder: BuilderDetails
   supplier: SupplierDetails
   items: LineItem[]
@@ -47,4 +49,8 @@ export interface RFQPayload {
   siteSuburb?: string
   sendToSupplier: boolean
   sendCopyToSelf: boolean
+  pmName?: string
+  pmPhone?: string
+  siteAccessNotes?: string
+  preferredContact?: 'phone' | 'email' | 'either'
 }
