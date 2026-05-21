@@ -3,6 +3,9 @@
 -- Supabase project: oxvhmulxuvlfjyjzleki
 -- Shared by: buildquote.com.au (RFQ + Builder Portal)
 --            mfp.buildquote.com.au (Manufacturer Portal)
+--
+-- CANONICAL COPY: manufacturer-portal/supabase/schema.sql
+-- Keep both in sync. Last synced: 2026-05-21
 -- Last updated: 2026-05-20
 -- ============================================================
 -- Backup tables (backup_20260513_*) exist but are omitted —

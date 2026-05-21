@@ -209,7 +209,8 @@ export default function ManualEntryScreen({
     try {
       setError('')
       const draft = await getOrCreateDraft()
-      window.open('https://mfp.buildquote.com.au/?draft=' + draft, '_blank')
+      const mfpBase = process.env.NEXT_PUBLIC_MFP_URL ?? 'https://mfp.buildquote.com.au'
+      window.open(`${mfpBase}/browse?draft=` + draft, '_blank')
     } catch (err: any) {
       setError(err?.message || 'Could not open Manufacturer Components.')
     }
