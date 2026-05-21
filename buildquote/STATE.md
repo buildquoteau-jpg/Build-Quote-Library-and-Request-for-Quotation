@@ -314,14 +314,75 @@ APIs enabled: Maps JavaScript API, Places API, Places API (New)
 - `e32d084` — feat: PM details, site access notes, preferred contact + auto-focus new row
 - `3d5aa0d` — chore: STATE.md full session 3 handover
 
-## Comm-bridge branch (session 4 goal — MFP side)
+## Comm-bridge branch (session 4 — completed)
 Branch: `comm-bridge` — diverges from builders-login at `3d5aa0d`.
-Buildquote-side changes are minimal (env var + schema sync).
-The session 4 focus is entirely on the MFP side (Products tab E2E, seeding, widget test).
-Buildquote action required: confirm `NEXT_PUBLIC_MFP_URL=http://localhost:3001` is in
-`.env.local`, then test the comm bridge flow from ManualEntryScreen.
+
+### Session 4 achievements
+All three repos committed. Key work this session:
+
+**manufacturer-portal** (`comm-bridge` — `773e537`):
+- Widget system card full UI overhaul (WidgetClient.tsx)
+  - `formatGroupKey()` — adds "mm" suffix to numeric profile group keys
+  - `ProfileGroupBlock` — collapsible, system name in header, smart single/two-line rows
+  - `AttributePills` — BAL, FRL-prefixed fire rating, acoustic, structural grade, Australian Made, pre-primed from notes
+  - `ColoursSection` — EOI badge for `is_stocked=false` colours
+  - `ComponentsAccordion` — flat selectable list (no Required/Recommended split), SKU badge + UOM
+- `getWidgetData.ts` — fixed missing attribute fields in query (bal_rating, fire_rating, acoustic_rating, moisture_resistant, structural_grade were not being fetched); `australian_made` typed but not in select (pending migration below)
+- `supabase/schema.sql` — added `australian_made boolean DEFAULT false` to systems table
+
+**buildquote-data-studio** (`claude/ui-edit-system-cards-verification` — `b1c7619`):
+- `SystemCard.tsx` — full rewrite to match MFP widget render
+  - Profile grouping: MIN-N prefix/suffix algorithm, collapsible groups, system name header
+  - Index-based `Set<number>` selection (DS types have no id field)
+  - Flat components list, no role split
+  - `AttributePills` — same pill set as MFP
+- `AdminVerificationBar.tsx` — new System Attributes panel (BAL dropdown, fire/acoustic/structural inputs, moisture/australian_made checkboxes, Save button)
+- `system-verification-actions.ts` — `SystemAttributes` type + `updateSystemAttributes` server action
+- `manufacturer-workspace.ts` — `australian_made` added to type, query, mapping
+- `preview/page.tsx` — passes all 6 attribute props to AdminVerificationBar
+
+**buildquote-v6-live** (`comm-bridge` — `3d07432`):
+- `GlobalNav.tsx` — hooks order fix (early return for /coming-soon moved after all useEffect calls)
+
+### ⚠️ Pending SQL migrations (run in Supabase before testing)
+
+**MFP project** (manufacturer portal Supabase):
+```sql
+-- Enable australian_made on systems
+ALTER TABLE public.systems ADD COLUMN IF NOT EXISTS australian_made boolean DEFAULT false;
+```
+After running: uncomment `australian_made,` in `manufacturer-portal/lib/data/getWidgetData.ts` select query (currently removed to avoid PostgREST error).
+
+**Character encoding fix** (MFP + DS Supabase — fix ™ showing as â„¢):
+```sql
+UPDATE components SET
+  name = replace(replace(name, 'â„¢', '™'), 'â€™', '''),
+  description = replace(replace(description, 'â„¢', '™'), 'â€™', ''')
+WHERE name LIKE '%â%' OR description LIKE '%â%';
+
+UPDATE system_components SET
+  notes = replace(replace(notes, 'â„¢', '™'), 'â€™', ''')
+WHERE notes LIKE '%â%';
+```
+
+### Next session priorities
+
+**1. Supplier portal — check system card rendering**
+Open MFP supplier portal and verify system cards render correctly with the new UI. Check profile grouping, attribute pills, components flat list, colour EOI badges.
+
+**2. Supplier directory tab (new feature — manufacturer-portal)**
+- New tab in supplier portal: "Suppliers" — lists all onboarded suppliers
+- Selecting a supplier opens a supplier detail page (within MFP) with: hero image, bio/about, brands they stock, location, opening hours
+- Clicking a brand (manufacturer) on the supplier page opens a widget-style preview of that manufacturer's systems that the supplier stocks
+- Every page needs back navigation: "← Back to suppliers", "← Back to [Supplier Name]", "Return to home" etc.
+
+**3. Manufacturer product page linked from RFQ "Browse Manufacturers" (buildquote-v6-live)**
+- From the RFQ flow's Browse Manufacturers section, link to a per-manufacturer "all products" page
+- This page shows all the manufacturer's systems as system cards
+- System cards on this page render "Add selected to RFQ" (not "Enquire about this product")
 
 ### Comm-bridge commits (buildquote side)
 - `c7723d7` — chore: anchor — comm-bridge session start (buildquote side)
 - `1cb3637` — feat: comm bridge — MFP URL env var + schema sync
-- (this commit) — chore: anchor — session 4 start, comm bridge E2E plan
+- `6f0da9b` — chore: anchor — session 4 start, comm bridge E2E plan
+- `3d07432` — fix: GlobalNav hooks order — move early return after all hook calls
