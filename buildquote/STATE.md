@@ -1,8 +1,33 @@
 # BuildQuote — Session State
-_Last updated: 2026-05-20 (session 3) — builders-login branch_
+_Last updated: 2026-05-21 (session 5) — comm-bridge branch_
 
 ## Branch
-`builders-login` — all work committed. Ready to merge to main after end-to-end test pass.
+`comm-bridge` — in progress.
+
+---
+
+## Styling rule — light vs dark (applies across all three repos)
+
+| Surface | Theme | Rationale |
+|---------|-------|-----------|
+| buildquote.com.au (all pages) | **Light** | Customer-facing, sun-readable |
+| MFP `/supplierdirectory/*` | **Light** | Customer-facing directory |
+| MFP `/manufacturers/*` | **Light** | Customer-facing product directory |
+| MFP `/widget/*` | **Light** | Customer-facing embed |
+| MFP `/supplier/[slug]/*` | **Dark** | Supplier admin portal |
+| MFP `/admin/*` | **Dark** | Admin only |
+| Data Studio (all pages) | **Dark** | Admin/manufacturer tool |
+| buildquote `/dashboard` | **Light** | Builder-facing |
+
+**Light palette** = buildquote design tokens in `app/globals.css`:
+`--color-page #ffffff`, `--color-surface-subtle #f5f7f9`, `--color-navy #185D7A`,
+`--color-text-primary #000000`, `--color-border #d1d9e0`.
+
+**Dark palette** = MFP CSS vars in `globals.css`:
+`--page-bg #0F1E26`, `--surface #1E3A4A`, `--brand #4A8FA0`, `--text-primary #F5F2ED`.
+
+Rule: anything a **builder or customer** sees → light. Anything a **supplier, manufacturer,
+or admin** manages → dark.
 
 ---
 
