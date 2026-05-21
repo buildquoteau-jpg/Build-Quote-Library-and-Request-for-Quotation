@@ -27,8 +27,8 @@ export default function Home() {
       </div>
       
       <a
-        href="/rfq"
-        className="bg-brand hover:bg-brand-hover active:bg-brand-hover text-white font-bold text-lg px-8 py-4 rounded-2xl transition-colors w-full max-w-xs text-center shadow-[0_10px_24px_rgba(24,93,122,0.22)]"
+        href="/coming-soon"
+        className="bg-brand hover:bg-brand-hover active:bg-brand-hover text-white font-bold text-lg px-8 py-4 rounded-2xl transition-colors w-full max-w-xs text-center shadow-[0_10px_24px_rgba(249,115,22,0.22)]"
       >Send a Quote Request</a>
       <p className="text-text-secondary text-sm mt-2 font-medium">Takes about 60 seconds</p>
       <div className="mt-6 w-full max-w-sm">
