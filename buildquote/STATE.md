@@ -309,7 +309,19 @@ APIs enabled: Maps JavaScript API, Places API, Places API (New)
 
 ---
 
-## Session 3 commits
+## Session 3 commits (builders-login)
 - `bb93ec2` — feat: parsing spinner on Enter Items screen
 - `e32d084` — feat: PM details, site access notes, preferred contact + auto-focus new row
-- (STATE.md update — this commit)
+- `3d5aa0d` — chore: STATE.md full session 3 handover
+
+## Comm-bridge branch (session 4 goal — MFP side)
+Branch: `comm-bridge` — diverges from builders-login at `3d5aa0d`.
+Buildquote-side changes are minimal (env var + schema sync).
+The session 4 focus is entirely on the MFP side (Products tab E2E, seeding, widget test).
+Buildquote action required: confirm `NEXT_PUBLIC_MFP_URL=http://localhost:3001` is in
+`.env.local`, then test the comm bridge flow from ManualEntryScreen.
+
+### Comm-bridge commits (buildquote side)
+- `c7723d7` — chore: anchor — comm-bridge session start (buildquote side)
+- `1cb3637` — feat: comm bridge — MFP URL env var + schema sync
+- (this commit) — chore: anchor — session 4 start, comm bridge E2E plan
