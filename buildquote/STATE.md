@@ -365,24 +365,23 @@ UPDATE system_components SET
 WHERE notes LIKE '%â%';
 ```
 
-### Next session priorities
+### Session 5 priorities (2026-05-21)
 
-**1. Supplier portal — check system card rendering**
-Open MFP supplier portal and verify system cards render correctly with the new UI. Check profile grouping, attribute pills, components flat list, colour EOI badges.
+**1. System card check (MFP)** — verify new widget card renders at `/supplier/demo-supplier`.
+Delete old NeoTechWood test data from DB.
 
-**2. Supplier directory tab (new feature — manufacturer-portal)**
-- New tab in supplier portal: "Suppliers" — lists all onboarded suppliers
-- Selecting a supplier opens a supplier detail page (within MFP) with: hero image, bio/about, brands they stock, location, opening hours
-- Clicking a brand (manufacturer) on the supplier page opens a widget-style preview of that manufacturer's systems that the supplier stocks
-- Every page needs back navigation: "← Back to suppliers", "← Back to [Supplier Name]", "Return to home" etc.
+**2. Supplier directory (MFP)** — new public `/suppliers` page + `/suppliers/[slug]` detail page.
+Each supplier detail shows hero, bio, brands stocked, location, hours. Clicking a brand
+opens widget-style view of that manufacturer's systems stocked by the supplier.
+All pages need clear back navigation.
 
-**3. Manufacturer product page linked from RFQ "Browse Manufacturers" (buildquote-v6-live)**
-- From the RFQ flow's Browse Manufacturers section, link to a per-manufacturer "all products" page
-- This page shows all the manufacturer's systems as system cards
-- System cards on this page render "Add selected to RFQ" (not "Enquire about this product")
+**3. Manufacturer product page from RFQ browse** — from Browse Manufacturers in RFQ flow,
+each manufacturer links to a per-manufacturer page showing all their systems as system cards.
+Cards on this page render "Add selected to RFQ" (not "Enquire about this product").
 
 ### Comm-bridge commits (buildquote side)
 - `c7723d7` — chore: anchor — comm-bridge session start (buildquote side)
 - `1cb3637` — feat: comm bridge — MFP URL env var + schema sync
 - `6f0da9b` — chore: anchor — session 4 start, comm bridge E2E plan
 - `3d07432` — fix: GlobalNav hooks order — move early return after all hook calls
+- `c073450` — chore: STATE.md — session 4 handover, next session priorities
