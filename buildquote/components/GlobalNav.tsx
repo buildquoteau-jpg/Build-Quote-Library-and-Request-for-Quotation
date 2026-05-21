@@ -39,6 +39,8 @@ export function GlobalNav() {
   // Close menu on route change
   useEffect(() => { setOpen(false) }, [pathname])
 
+  if (pathname === '/coming-soon') return null
+
   return (
     <div
       ref={menuRef}
