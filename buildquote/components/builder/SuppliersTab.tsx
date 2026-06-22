@@ -39,8 +39,7 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
   const [mapResults, setMapResults] = useState<any[]>([])
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
-  const autocompleteRef = useRef<any>(null)
-  const searchInputRef = useRef<HTMLInputElement>(null)
+  const autocompleteContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { loadSuppliers() }, [])
 
@@ -71,25 +70,30 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
       })
     }
 
-    if (searchInputRef.current) {
-      // Use Autocomplete (single result) — selecting immediately pre-fills the form
-      const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
+    // Only mount once — PlaceAutocompleteElement IS the input (web component)
+    if (autocompleteContainerRef.current && !autocompleteContainerRef.current.hasChildNodes()) {
+      const placeAutocomplete = new window.google.maps.places.PlaceAutocompleteElement({
         componentRestrictions: { country: 'au' },
-        fields: ['name', 'formatted_address', 'place_id', 'geometry', 'formatted_phone_number', 'website'],
       })
-      autocomplete.bindTo('bounds', map)
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace()
-        if (!place?.geometry) return
+      autocompleteContainerRef.current.appendChild(placeAutocomplete)
 
-        // Pan map to the selected place
-        if (place.geometry.viewport) { map.fitBounds(place.geometry.viewport) }
-        else { map.setCenter(place.geometry.location); map.setZoom(15) }
+      placeAutocomplete.addEventListener('gmp-placeselect', async ({ place }: any) => {
+        await place.fetchFields({
+          fields: ['displayName', 'formattedAddress', 'id', 'internationalPhoneNumber', 'websiteURI', 'location', 'viewport'],
+        })
 
-        new window.google.maps.Marker({ map, position: place.geometry.location, title: place.name })
+        if (place.viewport) { map.fitBounds(place.viewport) }
+        else if (place.location) { map.setCenter(place.location); map.setZoom(15) }
 
-        // Immediately pre-fill and open the supplier form
-        prefillFromPlace(place)
+        new window.google.maps.Marker({ map, position: place.location?.toJSON(), title: place.displayName })
+
+        prefillFromPlace({
+          name: place.displayName,
+          formatted_address: place.formattedAddress,
+          place_id: place.id,
+          formatted_phone_number: place.internationalPhoneNumber,
+          website: place.websiteURI,
+        })
       })
     }
   }, [])
@@ -103,7 +107,7 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
         if (!document.getElementById('google-maps-script')) {
           const s = document.createElement('script')
           s.id = 'google-maps-script'
-          s.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initSupplierMap`
+          s.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&v=weekly&libraries=places,marker&callback=initSupplierMap`
           s.async = true
           document.head.appendChild(s)
         }
@@ -249,8 +253,7 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
       {showMap && (
         <div className="fixed inset-0 bg-black/40 z-50 flex flex-col">
           <div className="bg-surface p-4 flex items-center gap-3 shadow-md">
-            <input ref={searchInputRef} type="text" placeholder="Search for a supplier near you…"
-              className="flex-1 border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-navy transition" />
+            <div ref={autocompleteContainerRef} className="flex-1 [&>gmp-placeautocomplete]:w-full" />
             <button onClick={() => { setShowMap(false); setMapResults([]) }} className="text-text-muted hover:text-text-primary font-semibold text-sm px-3 py-2">Close</button>
           </div>
 
