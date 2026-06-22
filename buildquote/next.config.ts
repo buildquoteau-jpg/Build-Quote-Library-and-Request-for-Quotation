@@ -21,10 +21,10 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       // Fonts
       "font-src 'self' https://fonts.gstatic.com",
-      // Images: self + data URIs + Supabase storage + Google Maps tiles + Google favicons
-      "img-src 'self' data: https://*.supabase.co https://*.supabase.in https://maps.gstatic.com https://maps.googleapis.com https://www.google.com",
-      // Connections: self + Supabase + Vercel analytics + Google Maps
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in https://va.vercel-scripts.com https://maps.googleapis.com https://maps.gstatic.com",
+      // Images: self + data URIs + Supabase storage + Google Maps tiles + Google favicons (t0/t2/t3.gstatic.com)
+      "img-src 'self' data: https://*.supabase.co https://*.supabase.in https://*.gstatic.com https://maps.googleapis.com",
+      // Connections: self + Supabase + Vercel analytics + Google Maps + Places API
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in https://va.vercel-scripts.com https://maps.googleapis.com https://maps.gstatic.com https://places.googleapis.com",
       // No plugins, no object embeds
       "object-src 'none'",
       // Restrict framing to same origin (belt-and-suspenders with X-Frame-Options)
