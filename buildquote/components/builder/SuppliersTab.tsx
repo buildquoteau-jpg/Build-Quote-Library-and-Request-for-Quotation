@@ -160,8 +160,8 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
 
   function getLogoUrl(website: string) {
     try {
-      const domain = new URL(website).hostname.replace('www.', '')
-      return `https://logo.clearbit.com/${domain}`
+      const domain = new URL(website).hostname
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
     } catch {
       return null
     }
