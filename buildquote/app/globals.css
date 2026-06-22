@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+/* ============================================
+   BUILDQUOTE DESIGN TOKENS
+   Sun-readable palette for builders onsite
+============================================ */
+
+@theme inline {
+
+  /* --- Brand (existing orange kept) --- */
+  --color-brand:           #f97316;
+  --color-brand-hover:     #ea6c0a;
+  --color-brand-muted:     #7c2d12;
+  --color-brand-subtle:    rgba(249,115,22,0.10);
+
+  /* --- New BuildQuote palette --- */
+  --color-navy:            #185D7A;
+  --color-teal:            #4FCBB0;
+
+  /* --- Page backgrounds (now light) --- */
+  --color-page:            #ffffff;
+  --color-surface:         #ffffff;
+  --color-surface-raised:  #ffffff;
+  --color-surface-subtle:  #f5f7f9;
+
+  /* --- UI backgrounds --- */
+  --color-ui:              #ffffff;
+  --color-ui-hover:        #f5f7f9;
+  --color-ui-dark:         #e8edf2;
+  --color-ui-darker:       #dde5ec;
+  --color-ui-darkest:      #cfd9e3;
+
+  /* --- Upload zone --- */
+  --color-upload-bg:       #f8fafc;
+  --color-upload-border:   #cfd9e3;
+  --color-upload-hover-bg: #fff7ed;
+  --color-upload-hover-border: #fb923c;
+
+  /* --- Borders (stronger for sunlight) --- */
+  --color-border:          #d1d9e0;
+  --color-border-subtle:   #e2e8f0;
+
+  /* --- Text --- */
+  --color-text-primary:    #000000;
+  --color-text-secondary:  #334155;
+  --color-text-muted:      #64748b;
+  --color-text-faint:      #94a3b8;
+  --color-text-disabled:   #cbd5e1;
+
+  /* --- Headings --- */
+  --color-heading:         #185D7A;
+
+  /* --- Accent --- */
+  --color-accent:          #4FCBB0;
+
+  /* --- Semantic --- */
+  --color-error:           #ef4444;
+  --color-error-bg:        #fee2e2;
+  --color-error-border:    #fecaca;
+  --color-warning:         #f59e0b;
+  --color-success:         #22c55e;
+
+  /* --- Radius --- */
+  --radius-sm:   0.5rem;
+  --radius-md:   0.75rem;
+  --radius-lg:   1rem;
+
+}
+
+/* Base body styles */
+body {
+  background-color: var(--color-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-barlow), Arial, Helvetica, sans-serif;
+}
+
+/* Testimonial scroll animation */
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-scroll {
+  animation: scroll 25s linear infinite;
+  width: max-content;
+}
+
+/* Testimonial scroll */
+@utility animate-scroll {
+  animation: scroll 25s linear infinite;
+  width: max-content;
+}
+
+@keyframes bq-water-flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.bq-flow-border {
+  background: linear-gradient(
+    90deg,
+    rgba(62,124,89,0.10) 0%,
+    rgba(68,92,112,0.18) 20%,
+    rgba(122,170,184,0.95) 35%,
+    rgba(68,92,112,0.18) 50%,
+    rgba(62,124,89,0.10) 65%,
+    rgba(122,170,184,0.95) 80%,
+    rgba(68,92,112,0.18) 90%,
+    rgba(62,124,89,0.10) 100%
+  );
+  background-size: 200% 100%;
+  animation: bq-water-flow 3.2s linear infinite;
+}
+
+.bq-community-cta {
+  position: relative;
+  overflow: hidden;
+}
+
+.bq-community-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(122,170,184,0.00) 35%,
+    rgba(122,170,184,0.22) 50%,
+    rgba(122,170,184,0.00) 65%,
+    transparent 100%
+  );
+  background-size: 220% 100%;
+  animation: bq-water-flow 2.8s linear infinite;
+  pointer-events: none;
+}

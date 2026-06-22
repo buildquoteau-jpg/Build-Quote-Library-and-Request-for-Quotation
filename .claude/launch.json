@@ -1,0 +1,26 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "buildquote-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "buildquote",
+      "port": 3000,
+      "autoPort": false
+    },
+    {
+      "name": "manufacturer-portal",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "../manufacturer-portal",
+      "port": 3001
+    },
+    {
+      "name": "presentation",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", ".", "--port", "4321", "--no-clipboard"],
+      "port": 4321
+    }
+  ]
+}
