@@ -15,16 +15,16 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      // Scripts: self + Next.js inline scripts (nonce not yet wired) + Vercel analytics
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com",
+      // Scripts: self + Next.js inline scripts (nonce not yet wired) + Vercel analytics + Google Maps
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://maps.googleapis.com",
       // Styles: self + Google Fonts + inline (Tailwind injects inline styles)
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       // Fonts
       "font-src 'self' https://fonts.gstatic.com",
-      // Images: self + data URIs + Supabase storage
-      "img-src 'self' data: https://*.supabase.co https://*.supabase.in",
-      // Connections: self + Supabase + Vercel analytics
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in https://va.vercel-scripts.com",
+      // Images: self + data URIs + Supabase storage + Clearbit logos
+      "img-src 'self' data: https://*.supabase.co https://*.supabase.in https://logo.clearbit.com",
+      // Connections: self + Supabase + Vercel analytics + Google Maps
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in https://va.vercel-scripts.com https://maps.googleapis.com https://maps.gstatic.com",
       // No plugins, no object embeds
       "object-src 'none'",
       // Restrict framing to same origin (belt-and-suspenders with X-Frame-Options)
