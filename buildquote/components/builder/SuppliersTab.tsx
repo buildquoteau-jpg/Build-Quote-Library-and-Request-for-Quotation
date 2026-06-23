@@ -78,24 +78,28 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
       autocompleteContainerRef.current.appendChild(placeAutocomplete)
 
       placeAutocomplete.addEventListener('gmp-placeselect', async (event: any) => {
+        console.log('[BQ] gmp-placeselect fired')
         const place = event?.place
-        if (!place) return
+        if (!place) { console.log('[BQ] no place on event'); return }
 
         try {
           await place.fetchFields({
             fields: ['displayName', 'formattedAddress', 'id', 'internationalPhoneNumber', 'websiteURI', 'location', 'viewport'],
           })
-        } catch {}
+          console.log('[BQ] fetchFields ok', place.displayName, place.formattedAddress)
+        } catch (e) {
+          console.log('[BQ] fetchFields error', e)
+        }
 
-        // Map pan + marker in separate try-catch so any failure here never blocks the form opening
         try {
           if (place.viewport) { map.fitBounds(place.viewport) }
           else if (place.location) { map.setCenter(place.location); map.setZoom(15) }
           if (place.location) {
             new window.google.maps.Marker({ map, position: place.location.toJSON(), title: place.displayName })
           }
-        } catch {}
+        } catch (e) { console.log('[BQ] map/marker error', e) }
 
+        console.log('[BQ] calling prefillFromPlace')
         prefillFromPlace({
           name: place.displayName || '',
           formatted_address: place.formattedAddress || '',
@@ -103,6 +107,7 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
           formatted_phone_number: place.internationalPhoneNumber || '',
           website: place.websiteURI || '',
         })
+        console.log('[BQ] prefillFromPlace done')
       })
     }
   }, [])
