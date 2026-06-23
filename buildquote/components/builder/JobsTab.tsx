@@ -158,11 +158,11 @@ export default function JobsTab({ builderId, onViewQuotesForJob }: { builderId: 
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {jobs.map(job => (
           <div key={job.id} className="bg-surface border border-border-subtle rounded-2xl shadow-sm overflow-hidden">
             {job.image_url && (
-              <img src={job.image_url} alt="Site" className="w-full h-36 object-cover block" />
+              <img src={job.image_url} alt="Site" className="w-full h-28 object-cover block" />
             )}
             <div className="p-5">
               <div className="flex items-start justify-between gap-2 mb-2">

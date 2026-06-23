@@ -94,6 +94,7 @@ export function GlobalNav() {
           width: '230px', background: '#ffffff',
           border: '1px solid #d1d9e0', borderRadius: '14px',
           overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
         }}>
           <div style={{ height: '6px' }} />
 
