@@ -70,44 +70,45 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
       })
     }
 
-    // Only mount once — PlaceAutocompleteElement IS the input (web component)
+    // Mount autocomplete input once
     if (autocompleteContainerRef.current && !autocompleteContainerRef.current.hasChildNodes()) {
-      const placeAutocomplete = new window.google.maps.places.PlaceAutocompleteElement({
+      const input = document.createElement('input')
+      input.placeholder = 'Search for a supplier…'
+      input.className = 'w-full border border-border-subtle rounded-xl px-4 py-3 text-sm outline-none transition'
+      autocompleteContainerRef.current.appendChild(input)
+
+      // pac-container is appended to document.body — ensure it sits above our z-[200] modal
+      if (!document.getElementById('pac-zindex-fix')) {
+        const style = document.createElement('style')
+        style.id = 'pac-zindex-fix'
+        style.textContent = '.pac-container { z-index: 9999 !important; }'
+        document.head.appendChild(style)
+      }
+
+      const autocomplete = new window.google.maps.places.Autocomplete(input, {
         componentRestrictions: { country: 'au' },
+        fields: ['name', 'formatted_address', 'place_id', 'international_phone_number', 'website', 'geometry'],
       })
-      autocompleteContainerRef.current.appendChild(placeAutocomplete)
 
-      placeAutocomplete.addEventListener('gmp-placeselect', async (event: any) => {
-        console.log('[BQ] gmp-placeselect fired')
-        const place = event?.place
-        if (!place) { console.log('[BQ] no place on event'); return }
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace()
+        if (!place.place_id) return  // user pressed Enter without selecting a suggestion
 
         try {
-          await place.fetchFields({
-            fields: ['displayName', 'formattedAddress', 'id', 'internationalPhoneNumber', 'websiteURI', 'location', 'viewport'],
-          })
-          console.log('[BQ] fetchFields ok', place.displayName, place.formattedAddress)
-        } catch (e) {
-          console.log('[BQ] fetchFields error', e)
-        }
-
-        try {
-          if (place.viewport) { map.fitBounds(place.viewport) }
-          else if (place.location) { map.setCenter(place.location); map.setZoom(15) }
-          if (place.location) {
-            new window.google.maps.Marker({ map, position: place.location.toJSON(), title: place.displayName })
+          if (place.geometry?.viewport) { map.fitBounds(place.geometry.viewport) }
+          else if (place.geometry?.location) { map.setCenter(place.geometry.location); map.setZoom(15) }
+          if (place.geometry?.location) {
+            new window.google.maps.Marker({ map, position: place.geometry.location.toJSON(), title: place.name })
           }
-        } catch (e) { console.log('[BQ] map/marker error', e) }
+        } catch (e) { console.error('[BQ] map/marker error', e) }
 
-        console.log('[BQ] calling prefillFromPlace')
         prefillFromPlace({
-          name: place.displayName || '',
-          formatted_address: place.formattedAddress || '',
-          place_id: place.id || '',
-          formatted_phone_number: place.internationalPhoneNumber || '',
-          website: place.websiteURI || '',
+          name: place.name || '',
+          formatted_address: place.formatted_address || '',
+          place_id: place.place_id || '',
+          formatted_phone_number: place.international_phone_number || '',
+          website: place.website || '',
         })
-        console.log('[BQ] prefillFromPlace done')
       })
     }
   }, [])
@@ -267,7 +268,7 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
       {showMap && (
         <div className="fixed inset-0 bg-black/40 z-[200] flex flex-col">
           <div className="bg-surface p-4 flex items-center gap-3 shadow-md">
-            <div ref={autocompleteContainerRef} className="flex-1 [&>gmp-placeautocomplete]:w-full" />
+            <div ref={autocompleteContainerRef} className="flex-1" />
             <button onClick={() => { setShowMap(false); setMapResults([]) }} className="text-text-muted hover:text-text-primary font-semibold text-sm px-3 py-2">Close</button>
           </div>
 
