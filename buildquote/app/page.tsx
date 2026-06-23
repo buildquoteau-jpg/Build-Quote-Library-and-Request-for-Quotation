@@ -4,7 +4,7 @@ export default function Home() {
 
       {/* ── Logo ─────────────────────────────────────────────── */}
       <div className="text-center mb-10 lg:mb-14">
-        <h1 className="text-[2.6rem] sm:text-[3.2rem] lg:text-[5.5rem] xl:text-[6rem] font-bold tracking-tight text-heading leading-none">
+        <h1 className="text-[2.6rem] sm:text-[3.2rem] lg:text-[4.5rem] xl:text-[5rem] font-bold tracking-tight text-heading leading-none">
           Build<span className="text-brand">Quote</span>
         </h1>
         <p className="text-xs lg:text-sm xl:text-sm text-text-muted mt-1.5 uppercase tracking-widest font-semibold">
@@ -14,12 +14,12 @@ export default function Home() {
 
       {/* ── Hero headline ─────────────────────────────────────── */}
       <div className="text-center max-w-xl lg:max-w-3xl xl:max-w-3xl mb-8 lg:mb-12">
-        <p className="text-3xl sm:text-4xl lg:text-5xl xl:text-5xl font-extrabold tracking-tight text-heading leading-tight">
+        <p className="text-3xl sm:text-4xl lg:text-4xl xl:text-4xl font-extrabold tracking-tight text-heading leading-tight">
           Building materials<br />
           Request for Quotation<br />
           <span className="text-brand mt-1 block">Made simple.</span>
         </p>
-        <p className="text-text-secondary text-base sm:text-lg lg:text-xl xl:text-xl mt-4 lg:mt-6 leading-relaxed font-medium max-w-md lg:max-w-2xl mx-auto">
+        <p className="text-text-secondary text-base sm:text-lg lg:text-lg xl:text-lg mt-4 lg:mt-6 leading-relaxed font-medium max-w-md lg:max-w-2xl mx-auto">
           Browse manufacturer product systems, build your materials list
           and send a professional RFQ to your suppliers — in minutes.
         </p>
