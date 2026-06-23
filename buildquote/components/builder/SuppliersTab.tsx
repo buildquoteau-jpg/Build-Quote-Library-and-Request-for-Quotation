@@ -77,15 +77,22 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
       })
       autocompleteContainerRef.current.appendChild(placeAutocomplete)
 
-      placeAutocomplete.addEventListener('gmp-placeselect', async ({ place }: any) => {
-        await place.fetchFields({
-          fields: ['displayName', 'formattedAddress', 'id', 'internationalPhoneNumber', 'websiteURI', 'location', 'viewport'],
-        })
+      placeAutocomplete.addEventListener('gmp-placeselect', async (event: any) => {
+        const place = event.place
+        try {
+          await place.fetchFields({
+            fields: ['displayName', 'formattedAddress', 'id', 'internationalPhoneNumber', 'websiteURI', 'location', 'viewport'],
+          })
+        } catch {
+          // fetchFields may fail if Places API (New) isn't enabled — proceed with autocomplete data
+        }
 
         if (place.viewport) { map.fitBounds(place.viewport) }
         else if (place.location) { map.setCenter(place.location); map.setZoom(15) }
 
-        new window.google.maps.Marker({ map, position: place.location?.toJSON(), title: place.displayName })
+        if (place.location) {
+          new window.google.maps.Marker({ map, position: place.location.toJSON(), title: place.displayName })
+        }
 
         prefillFromPlace({
           name: place.displayName,
@@ -251,7 +258,7 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
 
       {/* Map modal */}
       {showMap && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex flex-col">
+        <div className="fixed inset-0 bg-black/40 z-[200] flex flex-col">
           <div className="bg-surface p-4 flex items-center gap-3 shadow-md">
             <div ref={autocompleteContainerRef} className="flex-1 [&>gmp-placeautocomplete]:w-full" />
             <button onClick={() => { setShowMap(false); setMapResults([]) }} className="text-text-muted hover:text-text-primary font-semibold text-sm px-3 py-2">Close</button>
@@ -264,7 +271,7 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
 
       {/* Add / Edit form */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/40 z-[200] flex items-end sm:items-center justify-center p-4">
           <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h3 className="text-lg font-bold text-text-primary mb-5">{editing ? 'Edit Supplier' : 'Add Supplier'}</h3>
