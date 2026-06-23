@@ -93,8 +93,9 @@ export function GlobalNav() {
           position: 'absolute', top: 'calc(100% + 8px)', right: 0,
           width: '230px', background: '#ffffff',
           border: '1px solid #d1d9e0', borderRadius: '14px',
-          overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-          maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          maxHeight: 'calc(100vh - 100px)',
+          overflowX: 'hidden', overflowY: 'auto',
         }}>
           <div style={{ height: '6px' }} />
 
