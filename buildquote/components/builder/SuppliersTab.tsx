@@ -78,28 +78,30 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
       autocompleteContainerRef.current.appendChild(placeAutocomplete)
 
       placeAutocomplete.addEventListener('gmp-placeselect', async (event: any) => {
-        const place = event.place
+        const place = event?.place
+        if (!place) return
+
         try {
           await place.fetchFields({
             fields: ['displayName', 'formattedAddress', 'id', 'internationalPhoneNumber', 'websiteURI', 'location', 'viewport'],
           })
-        } catch {
-          // fetchFields may fail if Places API (New) isn't enabled — proceed with autocomplete data
-        }
+        } catch {}
 
-        if (place.viewport) { map.fitBounds(place.viewport) }
-        else if (place.location) { map.setCenter(place.location); map.setZoom(15) }
-
-        if (place.location) {
-          new window.google.maps.Marker({ map, position: place.location.toJSON(), title: place.displayName })
-        }
+        // Map pan + marker in separate try-catch so any failure here never blocks the form opening
+        try {
+          if (place.viewport) { map.fitBounds(place.viewport) }
+          else if (place.location) { map.setCenter(place.location); map.setZoom(15) }
+          if (place.location) {
+            new window.google.maps.Marker({ map, position: place.location.toJSON(), title: place.displayName })
+          }
+        } catch {}
 
         prefillFromPlace({
-          name: place.displayName,
-          formatted_address: place.formattedAddress,
-          place_id: place.id,
-          formatted_phone_number: place.internationalPhoneNumber,
-          website: place.websiteURI,
+          name: place.displayName || '',
+          formatted_address: place.formattedAddress || '',
+          place_id: place.id || '',
+          formatted_phone_number: place.internationalPhoneNumber || '',
+          website: place.websiteURI || '',
         })
       })
     }
