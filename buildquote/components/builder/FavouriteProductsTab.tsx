@@ -103,7 +103,7 @@ export default function FavouriteProductsTab({ builderId }: { builderId: string 
       <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
         <h2 className="text-xl font-bold text-text-primary">Favourite Products</h2>
         <div className="flex gap-2 items-center flex-wrap">
-          <a href={`${process.env.NEXT_PUBLIC_MFP_URL ?? 'https://mfp.buildquote.com.au'}/manufacturers`} target="_blank" rel="noopener noreferrer"
+          <a href={`${process.env.NEXT_PUBLIC_MFP_URL ?? 'https://search.buildquote.com.au'}/manufacturers`} target="_blank" rel="noopener noreferrer"
             className="border border-navy text-navy font-bold text-sm px-3 py-2 rounded-xl hover:bg-navy/5 transition flex items-center gap-1.5">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             Browse
@@ -147,7 +147,7 @@ export default function FavouriteProductsTab({ builderId }: { builderId: string 
         <div className="bg-surface-subtle border border-border-subtle rounded-2xl p-10 text-center">
           <p className="text-text-muted font-medium mb-2">No favourite products yet.</p>
           <p className="text-text-faint text-sm">Browse the manufacturer portal and add products you use often.</p>
-          <a href={`${process.env.NEXT_PUBLIC_MFP_URL ?? 'https://mfp.buildquote.com.au'}/manufacturers`} target="_blank" rel="noopener noreferrer"
+          <a href={`${process.env.NEXT_PUBLIC_MFP_URL ?? 'https://search.buildquote.com.au'}/manufacturers`} target="_blank" rel="noopener noreferrer"
             className="inline-block mt-4 bg-navy text-white font-bold text-sm px-5 py-2.5 rounded-xl hover:opacity-90 transition">
             Browse Manufacturer Products
           </a>

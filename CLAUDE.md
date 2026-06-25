@@ -97,7 +97,7 @@ Custom Tailwind tokens (set in globals.css):
 - Home `/`
 - Send a Quote `/rfq`
 - Products `/products`
-- Manufacturers Portal `https://mfp.buildquote.com.au` (external)
+- Manufacturers Portal `https://search.buildquote.com.au` (external)
 - Privacy Policy `/privacy`
 - Terms of Use `/terms`
 

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 
-const MFP = 'https://mfp.buildquote.com.au'
+const MFP = 'https://search.buildquote.com.au'
 
 const NAV_LINKS = [
   { label: 'Home',                          href: '/',                           external: false },
@@ -14,7 +14,7 @@ const NAV_LINKS = [
 ]
 
 const INTERNAL_LINKS = [
-  { label: 'Supplier Portal', href: 'https://mfp.buildquote.com.au',        external: true },
+  { label: 'Supplier Portal', href: 'https://search.buildquote.com.au',        external: true },
   { label: 'Data Studio',     href: 'https://studio.buildquote.com.au',     external: true },
 ]
 

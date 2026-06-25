@@ -2,7 +2,7 @@
 -- BuildQuote — full database schema (no data)
 -- Supabase project: oxvhmulxuvlfjyjzleki
 -- Shared by: buildquote.com.au (RFQ + Builder Portal)
---            mfp.buildquote.com.au (Manufacturer Portal)
+--            search.buildquote.com.au (Manufacturer Portal)
 --
 -- CANONICAL COPY: manufacturer-portal/supabase/schema.sql
 -- Keep both in sync. Last synced: 2026-05-21
@@ -14,7 +14,7 @@
 
 
 -- ------------------------------------------------------------
--- MANUFACTURER PORTAL (mfp.buildquote.com.au)
+-- MANUFACTURER PORTAL (search.buildquote.com.au)
 -- ------------------------------------------------------------
 
 create table if not exists manufacturers (

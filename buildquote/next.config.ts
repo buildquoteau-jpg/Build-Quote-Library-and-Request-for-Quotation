@@ -50,12 +50,12 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/products',
-        destination: 'https://mfp.buildquote.com.au/manufacturers',
+        destination: 'https://search.buildquote.com.au/manufacturers',
         permanent: false,
       },
       {
         source: '/products/:path*',
-        destination: 'https://mfp.buildquote.com.au/manufacturers',
+        destination: 'https://search.buildquote.com.au/manufacturers',
         permanent: false,
       },
     ]

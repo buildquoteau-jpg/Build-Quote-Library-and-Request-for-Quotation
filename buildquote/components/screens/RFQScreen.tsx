@@ -43,7 +43,7 @@ export default function RFQScreen({
     try {
       setError('')
       const draft = await getOrCreateDraft()
-      window.open('https://mfp.buildquote.com.au/?draft=' + draft, '_blank')
+      window.open('https://search.buildquote.com.au/?draft=' + draft, '_blank')
     } catch (err: any) {
       setError(err?.message || 'Could not open Manufacturer Components.')
     }

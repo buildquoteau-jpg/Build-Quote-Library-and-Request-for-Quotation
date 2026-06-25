@@ -218,7 +218,7 @@ RESEND_FROM_EMAIL              (default: rfq@buildquote.com.au)
 NEXT_PUBLIC_APP_URL            ← must be https://buildquote.com.au in prod, http://localhost:3000 in dev
                                   (passkey routes derive hostname from this — do NOT set to the var name itself)
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-NEXT_PUBLIC_MFP_URL            = https://mfp.buildquote.com.au
+NEXT_PUBLIC_MFP_URL            = https://search.buildquote.com.au
 VERCEL_OIDC_TOKEN
 ```
 

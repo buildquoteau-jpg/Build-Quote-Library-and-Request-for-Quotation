@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   },
 }
 
-const MFP = 'https://mfp.buildquote.com.au'
+const MFP = 'https://search.buildquote.com.au'
 const MFP_API = process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : MFP
 
 // ── Types ────────────────────────────────────────────────────────────────────
