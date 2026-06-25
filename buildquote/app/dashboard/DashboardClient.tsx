@@ -28,9 +28,9 @@ export default function DashboardClient({ user, profile }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-page">
+    <div className="h-screen bg-page flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-navy text-white px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between shadow-md">
+      <div className="bg-navy text-white px-4 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between shadow-md flex-shrink-0">
         <div>
           <div className="flex items-baseline gap-2">
             <h1 className="text-base sm:text-lg font-bold tracking-tight">
@@ -67,7 +67,7 @@ export default function DashboardClient({ user, profile }: Props) {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-border-subtle bg-surface sticky top-0 z-10">
+      <div className="border-b border-border-subtle bg-surface flex-shrink-0 z-10">
         <div
           className="max-w-7xl mx-auto px-4 flex overflow-x-auto"
           style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
@@ -82,7 +82,7 @@ export default function DashboardClient({ user, profile }: Props) {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`shrink-0 whitespace-nowrap px-3 sm:px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-semibold border-b-2 transition ${
+              className={`shrink-0 whitespace-nowrap px-3 sm:px-5 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold border-b-2 transition ${
                 tab === t.key
                   ? 'border-navy text-navy'
                   : 'border-transparent text-text-muted hover:text-text-secondary hover:border-border'
@@ -96,7 +96,8 @@ export default function DashboardClient({ user, profile }: Props) {
       </div>
 
       {/* Tab content */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
+      <div className="flex-1 overflow-y-auto">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {tab === 'jobs'      && <JobsTab builderId={user.id} onViewQuotesForJob={handleViewQuotesForJob} />}
         {tab === 'suppliers' && <SuppliersTab builderId={user.id} />}
         {tab === 'products'  && <FavouriteProductsTab builderId={user.id} />}
@@ -110,6 +111,7 @@ export default function DashboardClient({ user, profile }: Props) {
         {tab === 'profile'   && (
           <ProfilePanel user={user} profile={profile} onClose={() => setTab('jobs')} inline />
         )}
+      </div>
       </div>
 
       {/* Profile panel */}

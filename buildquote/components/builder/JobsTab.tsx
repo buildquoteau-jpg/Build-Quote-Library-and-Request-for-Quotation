@@ -145,7 +145,7 @@ export default function JobsTab({ builderId, onViewQuotesForJob }: { builderId: 
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-text-primary">Current Jobs</h2>
         <button onClick={openNew} className="bg-navy text-white font-bold text-sm px-4 py-2.5 rounded-xl hover:opacity-90 transition">
           + Add Job
@@ -162,9 +162,9 @@ export default function JobsTab({ builderId, onViewQuotesForJob }: { builderId: 
         {jobs.map(job => (
           <div key={job.id} className="bg-surface border border-border-subtle rounded-2xl shadow-sm overflow-hidden">
             {job.image_url && (
-              <img src={job.image_url} alt="Site" className="w-full h-28 object-cover block" />
+              <img src={job.image_url} alt="Site" className="w-full h-20 object-cover block" />
             )}
-            <div className="p-5">
+            <div className="p-4">
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div>
                   <p className="font-bold text-navy text-base">{job.project_reference || 'No reference'}</p>
