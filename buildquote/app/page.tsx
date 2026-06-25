@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <main className="h-screen bg-page flex flex-col items-center justify-between px-6 pt-12 pb-6 lg:pt-16 lg:pb-8">
+    <main className="min-h-screen bg-page flex flex-col items-center justify-center px-6 py-12 lg:py-16 gap-8 lg:gap-10">
 
       {/* ── Logo ─────────────────────────────────────────────── */}
       <div className="text-center">
