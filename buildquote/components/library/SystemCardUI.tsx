@@ -384,7 +384,11 @@ function AttributePills({ system }: { system: LibrarySystem }) {
 
 // ── Colours section ───────────────────────────────────────────────────────────
 
-function ColoursSection({ colours }: { colours: LibraryColour[] }) {
+function ColoursSection({ colours, selected, onSelect }: {
+  colours: LibraryColour[]
+  selected: string | null
+  onSelect: (name: string) => void
+}) {
   if (colours.length === 0) return null
   return (
     <div style={{ marginTop: '1.25rem' }}>
@@ -392,29 +396,35 @@ function ColoursSection({ colours }: { colours: LibraryColour[] }) {
         Select Colour (optional)
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-        {colours.map((c, i) => (
-          <span key={i} style={{
-            display: 'inline-flex', alignItems: 'center', gap: '7px',
-            fontSize: '13px', fontWeight: 500,
-            background: '#f8fafc', color: '#374151',
-            border: '1px solid #e2e8f0',
-            padding: c.image_url ? '4px 10px 4px 4px' : '5px 12px',
-            borderRadius: '20px', lineHeight: 1.4,
-          }}>
-            {c.image_url && (
-              <span style={{
-                display: 'inline-block', width: '20px', height: '20px',
-                borderRadius: '50%', flexShrink: 0,
-                background: `url(${c.image_url}) center/cover`,
-                border: '1px solid rgba(0,0,0,0.1)',
-              }} />
-            )}
-            {c.colour_name}
-            {c.is_stocked === false && (
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#9ca3af' }}>EOI</span>
-            )}
-          </span>
-        ))}
+        {colours.map((c, i) => {
+          const isSel = selected === c.colour_name
+          return (
+            <button key={i} type="button" onClick={() => onSelect(c.colour_name)} style={{
+              display: 'inline-flex', alignItems: 'center', gap: '7px',
+              fontSize: '13px', fontWeight: isSel ? 700 : 500,
+              background: isSel ? '#eef6fa' : '#f8fafc',
+              color: isSel ? '#185D7A' : '#374151',
+              border: `${isSel ? '2px' : '1px'} solid ${isSel ? '#185D7A' : '#e2e8f0'}`,
+              padding: c.image_url ? '4px 10px 4px 4px' : '5px 12px',
+              borderRadius: '20px', lineHeight: 1.4, cursor: 'pointer',
+              transition: 'all 0.12s',
+            }}>
+              {c.image_url && (
+                <span style={{
+                  display: 'inline-block', width: '20px', height: '20px',
+                  borderRadius: '50%', flexShrink: 0,
+                  background: `url(${c.image_url}) center/cover`,
+                  border: '1px solid rgba(0,0,0,0.1)',
+                }} />
+              )}
+              {c.colour_name}
+              {isSel && <span style={{ fontSize: '11px' }}>✓</span>}
+              {c.is_stocked === false && (
+                <span style={{ fontSize: '11px', fontWeight: 600, color: '#9ca3af' }}>EOI</span>
+              )}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
@@ -425,6 +435,7 @@ function ColoursSection({ colours }: { colours: LibraryColour[] }) {
 export function SystemCardUI({ system, onAddToList }: Props) {
   const [selectedProfiles,   setSelectedProfiles]   = useState<Set<number>>(new Set())
   const [selectedComponents, setSelectedComponents] = useState<Set<number>>(new Set())
+  const [selectedColour,     setSelectedColour]     = useState<string | null>(null)
 
   const posX = system.hero_image_position_x ?? 50
   const posY = system.hero_image_position_y ?? 50
@@ -536,7 +547,24 @@ export function SystemCardUI({ system, onAddToList }: Props) {
           </p>
         )}
 
-        <ColoursSection colours={system.system_colours} />
+        {/* Profile + component count */}
+        {(system.system_profiles.length > 0 || system.system_components.length > 0) && (
+          <p style={{ fontSize: '12px', color: '#9ca3af', margin: '8px 0 0' }}>
+            {system.system_profiles.length > 0
+              ? `${system.system_profiles.length} profile${system.system_profiles.length !== 1 ? 's' : ''}`
+              : ''}
+            {system.system_profiles.length > 0 && system.system_components.length > 0 ? ' · ' : ''}
+            {system.system_components.length > 0
+              ? `${system.system_components.length} component${system.system_components.length !== 1 ? 's' : ''}`
+              : ''}
+          </p>
+        )}
+
+        <ColoursSection
+          colours={system.system_colours}
+          selected={selectedColour}
+          onSelect={name => setSelectedColour(prev => prev === name ? null : name)}
+        />
 
         <ProfilesSection
           profiles={system.system_profiles}
@@ -573,15 +601,28 @@ export function SystemCardUI({ system, onAddToList }: Props) {
               }}
             >
               {hasSelections
-                ? `Add ${totalSelected} item${totalSelected !== 1 ? 's' : ''} to list`
+                ? `Add ${totalSelected} item${totalSelected !== 1 ? 's' : ''} to shopping list`
                 : 'Select profiles or components above'}
             </button>
+          )}
+
+          {/* See local stockists */}
+          <a href={`/suppliers?system=${system.slug}`} style={ghostLinkStyle}>
+            See local stockists
+          </a>
+
+          {/* Manufacturer website */}
+          {system.website_url && (
+            <a href={system.website_url} target="_blank" rel="noopener noreferrer" style={ghostLinkStyle}>
+              See {system.name} on {system.manufacturer?.name ?? 'manufacturer'} website
+              <ExternalIcon />
+            </a>
           )}
 
           {/* Install guides */}
           {(system.install_guide_urls ?? []).map((guide, i) => (
             <a key={i} href={guide.url} target="_blank" rel="noopener noreferrer" style={ghostLinkStyle}>
-              {guide.label}
+              See {system.name} installation guide
               <ExternalIcon />
             </a>
           ))}
@@ -589,7 +630,7 @@ export function SystemCardUI({ system, onAddToList }: Props) {
           {/* Design guide */}
           {system.design_guide_url && (
             <a href={system.design_guide_url} target="_blank" rel="noopener noreferrer" style={ghostLinkStyle}>
-              Design Guide
+              See {system.name} design guide
               <ExternalIcon />
             </a>
           )}
@@ -597,21 +638,11 @@ export function SystemCardUI({ system, onAddToList }: Props) {
           {/* Tech data */}
           {system.tech_data_url && (
             <a href={system.tech_data_url} target="_blank" rel="noopener noreferrer" style={ghostLinkStyle}>
-              Technical Data Sheet
+              See {system.name} technical guide
               <ExternalIcon />
             </a>
           )}
 
-          {/* Manufacturer website */}
-          {system.website_url && (
-            <a href={system.website_url} target="_blank" rel="noopener noreferrer" style={{
-              ...ghostLinkStyle,
-              color: '#374151', background: '#f9fafb', border: '1.5px solid #d1d5db',
-            }}>
-              View on {system.manufacturer?.name ?? 'manufacturer'} website
-              <ExternalIcon color="#4b5563" />
-            </a>
-          )}
         </div>
 
       </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { getAllSystems, type LibrarySystem } from '@/lib/data/getSystems'
+import { SystemCardTileUI } from '@/components/library/SystemCardTileUI'
 
 export const dynamic = 'force-dynamic'
 
@@ -170,7 +171,7 @@ export default async function LibraryPage() {
                   gap: '16px',
                 }}>
                   {grouped[cat].map(sys => (
-                    <SystemTile key={sys.id} system={sys} />
+                    <SystemCardTileUI key={sys.id} system={sys} />
                   ))}
                 </div>
               </section>
@@ -180,141 +181,6 @@ export default async function LibraryPage() {
 
       </main>
     </>
-  )
-}
-
-// ── System tile ───────────────────────────────────────────────────────────────
-
-function SystemTile({ system }: { system: LibrarySystem }) {
-  const posX = system.hero_image_position_x ?? 50
-  const posY = system.hero_image_position_y ?? 50
-
-  return (
-    <a
-      href={`/library/${system.slug}`}
-      style={{
-        display: 'block',
-        background: '#ffffff',
-        border: '1px solid #d1d9e0',
-        borderRadius: '10px',
-        overflow: 'hidden',
-        textDecoration: 'none',
-        transition: 'box-shadow 0.15s, border-color 0.15s',
-      }}
-    >
-      {/* Hero image */}
-      <div
-        style={{
-          height: '160px',
-          backgroundImage: system.hero_image_url
-            ? `linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.48)), url(${system.hero_image_url})`
-            : 'linear-gradient(135deg, #0d3347 0%, #185D7A 100%)',
-          backgroundSize: 'cover',
-          backgroundPosition: `${posX}% ${posY}%`,
-          display: 'flex',
-          flexDirection: 'column' as const,
-          justifyContent: 'space-between',
-          padding: '10px 12px',
-        }}
-        role="img"
-        aria-label={`${system.name} hero image`}
-      >
-        {/* Product code chip */}
-        <div style={{ alignSelf: 'flex-start' }}>
-          <span style={{
-            fontSize: '10px', fontWeight: 700, letterSpacing: '0.06em',
-            background: 'rgba(0,0,0,0.45)', color: '#ffffff',
-            padding: '3px 7px', borderRadius: '4px',
-          }}>
-            {system.product_code}
-          </span>
-        </div>
-
-        {/* Badges */}
-        <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' as const }}>
-          {system.australian_made && (
-            <span style={{ fontSize: '10px', fontWeight: 700, background: 'rgba(79,203,176,0.85)', color: '#ffffff', padding: '3px 7px', borderRadius: '4px' }}>
-              Australian Made
-            </span>
-          )}
-          {system.fire_rating && (
-            <span style={{ fontSize: '10px', fontWeight: 700, background: 'rgba(239,68,68,0.8)', color: '#ffffff', padding: '3px 7px', borderRadius: '4px' }}>
-              BAL {system.fire_rating}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div style={{ padding: '14px 16px 16px' }}>
-        {system.manufacturer && (
-          <div style={{ fontSize: '11px', fontWeight: 600, color: '#f97316', marginBottom: '4px', letterSpacing: '0.02em' }}>
-            {system.manufacturer.name}
-          </div>
-        )}
-        <h3 style={{
-          fontSize: '15px',
-          fontWeight: 700,
-          color: '#185D7A',
-          lineHeight: 1.25,
-          marginBottom: '6px',
-          fontFamily: 'var(--font-barlow-condensed), sans-serif',
-          letterSpacing: '-0.01em',
-        }}>
-          {system.name}
-        </h3>
-
-        {system.subcategory && (
-          <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '8px' }}>
-            {system.subcategory}
-          </div>
-        )}
-
-        {system.description && (
-          <p style={{
-            fontSize: '12px',
-            color: '#64748b',
-            lineHeight: 1.55,
-            margin: '0 0 10px',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          } as React.CSSProperties}>
-            {system.description}
-          </p>
-        )}
-
-        {/* Colour swatches */}
-        {system.system_colours.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '8px' }}>
-            {system.system_colours.slice(0, 5).map((c, i) => (
-              c.image_url ? (
-                <span
-                  key={i}
-                  title={c.colour_name}
-                  style={{
-                    width: '16px', height: '16px', borderRadius: '50%', flexShrink: 0,
-                    background: `url(${c.image_url}) center/cover`,
-                    border: '1px solid rgba(0,0,0,0.12)',
-                    display: 'inline-block',
-                  }}
-                />
-              ) : null
-            ))}
-            {system.system_colours.length > 5 && (
-              <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>
-                +{system.system_colours.length - 5}
-              </span>
-            )}
-          </div>
-        )}
-
-        <div style={{ marginTop: '12px', fontSize: '12px', fontWeight: 700, color: '#185D7A' }}>
-          View system →
-        </div>
-      </div>
-    </a>
   )
 }
 

@@ -90,7 +90,9 @@ export async function getAllSystems(): Promise<LibrarySystem[]> {
         description, hero_image_url, hero_image_position_x, hero_image_position_y,
         australian_made, bal_rating, fire_rating, moisture_resistant,
         acoustic_rating, structural_grade, notes, sort_order,
-        system_colours ( colour_name, image_url, sort_order, is_stocked )
+        system_colours ( colour_name, image_url, sort_order, is_stocked ),
+        system_profiles ( id ),
+        system_components ( id, components ( id ) )
       )
     `)
     .order('name')
@@ -116,8 +118,8 @@ export async function getAllSystems(): Promise<LibrarySystem[]> {
         manufacturer: { name: mfr.name, slug: mfr.slug, logo_url: mfr.logo_url },
         system_colours: ((sys.system_colours || []) as LibraryColour[])
           .sort((a, b) => a.sort_order - b.sort_order),
-        system_profiles: [],
-        system_components: [],
+        system_profiles: sys.system_profiles || [],
+        system_components: sys.system_components || [],
       })
     }
   }
