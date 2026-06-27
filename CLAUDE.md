@@ -149,7 +149,7 @@ RESEND_API_KEY
 
 ### Build Checklist
 - [x] **Step 1** — `lib/data/getSystems.ts` — Supabase queries: `getAllSystems()` + `getSystemBySlug(slug)`
-- [ ] **Step 2** — `app/library/page.tsx` — static index, systems grouped by category, generateMetadata
+- [x] **Step 2** — `app/library/page.tsx` — static index, systems grouped by category, generateMetadata
 - [ ] **Step 3** — `app/library/[slug]/page.tsx` + `components/library/SystemCardUI.tsx` — per-system SEO pages
 - [ ] **Step 4** — `components/library/ShoppingListProvider.tsx` + `components/library/ShoppingListDrawerUI.tsx`
 - [ ] **Step 5** — Convert to RFQ — wire shopping list → `/api/create-draft` → `/rfq?draft=uuid`. Check if `/api/add-to-draft` needs porting from MFP.
