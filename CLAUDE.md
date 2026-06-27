@@ -3,13 +3,16 @@
 ## Project Overview
 BuildQuote (buildquote.com.au) is a Next.js web app for Southwest WA builders. It turns handwritten or uploaded materials lists into professional RFQ (Request for Quotation) emails sent directly to suppliers.
 
-Working directory: `buildquote-v6-live/buildquote/`
-Run dev server: `cd buildquote && npm run dev` → http://localhost:3000
+**Working directory:** `C:\Users\Melia Borg\Desktop\Repositries\Build-Quote-v6\Build-Quote-v6\buildquote\`
+**Run dev server:** `cd buildquote && npm run dev` → http://localhost:3000
+**Branch:** `main` (all features merged — no active feature branches)
+
+---
 
 ## Tech Stack
 - **Framework:** Next.js 16.1.6 (App Router, React 19)
 - **Database:** Supabase (Postgres) — `@supabase/supabase-js ^2.98`
-- **AI/Parse:** Anthropic SDK `@anthropic-ai/sdk ^0.78` for OCR/parsing materials lists
+- **AI/Parse:** OpenAI `gpt-4o` via `openai` SDK — OCR/parsing materials lists (NOT Anthropic — migrated in session 7)
 - **Email:** Resend `^6.9.2`
 - **PDF:** pdf-lib, pdf-parse, pdf2pic
 - **Spreadsheet parse:** ExcelJS, Mammoth (Word docs)
@@ -17,145 +20,232 @@ Run dev server: `cd buildquote && npm run dev` → http://localhost:3000
 - **Styling:** Tailwind CSS v4 (PostCSS), custom design tokens via CSS variables
 - **Fonts:** Barlow (body), Barlow Condensed (headings) — Google Fonts
 - **Deployment:** Vercel
+- **Supabase project ref:** `oxvhmulxuvlfjyjzleki`
+
+---
+
+## Environment Variables
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+OPENAI_API_KEY                  ← parse/route.ts — gpt-4o OCR/parsing
+RESEND_API_KEY
+RESEND_FROM_EMAIL               (default: rfq@buildquote.com.au)
+NEXT_PUBLIC_APP_URL             ← https://buildquote.com.au in prod, http://localhost:3000 in dev
+                                   (passkey routes derive hostname from this)
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+NEXT_PUBLIC_MFP_URL             = https://search.buildquote.com.au
+VERCEL_OIDC_TOKEN
+```
+⚠️ `ANTHROPIC_API_KEY` is NOT used — parse was migrated to OpenAI. Remove from Vercel if present.
+⚠️ `NEXT_PUBLIC_BUILDQUOTE_URL` is NOT used — library RFQ redirect uses relative `/rfq?draft=uuid`.
+
+---
+
+## Design System
+Brand colour: `#185D7A` (navy/teal), orange accent: `#f97316`
+Custom Tailwind tokens (in `globals.css`):
+- `bg-page`, `bg-surface`, `bg-surface-subtle`
+- `text-heading`, `text-text-primary`, `text-text-secondary`, `text-text-muted`, `text-text-faint`
+- `text-brand`, `bg-brand`, `hover:bg-brand-hover`, `text-navy`, `bg-navy`
+- `border-border`, `border-border-subtle`
+
+Styling rule — light vs dark:
+- buildquote.com.au (all pages) → **Light**
+- `/dashboard` → **Light**
+- MFP `/supplierdirectory/*`, `/manufacturers/*`, `/widget/*` → **Light**
+- MFP `/supplier/[slug]/*`, `/admin/*` → **Dark**
+- Data Studio (all pages) → **Dark**
+
+---
 
 ## File Structure
 ```
 buildquote/
   app/
-    page.tsx               # Landing / home
-    layout.tsx             # Root layout — GlobalNav + Vercel Analytics
-    globals.css            # Tailwind v4 config + design tokens
-    rfq/page.tsx           # Main RFQ flow (5-step wizard)
-    products/page.tsx      # Products browse page
-    products/CatalogueClient.tsx
-    flyer/page.tsx
-    privacy/page.tsx
-    terms/page.tsx
+    page.tsx                      # Landing page — CTA → /rfq, /library, login links
+    layout.tsx                    # Root layout — GlobalNav + Vercel Analytics
+    globals.css                   # Tailwind v4 config + design tokens
+    rfq/page.tsx                  # RFQ wizard — 5-step state machine
+    products/page.tsx             # Customer product search (alt entry point)
+    products/rfq/page.tsx         # Inline quote form from product search
+    dashboard/
+      page.tsx                    # Auth-gated redirect to DashboardClient
+      DashboardClient.tsx         # 5-tab shell
+    login/page.tsx
+    register/page.tsx
+    library/
+      page.tsx                    # Library index — SSR, SEO, passes data to LibraryIndexClient
+      layout.tsx                  # Wraps library routes with ShoppingListProvider + drawer
+      [slug]/
+        page.tsx                  # Per-system SEO page — generateMetadata, JSON-LD
+        SystemCardWrapper.tsx     # Client bridge: connects SystemCardUI to shopping list context
     api/
-      parse/route.ts       # Anthropic OCR → LineItem[]
-      send/route.ts        # Resend email dispatch
-      pdf/route.ts         # PDF generation
-      csv/route.ts         # CSV export
+      parse/route.ts              # OpenAI gpt-4o OCR → LineItem[]
+      send/route.ts               # Resend email dispatch + PDF/CSV attachment
+      pdf/route.ts
+      csv/route.ts
+      create-draft/route.ts       # POST → create rfq_drafts row, returns draftId
+      save-draft-items/route.ts   # POST → upsert rfq_draft_items
+      get-draft-items/route.ts    # GET → read draft items for step 2 resume
+      library/
+        systems/route.ts          # GET ?q= ?category= → filtered system list for library search
+      auth/
+        register/route.ts
+        passkey/register/route.ts
+        passkey/authenticate/route.ts
+      quotes/[id]/route.ts        # PATCH won/declined status
+      cleanup-drafts/route.ts
       community/route.ts
-      save-draft-items/route.ts
-      get-draft-items/route.ts
+      interest/route.ts
   components/
-    GlobalNav.tsx          # Hamburger nav — fixed top-right, all pages
+    GlobalNav.tsx                 # Hamburger nav — fixed top-right, hidden on / and /coming-soon
+    library/
+      SystemCardUI.tsx            # Full system card: profiles, components, colours, pills, actions
+      SystemCardTileUI.tsx        # Index grid tile — hero image + name overlay
+      LibraryIndexClient.tsx      # Client: search input + category pills + grid, debounced API fetch
+      ShoppingListProvider.tsx    # Context + localStorage (key: bq_shopping_list)
+      ShoppingListDrawerUI.tsx    # Floating bottom drawer: table, PNG share, Convert to RFQ
+    builder/
+      JobsTab.tsx
+      SuppliersTab.tsx
+      FavouriteProductsTab.tsx    # Includes "Product Library" + "Browse MFP" buttons
+      ProfilePanel.tsx
+      QuotesTab.tsx               # My Quotes — drafts + sent, mark won/declined
     screens/
-      UploadScreen.tsx     # Step 1 — photo/file upload or manual entry
-      ManualEntryScreen.tsx # Step 2 — review/edit line items
-      RFQScreen.tsx        # Step 3 (currently skipped in flow)
-      SendScreen.tsx       # Step 4 — builder & supplier details + send
-      SuccessScreen.tsx    # Step 5 — confirmation
+      UploadScreen.tsx            # Step 1 — upload/manual, login banner
+      ManualEntryScreen.tsx       # Step 2 — review/edit line items
+      RFQScreen.tsx               # Step 3 — skipped in active flow
+      SendScreen.tsx              # Step 4 — builder & supplier details, send
+      SuccessScreen.tsx           # Step 5
     ui/
       Button.tsx / Card.tsx / Input.tsx / Toggle.tsx
       CheckRow.tsx / SectionLabel.tsx / TopBar.tsx
   lib/
-    supabase.ts            # Supabase client (anon key, public)
-    rfqDraft.ts            # Draft create/read from URL param ?draft=
-    types.ts               # LineItem, BuilderDetails, SupplierDetails, RFQPayload
+    supabase-browser.ts           # Supabase browser client (SSR-aware)
+    supabase-server.ts            # Supabase server client (SSR-aware)
+    supabase-service.ts           # Supabase service role client (API routes)
+    supabase.ts                   # Legacy anon client (kept for compat)
+    data/
+      getSystems.ts               # getAllSystems() + getSystemBySlug(slug) — Supabase queries
+    rfqDraft.ts                   # getOrCreateDraft(builderId?)
+    types.ts                      # LineItem, BuilderDetails, SupplierDetails, RFQPayload
     emailTemplate.ts
     generateCSV.ts
     generatePDF.ts
     suppliers.ts
-  data/
-    manufacturers.json
-    suppliers.json
+  proxy.ts                        # Next.js 16 auth routing (replaces middleware.ts)
   supabase/
-    rfq_draft_tables.sql   # rfq_drafts + rfq_draft_items schema
-```
-
-## RFQ Flow (5 Steps)
-`step 1` UploadScreen → `step 2` ManualEntryScreen → `step 4` SendScreen → `step 5` SuccessScreen
-- Step 3 (RFQScreen) exists but is currently skipped in the active flow
-- Draft ID lives in `?draft=` URL param — no localStorage. New URL = clean session
-- Draft auto-created in Supabase on first visit; items persisted between steps
-
-## Supabase Schema
-```sql
-rfq_drafts       — id (uuid PK), created_at, updated_at, status
-rfq_draft_items  — id, draft_id (FK), component_id, manufacturer, system,
-                   sku, name, description, uom, qty, added_at
-```
-Client: `lib/supabase.ts` uses `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-
-## Key Types (`lib/types.ts`)
-- `LineItem` — id, name, sku, productId, desc, uom, qty + dimension fields (mm, roll_m, weight_kg etc.)
-- `BuilderDetails` — builderName, company, abn, phone, email
-- `SupplierDetails` — supplierName, supplierEmail, accountNumber
-- `RFQPayload` — rfqId, builder, supplier, items, delivery, dateRequired, message, projectReference, siteAddress, siteSuburb, sendToSupplier, sendCopyToSelf
-
-## Design System
-Brand colour: `#185D7A` (navy/teal)
-Custom Tailwind tokens (set in globals.css):
-- `bg-page`, `bg-surface-subtle`
-- `text-heading`, `text-text-primary`, `text-text-secondary`, `text-text-muted`
-- `text-brand`, `bg-brand`, `hover:bg-brand-hover`
-- `border-border-subtle`
-
-## Nav Links (GlobalNav)
-- Home `/`
-- Send a Quote `/rfq`
-- Products `/products`
-- Manufacturers Portal `https://search.buildquote.com.au` (external)
-- Privacy Policy `/privacy`
-- Terms of Use `/terms`
-
-## Workflow Rules
-1. **Always run and verify on `localhost:3000` before committing.** No exceptions.
-2. Use `skill.md` patterns (Claude Code skills) where they apply to a feature.
-3. Branch per feature. Current feature branch: `builders-login`.
-4. Commit messages in conventional format: `feat:`, `fix:`, `chore:` etc.
-5. Supabase project ref: `oxvhmulxuvlfjyjzleki`
-
-## Builders Login (In Progress — branch: `builders-login`)
-See `buildquote/STATE.md` for full detail. Summary:
-- `/login`, `/register`, `/dashboard` pages built
-- `proxy.ts` handles auth routing (Next.js 16 — replaces middleware.ts)
-- `lib/supabase-server.ts` + `lib/supabase-browser.ts` — SSR-aware clients
-- Dashboard has 4 tabs: Current Jobs / Preferred Suppliers / Favourite Products / My Profile
-- Components in `components/builder/`: JobsTab, SuppliersTab, FavouriteProductsTab, ProfilePanel
-- API routes in `app/api/auth/`: register, passkey register/authenticate
-- New Supabase tables: builders, builder_jobs, builder_suppliers, builder_favourite_products, builder_passkeys
-- Storage buckets: builder-logos, job-images (both need RLS policies — see STATE.md)
-- **TODO:** RFQ auto-fill (pre-populate SendScreen with logged-in builder details)
-
-## Environment Variables Required
-```
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-ANTHROPIC_API_KEY
-RESEND_API_KEY
+    schema.sql                    # Full schema reference
+    migrations/
+      rfq_draft_tables.sql
+      20260520_my_quotes.sql      # ⚠️ Must be run in Supabase before testing My Quotes tab
 ```
 
 ---
 
-## Library Feature Build (Phase 1)
-**Goal:** Add `buildquote.com.au/library` — public product library with shopping list and RFQ conversion.
-**Status:** In progress
+## Nav Links (GlobalNav)
+1. Home `/`
+2. Builder Portal `/dashboard`
+3. Start a Quote Request `/rfq`
+4. Product Library `/library`
+5. Browse Products & Suppliers `https://search.buildquote.com.au/manufacturers` (external)
+6. Supplier Directory `https://search.buildquote.com.au/supplierdirectory` (external)
++ Team Links: Supplier Portal / Data Studio (external)
++ Legal: Privacy Policy / Terms of Use
+
+GlobalNav is hidden on `/` and `/coming-soon`.
+
+---
+
+## RFQ Flow
+`step 1` UploadScreen → `step 2` ManualEntryScreen → `step 4` SendScreen → `step 5` SuccessScreen
+- Step 3 (RFQScreen) exists but is skipped in the active flow
+- Draft ID lives in `?draft=` URL param — no localStorage. New URL = clean session
+- `lib/rfqDraft.ts` → `getOrCreateDraft(builderId?)` — creates or resumes a draft
+
+**RFQ entry points:**
+1. `/rfq` — fresh start
+2. `/rfq?job=<uuid>` — prefills project reference, site address, PM details
+3. `/rfq?supplier=<uuid>` — prefills supplier from builder_suppliers
+4. `/rfq?draft=<uuid>` — resumes draft at step 2
+5. `/rfq?draft=<uuid>&supplierName=<name>` — returns from MFP with supplier pre-filled
+
+---
+
+## Library Feature (Complete ✅)
+**Goal:** `buildquote.com.au/library` — public product library, shopping list, RFQ conversion.
 
 ### Key Decisions
-- Folder: `components/library/` (alongside existing `components/builder/`)
-- File naming: `*UI.tsx` = visual component, `*Provider.tsx` = state/context, `.ts` = pure logic
-- localStorage key: `bq_shopping_list` (same key as MFP — shared domain means shared storage)
-- Share: Canvas API → PNG → `navigator.share()` on mobile, download on desktop (port from MFP)
-- Convert to RFQ: POST to `/api/create-draft` with `builderId` if logged in → `/rfq?draft=uuid`
-- Logged-in builder: flows straight to step 2 with items pre-populated, no friction
-- RLS confirmed: all required tables have public SELECT for anon users
+- Folder: `components/library/` (alongside `components/builder/`)
+- File naming: `*UI.tsx` = visual, `*Provider.tsx` = state/context, `.ts` = pure logic
+- localStorage key: `bq_shopping_list`
+- Share: Canvas API → PNG → `navigator.share()` on mobile, download on desktop
+- Convert to RFQ: POST `/api/create-draft` (with builderId if logged in) → `/api/save-draft-items` → redirect `/rfq?draft=uuid`
+- `stripSystem()` strips trailing " System" / " Systems" from display names (DB names unchanged)
+- Profile row: single line — label | specs | SKU | UOM badge | checkbox
+- Search API: `?q=` (ilike on name, description, category, subcategory) + `?category=` filter
+- "See local stockists" button is a disabled placeholder — `/suppliers` route not yet built
 
-### Source Files to Port From
-- Shopping list + drawer: `manufacturer-portal/app/manufacturers/ManufacturersClient.tsx` (lines 302–385 for PNG share, lines 93–165 for drawer UI)
-- SystemCard: `buildquote-data-studio/apps/web/components/system-card/SystemCard.tsx`
+### Supabase Tables (public SELECT, anon access confirmed)
+- `systems` — joined to `manufacturers`, `system_profiles`, `system_components`, `system_colours`
 
-### Build Checklist
-- [x] **Step 1** — `lib/data/getSystems.ts` — Supabase queries: `getAllSystems()` + `getSystemBySlug(slug)`
-- [x] **Step 2** — `app/library/page.tsx` — static index, systems grouped by category, generateMetadata
-- [x] **Step 3** — `app/library/[slug]/page.tsx` + `components/library/SystemCardUI.tsx` — per-system SEO pages
-- [x] **Step 3 (polish)** — SystemCardTileUI ported from MFP, selectable colour pills, renamed buttons, profile/component counts
-- [x] **Step 4** — `components/library/ShoppingListProvider.tsx` + `components/library/ShoppingListDrawerUI.tsx`
-- [x] **Step 5** — Convert to RFQ — wire shopping list → `/api/create-draft` → `/rfq?draft=uuid`. Check if `/api/add-to-draft` needs porting from MFP.
-- [x] **Step 6** — Update `components/GlobalNav.tsx` + `components/builder/FavouriteProductsTab.tsx` to point to `/library`
-- [x] **Step 7** — `app/api/library/systems/route.ts` + live search/filter on index page
+---
 
-### Commit Points
-Commit after each step is checked off. Tag significant ones: `feat/library-step-1`, `feat/library-step-2` etc.
+## Supabase Schema (Key Tables)
+```
+builders                   — id, email, builder_name, company_name, abn, office_phone,
+                             mobile_phone, logo_url, created_at
+builder_jobs               — id, builder_id, project_reference, project_address,
+                             build_type, pm_name, pm_mobile, site_access_notes
+builder_suppliers          — id, builder_id, supplier_name, supplier_email,
+                             account_number, phone, website, rep_name, rep_mobile
+builder_favourite_products — id, builder_id, product_id, product_name,
+                             manufacturer, sku, description, uom, notes
+rfq_drafts                 — id, builder_id, supplier_name, supplier_email,
+                             project_reference, status, created_at, updated_at
+rfq_draft_items            — id, draft_id, name, sku, description, uom, qty,
+                             + dimension fields (length_mm, width_mm, etc.)
+rfq_requests               — id, builder_id, builder_name, supplier_name,
+                             supplier_email, rfq_id_short, draft_id, status,
+                             send_to_supplier, terms_confirmed, created_at
+rfq_items                  — id, rfq_id, item_name, quantity, unit, specification
+rfq_enquiries              — id, supplier_name, system_name, name, email, phone,
+                             message, created_at (anon insert — /products flow)
+systems                    — id, name, slug, category, subcategory, description,
+                             hero_image_url, sort_order, manufacturer_id + attribute fields
+manufacturers              — id, name, slug, logo_url
+system_profiles            — id, system_id, profile_name, product_code, dims, uom, sort_order
+system_components          — id, system_id, role, component_id, sort_order
+system_colours             — id, system_id, colour_name, image_url, is_stocked, sort_order
+```
+
+---
+
+## Workflow Rules
+1. **Always verify on `localhost:3000` before committing.** No exceptions.
+2. Commit messages: conventional format — `feat:`, `fix:`, `chore:`, `refactor:` etc.
+3. All features currently on `main` — create a feature branch for any new work.
+4. TypeScript strict — run `npx tsc --noEmit` before committing.
+5. File naming: `*UI.tsx` = visual component, `*Provider.tsx` = state/context, `.ts` = pure logic.
+
+---
+
+## Known Gaps / Next Work
+- **`/suppliers` route** — "See local stockists" on system cards is a disabled placeholder; this page doesn't exist yet
+- **RFQ auto-fill** — pre-populate SendScreen with logged-in builder details (builder name, company, ABN, phone, email)
+- **Google Maps API key** — not restricted to production domains yet
+- **Supabase migration** — `20260520_my_quotes.sql` must be run before testing My Quotes tab
+- **Passkey flow** — not tested end-to-end
+- **Hero image data** — some records have trailing `\r\n` in `hero_image_url`; guarded with `.trim()` in UI but fix at source in Supabase
+- **`/products` page** — parallel entry point to MFP manufacturers search; consider whether to consolidate long-term
+
+---
+
+## Recent Commits (main)
+```
+e95c2ff  fix: library polish -- RFQ redirect, stockists placeholder, hero URL trim, landing link
+4dd5b49  feat: library Steps 5-7 -- RFQ conversion, nav links, search/filter
+844d564  (earlier library steps 1-4)
+```
