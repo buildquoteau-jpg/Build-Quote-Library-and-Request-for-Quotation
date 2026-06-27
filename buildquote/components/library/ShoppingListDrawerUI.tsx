@@ -6,6 +6,37 @@ import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
 const BUILDQUOTE_URL = process.env.NEXT_PUBLIC_BUILDQUOTE_URL || 'https://buildquote.com.au'
 
+const thStyle: React.CSSProperties = {
+  padding: '7px 8px',
+  fontSize: '10px',
+  fontWeight: 700,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  color: '#64748b',
+  textAlign: 'center',
+  whiteSpace: 'nowrap',
+}
+
+const tdStyle: React.CSSProperties = {
+  padding: '8px 8px',
+  verticalAlign: 'middle',
+}
+
+const qtyBtnStyle: React.CSSProperties = {
+  width: '22px', height: '22px',
+  borderRadius: '5px',
+  border: '1.5px solid #e5e7eb',
+  background: '#fff',
+  cursor: 'pointer',
+  fontSize: '13px',
+  fontWeight: 700,
+  color: '#374151',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 0,
+}
+
 export function ShoppingListDrawerUI() {
   const { shoppingList, addItems, removeItem, updateQty, updateName, updateUom, clearList } = useShoppingList()
   const [drawerOpen,    setDrawerOpen]    = useState(false)
@@ -170,7 +201,7 @@ export function ShoppingListDrawerUI() {
           <div style={{ maxWidth: '720px', margin: '0 auto', padding: '16px 20px 20px' }}>
 
             {/* Header row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', gap: '10px' }}>
               <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 {shoppingList.length} item{shoppingList.length !== 1 ? 's' : ''}
               </p>
@@ -182,31 +213,67 @@ export function ShoppingListDrawerUI() {
               </button>
             </div>
 
-            {/* Item rows */}
-            {shoppingList.map(item => (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
-                <input
-                  value={item.name}
-                  onChange={e => updateName(item.id, e.target.value)}
-                  style={{ flex: 1, border: 'none', borderBottom: '1.5px solid transparent', background: 'transparent', fontSize: '14px', fontWeight: 600, color: '#0f172a', outline: 'none', padding: '2px 0', minWidth: 0 }}
-                  onFocus={e => { e.currentTarget.style.borderBottomColor = '#185D7A' }}
-                  onBlur={e => { e.currentTarget.style.borderBottomColor = 'transparent' }}
-                />
-                <input
-                  value={item.uom}
-                  onChange={e => updateUom(item.id, e.target.value.toUpperCase().slice(0, 6))}
-                  style={{ width: '44px', border: '1.5px solid #e5e7eb', borderRadius: '5px', background: '#f8fafc', fontSize: '11px', fontWeight: 700, color: '#6b7280', textAlign: 'center', padding: '3px 4px', outline: 'none' }}
-                  onFocus={e => { e.currentTarget.style.borderColor = '#185D7A' }}
-                  onBlur={e => { e.currentTarget.style.borderColor = '#e5e7eb' }}
-                />
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                  <button onClick={() => updateQty(item.id, item.qty - 1)} style={{ width: '26px', height: '26px', borderRadius: '6px', border: '1.5px solid #e5e7eb', background: '#fff', cursor: 'pointer', fontSize: '15px', fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-                  <span style={{ minWidth: '28px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{item.qty}</span>
-                  <button onClick={() => updateQty(item.id, item.qty + 1)} style={{ width: '26px', height: '26px', borderRadius: '6px', border: '1.5px solid #e5e7eb', background: '#fff', cursor: 'pointer', fontSize: '15px', fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
-                </div>
-                <button onClick={() => removeItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#9ca3af', lineHeight: 1, padding: '4px', flexShrink: 0 }}>×</button>
-              </div>
-            ))}
+            {/* Table */}
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
+                    <th style={thStyle}>#</th>
+                    <th style={{ ...thStyle, textAlign: 'left', minWidth: '160px' }}>Profile</th>
+                    <th style={{ ...thStyle, textAlign: 'left', width: '22%' }}>Specs</th>
+                    <th style={{ ...thStyle, textAlign: 'left', width: '18%' }}>SKU / Part No</th>
+                    <th style={{ ...thStyle, width: '70px' }}>UOM</th>
+                    <th style={{ ...thStyle, width: '100px' }}>QTY</th>
+                    <th style={{ ...thStyle, width: '28px' }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {shoppingList.map((item, rowIdx) => (
+                    <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9', background: rowIdx % 2 === 0 ? '#f8fafc' : '#ffffff' }}>
+                      <td style={{ ...tdStyle, color: '#9ca3af', textAlign: 'center' }}>{rowIdx + 1}</td>
+                      <td style={{ ...tdStyle, wordBreak: 'break-word', minWidth: '160px' }}>
+                        <input
+                          value={item.name}
+                          onChange={e => updateName(item.id, e.target.value)}
+                          style={{ width: '100%', border: 'none', background: 'transparent', fontSize: '13px', fontWeight: 600, color: '#0f172a', outline: 'none', padding: '2px 0', borderBottom: '1.5px solid transparent', wordBreak: 'break-word' }}
+                          onFocus={e => { e.currentTarget.style.borderBottomColor = '#185D7A' }}
+                          onBlur={e => { e.currentTarget.style.borderBottomColor = 'transparent' }}
+                        />
+                      </td>
+                      <td style={{ ...tdStyle, color: '#64748b', fontSize: '12px', maxWidth: '180px' }}>
+                        <span title={item.desc}>
+                          {item.desc && item.desc.length > 50 ? item.desc.slice(0, 48) + '…' : item.desc}
+                        </span>
+                      </td>
+                      <td style={{ ...tdStyle }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#475569', background: '#f1f5f9', padding: '2px 5px', borderRadius: '3px' }}>
+                          {item.sku || '—'}
+                        </span>
+                      </td>
+                      <td style={{ ...tdStyle, textAlign: 'center' }}>
+                        <input
+                          value={item.uom}
+                          onChange={e => updateUom(item.id, e.target.value.toUpperCase().slice(0, 6))}
+                          style={{ width: '52px', border: '1.5px solid #e5e7eb', borderRadius: '4px', background: '#fff', fontSize: '11px', fontWeight: 700, color: '#6b7280', textAlign: 'center', padding: '3px 4px', outline: 'none' }}
+                          onFocus={e => { e.currentTarget.style.borderColor = '#185D7A' }}
+                          onBlur={e => { e.currentTarget.style.borderColor = '#e5e7eb' }}
+                        />
+                      </td>
+                      <td style={{ ...tdStyle, textAlign: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
+                          <button onClick={() => updateQty(item.id, item.qty - 1)} style={qtyBtnStyle}>−</button>
+                          <span style={{ minWidth: '24px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>{item.qty}</span>
+                          <button onClick={() => updateQty(item.id, item.qty + 1)} style={qtyBtnStyle}>+</button>
+                        </div>
+                      </td>
+                      <td style={{ ...tdStyle, textAlign: 'center' }}>
+                        <button onClick={() => removeItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#9ca3af', lineHeight: 1, padding: '2px' }}>×</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             {/* Manual add row */}
             <div style={{ display: 'flex', gap: '8px', marginTop: '12px', alignItems: 'center' }}>

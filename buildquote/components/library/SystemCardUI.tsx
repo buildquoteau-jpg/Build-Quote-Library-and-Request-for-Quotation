@@ -3,6 +3,11 @@
 import { useState } from 'react'
 import type { LibrarySystem, LibraryProfile, LibraryColour, LibraryComponent } from '@/lib/data/getSystems'
 
+// Strip trailing " System" / " Systems" from display names
+function stripSystem(name: string): string {
+  return name.replace(/\s+systems?$/i, '').trim()
+}
+
 // ── Shopping list item type (exported for ShoppingListProvider) ───────────────
 
 export type ShoppingListItem = {
@@ -165,20 +170,33 @@ function ProfileRow({ label, profile, idx, selected, onToggle }: {
     borderRadius: '10px', cursor: 'pointer', transition: 'all 0.12s',
   }
 
+  // Single-line layout matching shopping list columns: label+dims | SKU | UOM | checkbox
+  const displayLabel = labelOverlaps ? dims : label
+  const displaySpecs = labelOverlaps ? '' : dims
+
   return (
-    <button type="button" onClick={() => onToggle(idx)} style={rowStyle}>
+    <button type="button" onClick={() => onToggle(idx)} style={{ ...rowStyle, alignItems: 'center' }}>
+      {/* Profile / Specs */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        {!labelOverlaps && (
-          <div style={{ fontSize: '13px', fontWeight: isSel ? 700 : 600, color: isSel ? '#0f2d3d' : '#111827', lineHeight: 1.3 }}>
-            {label}
-          </div>
+        <span style={{ fontSize: '13px', fontWeight: isSel ? 700 : 600, color: isSel ? '#0f2d3d' : '#111827' }}>
+          {displayLabel}
+        </span>
+        {displaySpecs && (
+          <span style={{ fontSize: '12px', color: '#6b7280', marginLeft: '8px' }}>{displaySpecs}</span>
         )}
-        <div style={{ marginTop: labelOverlaps ? 0 : '3px', fontSize: '12px', color: '#6b7280', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-          {dims && <span style={{ fontSize: labelOverlaps ? '13px' : '12px', fontWeight: isSel ? 700 : 600, color: isSel ? '#0f2d3d' : '#111827' }}>{dims}</span>}
-          {uom && <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: isSel ? '#185D7A' : '#6b7280' }}>{uom}</span>}
-          {sku && <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#4b5563', background: isSel ? '#d4ecf5' : '#f3f4f6', padding: '1px 5px', borderRadius: '4px' }}>{sku}</span>}
-        </div>
       </div>
+      {/* SKU */}
+      {sku && (
+        <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#4b5563', background: isSel ? '#d4ecf5' : '#f3f4f6', padding: '2px 6px', borderRadius: '4px', flexShrink: 0 }}>
+          {sku}
+        </span>
+      )}
+      {/* UOM badge */}
+      {uom && (
+        <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: isSel ? '#fff' : '#185D7A', background: isSel ? '#185D7A' : '#eef6fa', border: `1px solid ${isSel ? '#185D7A' : '#b6dcea'}`, padding: '2px 7px', borderRadius: '5px', flexShrink: 0, minWidth: '44px', textAlign: 'center' }}>
+          {uom}
+        </span>
+      )}
       <Checkbox checked={isSel} />
     </button>
   )
@@ -208,7 +226,10 @@ function ProfileGroupBlock({ groupKey, systemName, showSystemName, items, defaul
   }
 
   const fmtKey     = formatGroupKey(groupKey)
-  const displayKey = showSystemName ? `${systemName} ${fmtKey}` : fmtKey
+  const keyAlreadyIn = systemName.toLowerCase().includes(fmtKey.toLowerCase().replace('mm', ''))
+  const displayKey = showSystemName
+    ? (keyAlreadyIn ? systemName : `${systemName} ${fmtKey}`)
+    : fmtKey
 
   return (
     <div>
@@ -255,7 +276,12 @@ function ProfilesSection({ profiles, systemName, selected, onToggle }: {
       </div>
       {!multiGroup && (
         <div style={{ fontSize: '13px', fontWeight: 700, color: '#111827', paddingLeft: '10px', borderLeft: '3px solid #185D7A', marginBottom: '8px' }}>
-          {!useHeaders && groups[0]?.key ? `${systemName} ${formatGroupKey(groups[0].key)}` : systemName}
+          {(() => {
+            const key = groups[0]?.key ?? ''
+            const fmtKey = formatGroupKey(key)
+            const alreadyIn = key && systemName.toLowerCase().includes(fmtKey.toLowerCase())
+            return (!useHeaders && key && !alreadyIn) ? `${systemName} ${fmtKey}` : systemName
+          })()}
         </div>
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -453,7 +479,12 @@ export function SystemCardUI({ system, onAddToList }: Props) {
 
     system.system_profiles.forEach((p, idx) => {
       if (!selectedProfiles.has(idx)) return
-      const name = (p.profile_name || p.name || system.name).trim()
+      const base = stripSystem(system.name)
+      const profileLabel = (p.profile_name || p.name || '').trim()
+      // Only append profileLabel if its first word isn't already in the base name
+      const firstWord = profileLabel.split(/\s+/)[0]?.toLowerCase() ?? ''
+      const alreadyIn = firstWord && base.toLowerCase().includes(firstWord)
+      const name = (!alreadyIn && profileLabel) ? `${base} ${profileLabel}` : base
       const dims = fmtDims(p)
       items.push({
         id: `${Date.now()}-p${idx}-${Math.random().toString(36).slice(2, 6)}`,
@@ -528,7 +559,7 @@ export function SystemCardUI({ system, onAddToList }: Props) {
             margin: 0, lineHeight: 1.15, letterSpacing: '-0.01em',
             fontFamily: 'var(--font-barlow-condensed), sans-serif',
           }}>
-            {system.name}
+            {stripSystem(system.name)}
           </h1>
           {(system.category || system.subcategory) && (
             <div style={{ marginTop: '4px', fontSize: '12px', color: 'rgba(255,255,255,0.65)' }}>
@@ -568,7 +599,7 @@ export function SystemCardUI({ system, onAddToList }: Props) {
 
         <ProfilesSection
           profiles={system.system_profiles}
-          systemName={system.name}
+          systemName={stripSystem(system.name)}
           selected={selectedProfiles}
           onToggle={toggleProfile}
         />
@@ -614,7 +645,7 @@ export function SystemCardUI({ system, onAddToList }: Props) {
           {/* Manufacturer website */}
           {system.website_url && (
             <a href={system.website_url} target="_blank" rel="noopener noreferrer" style={ghostLinkStyle}>
-              See {system.name} on {system.manufacturer?.name ?? 'manufacturer'} website
+              See {stripSystem(system.name)} on {system.manufacturer?.name ?? 'manufacturer'} website
               <ExternalIcon />
             </a>
           )}
@@ -622,7 +653,7 @@ export function SystemCardUI({ system, onAddToList }: Props) {
           {/* Install guides */}
           {(system.install_guide_urls ?? []).map((guide, i) => (
             <a key={i} href={guide.url} target="_blank" rel="noopener noreferrer" style={ghostLinkStyle}>
-              See {system.name} installation guide
+              See {stripSystem(system.name)} installation guide
               <ExternalIcon />
             </a>
           ))}
@@ -630,7 +661,7 @@ export function SystemCardUI({ system, onAddToList }: Props) {
           {/* Design guide */}
           {system.design_guide_url && (
             <a href={system.design_guide_url} target="_blank" rel="noopener noreferrer" style={ghostLinkStyle}>
-              See {system.name} design guide
+              See {stripSystem(system.name)} design guide
               <ExternalIcon />
             </a>
           )}
@@ -638,7 +669,7 @@ export function SystemCardUI({ system, onAddToList }: Props) {
           {/* Tech data */}
           {system.tech_data_url && (
             <a href={system.tech_data_url} target="_blank" rel="noopener noreferrer" style={ghostLinkStyle}>
-              See {system.name} technical guide
+              See {stripSystem(system.name)} technical guide
               <ExternalIcon />
             </a>
           )}
