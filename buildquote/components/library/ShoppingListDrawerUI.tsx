@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useShoppingList } from '@/components/library/ShoppingListProvider'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
-const BUILDQUOTE_URL = process.env.NEXT_PUBLIC_BUILDQUOTE_URL || 'https://buildquote.com.au'
 
 const thStyle: React.CSSProperties = {
   padding: '7px 8px',
@@ -180,7 +179,7 @@ export function ShoppingListDrawerUI() {
         }),
       })
 
-      window.location.href = `${BUILDQUOTE_URL}/rfq?draft=${draftId}`
+      window.location.href = `/rfq?draft=${draftId}`
     } catch {
       setConverting(false)
     }

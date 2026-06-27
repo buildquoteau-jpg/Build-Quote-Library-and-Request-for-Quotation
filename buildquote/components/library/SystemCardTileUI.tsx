@@ -50,11 +50,11 @@ export function SystemCardTileUI({
       {/* Hero — name + category overlaid on image */}
       <div style={{
         height: '220px', flexShrink: 0, position: 'relative', overflow: 'hidden',
-        background: system.hero_image_url ? undefined : 'linear-gradient(135deg, #185D7A 0%, #0f3d52 100%)',
+        background: system.hero_image_url?.trim() ? undefined : 'linear-gradient(135deg, #185D7A 0%, #0f3d52 100%)',
       }}>
-        {system.hero_image_url && (
+        {system.hero_image_url?.trim() && (
           <img
-            src={system.hero_image_url}
+            src={system.hero_image_url.trim()}
             alt={system.name}
             style={{
               position: 'absolute', inset: 0, width: '100%', height: '100%',

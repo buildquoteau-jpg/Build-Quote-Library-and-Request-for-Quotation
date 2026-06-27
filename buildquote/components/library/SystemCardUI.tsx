@@ -532,14 +532,14 @@ export function SystemCardUI({ system, onAddToList }: Props) {
       <div style={{
         position: 'relative',
         height: '220px',
-        background: system.hero_image_url
+        background: system.hero_image_url?.trim()
           ? undefined
           : 'linear-gradient(135deg, #185D7A 0%, #0f3d52 100%)',
         overflow: 'hidden',
       }}>
-        {system.hero_image_url && (
+        {system.hero_image_url?.trim() && (
           <img
-            src={system.hero_image_url}
+            src={system.hero_image_url.trim()}
             alt={system.name}
             style={{
               position: 'absolute', inset: 0, width: '100%', height: '100%',
@@ -637,10 +637,11 @@ export function SystemCardUI({ system, onAddToList }: Props) {
             </button>
           )}
 
-          {/* See local stockists */}
-          <a href={`/suppliers?system=${system.slug}`} style={ghostLinkStyle}>
+          {/* See local stockists — coming soon */}
+          <span style={{ ...ghostLinkStyle, opacity: 0.45, cursor: 'default', userSelect: 'none' }}>
             See local stockists
-          </a>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', marginLeft: '6px' }}>Coming soon</span>
+          </span>
 
           {/* Manufacturer website */}
           {system.website_url && (

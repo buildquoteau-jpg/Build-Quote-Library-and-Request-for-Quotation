@@ -45,6 +45,9 @@ export default function Home() {
         <a href="/login" className="text-sm font-semibold text-brand hover:underline">
           Already have an account? Sign in →
         </a>
+        <a href="/library" className="text-xs font-semibold text-text-muted hover:text-brand transition-colors">
+          Browse product library →
+        </a>
       </div>
 
       {/* ── Footer ────────────────────────────────────────────── */}
