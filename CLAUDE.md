@@ -148,7 +148,7 @@ RESEND_API_KEY
 - SystemCard: `buildquote-data-studio/apps/web/components/system-card/SystemCard.tsx`
 
 ### Build Checklist
-- [ ] **Step 1** — `lib/data/getSystems.ts` — Supabase queries: `getAllSystems()` + `getSystemBySlug(slug)`
+- [x] **Step 1** — `lib/data/getSystems.ts` — Supabase queries: `getAllSystems()` + `getSystemBySlug(slug)`
 - [ ] **Step 2** — `app/library/page.tsx` — static index, systems grouped by category, generateMetadata
 - [ ] **Step 3** — `app/library/[slug]/page.tsx` + `components/library/SystemCardUI.tsx` — per-system SEO pages
 - [ ] **Step 4** — `components/library/ShoppingListProvider.tsx` + `components/library/ShoppingListDrawerUI.tsx`
