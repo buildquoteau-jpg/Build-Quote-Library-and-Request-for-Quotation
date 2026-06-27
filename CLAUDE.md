@@ -152,7 +152,7 @@ RESEND_API_KEY
 - [x] **Step 2** — `app/library/page.tsx` — static index, systems grouped by category, generateMetadata
 - [x] **Step 3** — `app/library/[slug]/page.tsx` + `components/library/SystemCardUI.tsx` — per-system SEO pages
 - [x] **Step 3 (polish)** — SystemCardTileUI ported from MFP, selectable colour pills, renamed buttons, profile/component counts
-- [ ] **Step 4** — `components/library/ShoppingListProvider.tsx` + `components/library/ShoppingListDrawerUI.tsx`
+- [x] **Step 4** — `components/library/ShoppingListProvider.tsx` + `components/library/ShoppingListDrawerUI.tsx`
 - [ ] **Step 5** — Convert to RFQ — wire shopping list → `/api/create-draft` → `/rfq?draft=uuid`. Check if `/api/add-to-draft` needs porting from MFP.
 - [ ] **Step 6** — Update `components/GlobalNav.tsx` + `components/builder/FavouriteProductsTab.tsx` to point to `/library`
 - [ ] **Step 7** — `app/api/library/systems/route.ts` + live search/filter on index page

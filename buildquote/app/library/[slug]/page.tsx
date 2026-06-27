@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getSystemBySlug } from '@/lib/data/getSystems'
-import { SystemCardUI } from '@/components/library/SystemCardUI'
+import { SystemCardWrapper } from '@/app/library/[slug]/SystemCardWrapper'
 
 export const dynamic = 'force-dynamic'
 
@@ -88,7 +88,7 @@ export default async function SystemPage({
 
         {/* Card */}
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '32px 24px 80px' }}>
-          <SystemCardUI system={system} />
+          <SystemCardWrapper system={system} />
 
           {/* Back link */}
           <div style={{ marginTop: '24px', textAlign: 'center' }}>
