@@ -127,3 +127,34 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY
 ANTHROPIC_API_KEY
 RESEND_API_KEY
 ```
+
+---
+
+## Library Feature Build (Phase 1)
+**Goal:** Add `buildquote.com.au/library` — public product library with shopping list and RFQ conversion.
+**Status:** In progress
+
+### Key Decisions
+- Folder: `components/library/` (alongside existing `components/builder/`)
+- File naming: `*UI.tsx` = visual component, `*Provider.tsx` = state/context, `.ts` = pure logic
+- localStorage key: `bq_shopping_list` (same key as MFP — shared domain means shared storage)
+- Share: Canvas API → PNG → `navigator.share()` on mobile, download on desktop (port from MFP)
+- Convert to RFQ: POST to `/api/create-draft` with `builderId` if logged in → `/rfq?draft=uuid`
+- Logged-in builder: flows straight to step 2 with items pre-populated, no friction
+- RLS confirmed: all required tables have public SELECT for anon users
+
+### Source Files to Port From
+- Shopping list + drawer: `manufacturer-portal/app/manufacturers/ManufacturersClient.tsx` (lines 302–385 for PNG share, lines 93–165 for drawer UI)
+- SystemCard: `buildquote-data-studio/apps/web/components/system-card/SystemCard.tsx`
+
+### Build Checklist
+- [ ] **Step 1** — `lib/data/getSystems.ts` — Supabase queries: `getAllSystems()` + `getSystemBySlug(slug)`
+- [ ] **Step 2** — `app/library/page.tsx` — static index, systems grouped by category, generateMetadata
+- [ ] **Step 3** — `app/library/[slug]/page.tsx` + `components/library/SystemCardUI.tsx` — per-system SEO pages
+- [ ] **Step 4** — `components/library/ShoppingListProvider.tsx` + `components/library/ShoppingListDrawerUI.tsx`
+- [ ] **Step 5** — Convert to RFQ — wire shopping list → `/api/create-draft` → `/rfq?draft=uuid`. Check if `/api/add-to-draft` needs porting from MFP.
+- [ ] **Step 6** — Update `components/GlobalNav.tsx` + `components/builder/FavouriteProductsTab.tsx` to point to `/library`
+- [ ] **Step 7** — `app/api/library/systems/route.ts` + live search/filter on index page
+
+### Commit Points
+Commit after each step is checked off. Tag significant ones: `feat/library-step-1`, `feat/library-step-2` etc.
