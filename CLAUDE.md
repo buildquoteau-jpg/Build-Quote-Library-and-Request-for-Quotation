@@ -153,9 +153,9 @@ RESEND_API_KEY
 - [x] **Step 3** — `app/library/[slug]/page.tsx` + `components/library/SystemCardUI.tsx` — per-system SEO pages
 - [x] **Step 3 (polish)** — SystemCardTileUI ported from MFP, selectable colour pills, renamed buttons, profile/component counts
 - [x] **Step 4** — `components/library/ShoppingListProvider.tsx` + `components/library/ShoppingListDrawerUI.tsx`
-- [ ] **Step 5** — Convert to RFQ — wire shopping list → `/api/create-draft` → `/rfq?draft=uuid`. Check if `/api/add-to-draft` needs porting from MFP.
-- [ ] **Step 6** — Update `components/GlobalNav.tsx` + `components/builder/FavouriteProductsTab.tsx` to point to `/library`
-- [ ] **Step 7** — `app/api/library/systems/route.ts` + live search/filter on index page
+- [x] **Step 5** — Convert to RFQ — wire shopping list → `/api/create-draft` → `/rfq?draft=uuid`. Check if `/api/add-to-draft` needs porting from MFP.
+- [x] **Step 6** — Update `components/GlobalNav.tsx` + `components/builder/FavouriteProductsTab.tsx` to point to `/library`
+- [x] **Step 7** — `app/api/library/systems/route.ts` + live search/filter on index page
 
 ### Commit Points
 Commit after each step is checked off. Tag significant ones: `feat/library-step-1`, `feat/library-step-2` etc.

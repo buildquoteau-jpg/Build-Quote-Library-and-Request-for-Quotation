@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import { getAllSystems, type LibrarySystem } from '@/lib/data/getSystems'
-import { SystemCardTileUI } from '@/components/library/SystemCardTileUI'
+import { getAllSystems } from '@/lib/data/getSystems'
+import { LibraryIndexClient } from '@/components/library/LibraryIndexClient'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,20 +19,12 @@ export const metadata: Metadata = {
   },
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-
 export default async function LibraryPage() {
   const systems = await getAllSystems()
 
-  // Group by category, preserving sort order within each group
-  const grouped = systems.reduce<Record<string, LibrarySystem[]>>((acc, sys) => {
-    const cat = sys.category || 'Other'
-    if (!acc[cat]) acc[cat] = []
-    acc[cat].push(sys)
-    return acc
-  }, {})
-
-  const categories = Object.keys(grouped).sort()
+  const categories = Array.from(
+    new Set(systems.map(s => s.category || 'Other'))
+  ).sort()
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -111,81 +103,16 @@ export default async function LibraryPage() {
           </div>
         </section>
 
-        {/* ── Category nav ──────────────────────────────────────────────────── */}
-        {categories.length > 1 && (
-          <div style={{ background: '#ffffff', borderBottom: '1px solid #d1d9e0', overflowX: 'auto' }}>
-            <div style={{
-              maxWidth: '1100px', margin: '0 auto', padding: '0 24px',
-              display: 'flex', gap: '0', whiteSpace: 'nowrap' as const,
-            }}>
-              {categories.map(cat => (
-                <a
-                  key={cat}
-                  href={`#${slugifyCategory(cat)}`}
-                  style={{
-                    display: 'inline-block',
-                    padding: '14px 18px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: '#185D7A',
-                    textDecoration: 'none',
-                    borderBottom: '2px solid transparent',
-                    transition: 'border-color 0.12s',
-                  }}
-                >
-                  {cat}
-                </a>
-              ))}
-            </div>
+        {/* ── Search, filter + grid (client) ────────────────────────────────── */}
+        {systems.length === 0 ? (
+          <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '60px 24px', textAlign: 'center' }}>
+            <p style={{ color: '#94a3b8', fontSize: '15px' }}>No products in the library yet.</p>
           </div>
+        ) : (
+          <LibraryIndexClient initialSystems={systems} categories={categories} />
         )}
-
-        {/* ── Systems by category ───────────────────────────────────────────── */}
-        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '48px 24px 80px' }}>
-          {systems.length === 0 ? (
-            <p style={{ color: '#94a3b8', fontSize: '15px', textAlign: 'center', padding: '60px 0' }}>
-              No products in the library yet.
-            </p>
-          ) : (
-            categories.map(cat => (
-              <section key={cat} id={slugifyCategory(cat)} style={{ marginBottom: '56px' }}>
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#f97316', marginBottom: '4px' }}>
-                    Product category
-                  </div>
-                  <h2 style={{
-                    fontSize: 'clamp(20px, 2.5vw, 28px)',
-                    fontWeight: 800,
-                    color: '#185D7A',
-                    fontFamily: 'var(--font-barlow-condensed), sans-serif',
-                    letterSpacing: '-0.01em',
-                    lineHeight: 1.15,
-                  }}>
-                    {cat}
-                  </h2>
-                </div>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                  gap: '16px',
-                }}>
-                  {grouped[cat].map(sys => (
-                    <SystemCardTileUI key={sys.id} system={sys} />
-                  ))}
-                </div>
-              </section>
-            ))
-          )}
-        </div>
 
       </main>
     </>
   )
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function slugifyCategory(cat: string): string {
-  return cat.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
