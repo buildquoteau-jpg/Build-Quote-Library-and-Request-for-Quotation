@@ -235,11 +235,12 @@ system_colours             — id, system_id, colour_name, image_url, is_stocked
 ## Known Gaps / Next Work
 - **`/suppliers` route** — "See local stockists" on system cards is a disabled placeholder; this page doesn't exist yet
 - **RFQ auto-fill** — pre-populate SendScreen with logged-in builder details (builder name, company, ABN, phone, email)
+- **MFP product search → bring to buildquote** — `search.buildquote.com.au/manufacturers` has a "Find Building Products & Suppliers" feature (AI list reading, voice input, example chips, supplier lookup) that needs to be ported into `buildquote.com.au/library` or a new internal route. Currently lives only on the external MFP. This is the feature behind nav item "4 Browse Products & Suppliers". Once ported, that external link can be removed.
+- **`/products` page** — parallel entry point to MFP manufacturers search; now that `/library` exists, consider redirecting `/products` → `/library` or removing it
 - **Google Maps API key** — not restricted to production domains yet
 - **Supabase migration** — `20260520_my_quotes.sql` must be run before testing My Quotes tab
 - **Passkey flow** — not tested end-to-end
 - **Hero image data** — some records have trailing `\r\n` in `hero_image_url`; guarded with `.trim()` in UI but fix at source in Supabase
-- **`/products` page** — parallel entry point to MFP manufacturers search; consider whether to consolidate long-term
 
 ---
 
