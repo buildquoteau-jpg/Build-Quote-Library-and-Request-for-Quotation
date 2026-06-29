@@ -230,11 +230,12 @@ export function ShoppingListDrawerUI() {
                   {shoppingList.map((item, rowIdx) => (
                     <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9', background: rowIdx % 2 === 0 ? '#f8fafc' : '#ffffff' }}>
                       <td style={{ ...tdStyle, color: '#9ca3af', textAlign: 'center' }}>{rowIdx + 1}</td>
-                      <td style={{ ...tdStyle, wordBreak: 'break-word', minWidth: '160px' }}>
-                        <input
+                      <td style={{ ...tdStyle, minWidth: '160px' }}>
+                        <textarea
                           value={item.name}
                           onChange={e => updateName(item.id, e.target.value)}
-                          style={{ width: '100%', border: 'none', background: 'transparent', fontSize: '13px', fontWeight: 600, color: '#0f172a', outline: 'none', padding: '2px 0', borderBottom: '1.5px solid transparent', wordBreak: 'break-word' }}
+                          rows={2}
+                          style={{ width: '100%', border: 'none', background: 'transparent', fontSize: '13px', fontWeight: 600, color: '#0f172a', outline: 'none', padding: '2px 0', borderBottom: '1.5px solid transparent', resize: 'none', lineHeight: 1.35, wordBreak: 'break-word', overflowWrap: 'break-word', overflow: 'hidden' }}
                           onFocus={e => { e.currentTarget.style.borderBottomColor = '#185D7A' }}
                           onBlur={e => { e.currentTarget.style.borderBottomColor = 'transparent' }}
                         />
