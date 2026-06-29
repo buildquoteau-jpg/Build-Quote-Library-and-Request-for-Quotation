@@ -21,8 +21,10 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       // Fonts
       "font-src 'self' https://fonts.gstatic.com",
-      // Images: self + data URIs + Supabase storage + Google Maps tiles + Google favicons
-      "img-src 'self' data: https://*.supabase.co https://*.supabase.in https://*.gstatic.com https://maps.googleapis.com https://www.google.com",
+      // Images: self + data URIs + any HTTPS host. The library aggregates
+      // manufacturer imagery from many external CDNs (Supabase, Wix, etc.);
+      // images can't execute code, so a broad img-src is low risk.
+      "img-src 'self' data: https:",
       // Connections: self + Supabase + Vercel analytics + Google Maps + Places API
       "connect-src 'self' https://*.supabase.co https://*.supabase.in https://va.vercel-scripts.com https://maps.googleapis.com https://maps.gstatic.com https://places.googleapis.com",
       // No plugins, no object embeds
