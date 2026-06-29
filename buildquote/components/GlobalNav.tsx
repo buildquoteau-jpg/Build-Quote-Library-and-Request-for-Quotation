@@ -91,17 +91,17 @@ export function GlobalNav() {
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-          width: '230px', background: '#ffffff',
-          border: '1px solid #d1d9e0', borderRadius: '14px',
+          width: '200px', background: '#ffffff',
+          border: '1px solid #d1d9e0', borderRadius: '12px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
           maxHeight: 'calc(100vh - 100px)',
           overflowX: 'hidden', overflowY: 'auto',
         }}>
-          <div style={{ height: '6px' }} />
+          <div style={{ height: '4px' }} />
 
           {allLinks.map((link, i) =>
             link === null ? (
-              <div key={`divider-${i}`} style={{ margin: '5px 0', borderTop: '1px solid #e5e7eb' }} />
+              <div key={`divider-${i}`} style={{ margin: '3px 0', borderTop: '1px solid #e5e7eb' }} />
             ) : link === 'internal-header' ? (
               <div key="internal-header" style={{ padding: '4px 18px 2px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.08em', color: '#94a3b8', textTransform: 'uppercase' }}>
                 Team Links
@@ -115,8 +115,8 @@ export function GlobalNav() {
                 onClick={() => setOpen(false)}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '11px 18px',
-                  fontSize: '14px',
+                  padding: '8px 14px',
+                  fontSize: '13px',
                   fontWeight: (!link.external && pathname === link.href) ? 700 : 500,
                   color: (!link.external && pathname === link.href) ? '#185D7A' : '#334155',
                   background: (!link.external && pathname === link.href) ? '#f0f9ff' : 'transparent',
@@ -135,7 +135,7 @@ export function GlobalNav() {
             )
           )}
 
-          <div style={{ height: '6px' }} />
+          <div style={{ height: '4px' }} />
         </div>
       )}
     </div>
