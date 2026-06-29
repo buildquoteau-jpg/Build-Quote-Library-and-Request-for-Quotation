@@ -235,7 +235,34 @@ system_colours             — id, system_id, colour_name, image_url, is_stocked
 ## Known Gaps / Next Work
 - **`/suppliers` route** — "See local stockists" on system cards is a disabled placeholder; this page doesn't exist yet
 - **RFQ auto-fill** — pre-populate SendScreen with logged-in builder details (builder name, company, ABN, phone, email)
-- **MFP product search → bring to buildquote** — `search.buildquote.com.au/manufacturers` has a "Find Building Products & Suppliers" feature (AI list reading, voice input, example chips, supplier lookup) that needs to be ported into `buildquote.com.au/library` or a new internal route. Currently lives only on the external MFP. This is the feature behind nav item "4 Browse Products & Suppliers". Once ported, that external link can be removed.
+- **MFP product search → port to buildquote.com.au/library** — `search.buildquote.com.au/manufacturers` (ManufacturersClient.tsx) has a full feature set that needs to come across. Source: `manufacturer-portal/manufacturer-portal-main/app/manufacturers/ManufacturersClient.tsx`. Once ported, nav item "4 Browse Products & Suppliers" (external MFP link) can be removed.
+
+  **Already ported to /library ✅**
+  - System card tiles grid (LibraryIndexClient)
+  - Category pill filter + text search bar
+  - Shopping list drawer (ShoppingListDrawerUI) — add, qty, UOM, share PNG, convert to RFQ
+
+  **Still to port ❌**
+  - **AI search bar** — large prominent search input ("Search or ask a question…") with intent detection: auto-detects if query is a keyword search, a natural-language question (→ AI answer), or a materials list (→ parse it)
+  - **Example chips** — "Try: 820 internal door / fibre cement cladding / composite decking / external corner trim" — click to run search
+  - **AI Q&A** — streaming Claude/OpenAI answer panel for question-style queries; shows related product chips; graceful "outside scope" fallback
+  - **Quick List panel** ("Already know what you need?"):
+    - Textarea — paste or type a materials list
+    - **Upload photo** — AI OCR via `POST /api/search/extract-from-image` (image → line items)
+    - **Speak list** — Web Speech API voice input appended to textarea
+    - **Read list →** — AI parse via `POST /api/search/parse-list` (text → line items → shopping list)
+    - Drag-and-drop support (drop a photo or text onto the panel)
+    - Paste-image-from-clipboard support
+    - Rotating funny loading messages while parsing
+  - **Voice search** — microphone button in the main search bar (separate from "Speak list")
+  - **System detail modal** — clicking a search result opens the full system card in an inline modal (not a new page). Uses same SystemCardUI but rendered as overlay. Currently /library navigates to a new page per system.
+  - **Fuzzy client-side search** with stop-word filtering (lazy-loads all systems on first 2-char keystroke)
+
+  **API routes that need porting (currently MFP-only):**
+  - `POST /api/search/ask` → stream AI Q&A answer (needs Claude/OpenAI + system context)
+  - `POST /api/search/parse-list` → parse text list → `{ items: [{qty, name, uom}] }`
+  - `POST /api/search/extract-from-image` → base64 image → `{ items: [{qty, name, uom}] }`
+  These will need to be created as `POST /api/library/ask`, `/api/library/parse-list`, `/api/library/extract-from-image` on the buildquote app.
 - **`/products` page** — parallel entry point to MFP manufacturers search; now that `/library` exists, consider redirecting `/products` → `/library` or removing it
 - **Google Maps API key** — not restricted to production domains yet
 - **Supabase migration** — `20260520_my_quotes.sql` must be run before testing My Quotes tab
