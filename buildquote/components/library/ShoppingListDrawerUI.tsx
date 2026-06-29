@@ -218,10 +218,9 @@ export function ShoppingListDrawerUI() {
                 <thead>
                   <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
                     <th style={thStyle}>#</th>
-                    <th style={{ ...thStyle, textAlign: 'left', minWidth: '160px' }}>Profile</th>
-                    <th style={{ ...thStyle, textAlign: 'left', width: '22%' }}>Specs</th>
-                    <th style={{ ...thStyle, textAlign: 'left', width: '18%' }}>SKU / Part No</th>
-                    <th style={{ ...thStyle, width: '70px' }}>UOM</th>
+                    <th style={{ ...thStyle, textAlign: 'left' }}>Profile &amp; Specs</th>
+                    <th style={{ ...thStyle, textAlign: 'left', width: '20%' }}>SKU / Part No</th>
+                    <th style={{ ...thStyle, width: '72px' }}>UOM</th>
                     <th style={{ ...thStyle, width: '100px' }}>QTY</th>
                     <th style={{ ...thStyle, width: '28px' }}></th>
                   </tr>
@@ -229,28 +228,30 @@ export function ShoppingListDrawerUI() {
                 <tbody>
                   {shoppingList.map((item, rowIdx) => (
                     <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9', background: rowIdx % 2 === 0 ? '#f8fafc' : '#ffffff' }}>
-                      <td style={{ ...tdStyle, color: '#9ca3af', textAlign: 'center' }}>{rowIdx + 1}</td>
-                      <td style={{ ...tdStyle, minWidth: '160px' }}>
+                      <td style={{ ...tdStyle, color: '#9ca3af', textAlign: 'center', verticalAlign: 'top', paddingTop: '12px' }}>{rowIdx + 1}</td>
+
+                      {/* Profile name + specs stacked */}
+                      <td style={{ ...tdStyle, verticalAlign: 'top' }}>
                         <textarea
                           value={item.name}
                           onChange={e => updateName(item.id, e.target.value)}
-                          rows={2}
-                          style={{ width: '100%', border: 'none', background: 'transparent', fontSize: '13px', fontWeight: 600, color: '#0f172a', outline: 'none', padding: '2px 0', borderBottom: '1.5px solid transparent', resize: 'none', lineHeight: 1.35, wordBreak: 'break-word', overflowWrap: 'break-word', overflow: 'hidden' }}
+                          rows={Math.max(1, Math.ceil(item.name.length / 32))}
+                          style={{ width: '100%', border: 'none', background: 'transparent', fontSize: '13px', fontWeight: 600, color: '#0f172a', outline: 'none', padding: '2px 0 1px', borderBottom: '1.5px solid transparent', resize: 'none', lineHeight: 1.4, overflow: 'hidden', display: 'block' }}
                           onFocus={e => { e.currentTarget.style.borderBottomColor = '#185D7A' }}
                           onBlur={e => { e.currentTarget.style.borderBottomColor = 'transparent' }}
                         />
+                        {item.desc && (
+                          <span style={{ display: 'block', fontSize: '11px', color: '#6b7280', marginTop: '2px', lineHeight: 1.35 }}>{item.desc}</span>
+                        )}
                       </td>
-                      <td style={{ ...tdStyle, color: '#64748b', fontSize: '12px', maxWidth: '180px' }}>
-                        <span title={item.desc}>
-                          {item.desc && item.desc.length > 50 ? item.desc.slice(0, 48) + '…' : item.desc}
-                        </span>
-                      </td>
-                      <td style={{ ...tdStyle }}>
-                        <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#475569', background: '#f1f5f9', padding: '2px 5px', borderRadius: '3px' }}>
+
+                      <td style={{ ...tdStyle, verticalAlign: 'top', paddingTop: '10px' }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#475569', background: '#f1f5f9', padding: '2px 5px', borderRadius: '3px', wordBreak: 'break-all' }}>
                           {item.sku || '—'}
                         </span>
                       </td>
-                      <td style={{ ...tdStyle, textAlign: 'center' }}>
+
+                      <td style={{ ...tdStyle, textAlign: 'center', verticalAlign: 'top', paddingTop: '10px' }}>
                         <input
                           value={item.uom}
                           onChange={e => updateUom(item.id, e.target.value.toUpperCase().slice(0, 6))}
@@ -259,14 +260,16 @@ export function ShoppingListDrawerUI() {
                           onBlur={e => { e.currentTarget.style.borderColor = '#e5e7eb' }}
                         />
                       </td>
-                      <td style={{ ...tdStyle, textAlign: 'center' }}>
+
+                      <td style={{ ...tdStyle, textAlign: 'center', verticalAlign: 'top', paddingTop: '8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
                           <button onClick={() => updateQty(item.id, item.qty - 1)} style={qtyBtnStyle}>−</button>
                           <span style={{ minWidth: '24px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>{item.qty}</span>
                           <button onClick={() => updateQty(item.id, item.qty + 1)} style={qtyBtnStyle}>+</button>
                         </div>
                       </td>
-                      <td style={{ ...tdStyle, textAlign: 'center' }}>
+
+                      <td style={{ ...tdStyle, textAlign: 'center', verticalAlign: 'top', paddingTop: '10px' }}>
                         <button onClick={() => removeItem(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#9ca3af', lineHeight: 1, padding: '2px' }}>×</button>
                       </td>
                     </tr>
