@@ -103,7 +103,7 @@ export default async function Home() {
 
       {/* ── Manufacturer marquee (decorative) ─────────────────── */}
       {marquee.length > 0 && (
-        <div className="bq-marquee" style={{ overflow: 'hidden', padding: 'clamp(28px, 5vh, 44px) 0 clamp(10px, 2vh, 16px)' }} aria-hidden="true">
+        <div className="bq-marquee" style={{ overflow: 'hidden', padding: 'clamp(28px, 5vh, 44px) 0 clamp(28px, 5vh, 48px)' }} aria-hidden="true">
           <div className="bq-marquee-track" style={{ display: 'flex', gap: 'clamp(10px, 1.5vw, 16px)' }}>
             {marquee.map((m, i) => {
               const hero = m.hero_image_url?.trim()
@@ -124,7 +124,6 @@ export default async function Home() {
                     alignItems: 'flex-end',
                     padding: '10px 12px',
                     textDecoration: 'none',
-                    border: '1px solid rgba(255,255,255,0.14)',
                     backgroundImage: `linear-gradient(rgba(13,30,45,0.15), rgba(13,30,45,0.66)), url(${hero})`,
                     backgroundSize: 'cover',
                     backgroundPosition: `center ${posY}%`,
