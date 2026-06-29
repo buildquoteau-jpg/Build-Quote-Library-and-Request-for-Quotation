@@ -10,8 +10,7 @@ const NAV_LINKS = [
   { label: '1  Builder Portal',             href: '/dashboard',                  external: false },
   { label: '2  Start a Quote Request',      href: '/rfq',                        external: false },
   { label: '3  Product Library',            href: '/library',                    external: false },
-  { label: '4  Browse Products & Suppliers',href: `${MFP}/manufacturers`,       external: true  },
-  { label: '5  Supplier Directory',         href: `${MFP}/supplierdirectory`,   external: true  },
+  { label: '4  Supplier Directory',         href: `${MFP}/supplierdirectory`,   external: true  },
 ]
 
 const INTERNAL_LINKS = [
