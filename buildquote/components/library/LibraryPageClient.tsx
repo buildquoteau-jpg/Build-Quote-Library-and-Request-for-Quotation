@@ -154,25 +154,25 @@ export function LibraryPageClient({ initialSystems, categories }: {
   return (
     <>
       {/* Hero */}
-      <section style={{ background: 'linear-gradient(155deg, #0d3347 0%, #185D7A 55%, #1e7399 100%)', padding: '52px 20px 44px' }}>
+      <section style={{ background: 'linear-gradient(155deg, #0d3347 0%, #185D7A 55%, #1e7399 100%)', padding: '32px 20px 28px' }}>
         <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center' }}>
 
-          <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(24px, 4vw, 34px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.15, fontFamily: 'var(--font-barlow-condensed), sans-serif' }}>
+          <h1 style={{ margin: '0 0 6px', fontSize: 'clamp(22px, 3.5vw, 30px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.15, fontFamily: 'var(--font-barlow-condensed), sans-serif' }}>
             Building Product Library
           </h1>
-          <p style={{ margin: '0 0 22px', fontSize: '15px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.55 }}>
+          <p style={{ margin: '0 0 16px', fontSize: '14px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.5 }}>
             Browse product systems and find local WA suppliers — in seconds.
           </p>
 
           {/* Search bar */}
-          <div style={{ position: 'relative', marginBottom: '14px' }}>
+          <div style={{ position: 'relative', marginBottom: '10px' }}>
             <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="6" stroke="#94a3b8" strokeWidth="2"/><path d="M13 13l3 3" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round"/></svg>
             </div>
             <input
               type="search" value={query} onChange={e => setQuery(e.target.value)}
               placeholder="Search or ask a question…"
-              style={{ width: '100%', boxSizing: 'border-box', border: 0, borderRadius: '16px', padding: '16px 48px 16px 46px', fontSize: '16px', color: '#0f172a', background: '#fff', outline: 'none', boxShadow: '0 6px 28px rgba(0,0,0,0.22)', fontWeight: 500 }}
+              style={{ width: '100%', boxSizing: 'border-box', border: 0, borderRadius: '14px', padding: '13px 44px 13px 42px', fontSize: '15px', color: '#0f172a', background: '#fff', outline: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.18)', fontWeight: 500 }}
             />
             {query && (
               <button onClick={() => setQuery('')} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#9ca3af', lineHeight: 1, padding: '4px' }}>×</button>
@@ -181,7 +181,7 @@ export function LibraryPageClient({ initialSystems, categories }: {
 
           {/* Example chips */}
           {!query && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', alignItems: 'center', marginBottom: '18px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center', alignItems: 'center', marginBottom: '12px' }}>
               <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.55)' }}>Try:</span>
               {EXAMPLES.map(ex => (
                 <button key={ex} onClick={() => setQuery(ex)}
@@ -206,10 +206,9 @@ export function LibraryPageClient({ initialSystems, categories }: {
               const text = e.dataTransfer.getData('text')
               if (text) { setListInput(prev => prev ? `${prev}\n${text}` : text); setListError('') }
             }}
-            style={{ background: dragOver ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.18)', border: dragOver ? '2px dashed rgba(255,255,255,0.6)' : '1px solid rgba(255,255,255,0.18)', borderRadius: '14px', padding: '16px 18px', textAlign: 'left', transition: 'background 0.15s, border 0.15s' }}
+            style={{ background: dragOver ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.18)', border: dragOver ? '2px dashed rgba(255,255,255,0.6)' : '1px solid rgba(255,255,255,0.18)', borderRadius: '12px', padding: '12px 14px', textAlign: 'left', transition: 'background 0.15s, border 0.15s' }}
           >
-            <p style={{ margin: '0 0 2px', fontSize: '15px', fontWeight: 800, color: '#fff', letterSpacing: '-0.01em', lineHeight: 1.3 }}>Already know what you need?</p>
-            <p style={{ margin: '0 0 12px', fontSize: '13px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Type, upload or speak your building materials list. BuildQuote will convert it into a clear shopping list or RFQ.</p>
+            <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 700, color: '#fff', letterSpacing: '-0.01em', lineHeight: 1.3 }}>Already know what you need? <span style={{ fontWeight: 400, opacity: 0.65 }}>Paste a list, upload a photo or speak it.</span></p>
 
             {listBusy ? (
               <div style={{ padding: '20px 0', textAlign: 'center' }}>
@@ -232,13 +231,13 @@ export function LibraryPageClient({ initialSystems, categories }: {
                     if (imgFile) { e.preventDefault(); handleFileUpload(imgFile) }
                   }}
                   placeholder="Paste or type a list — e.g. 25 bags post set, 13 stirrups, 15 lengths 70×35 …"
-                  rows={3}
+                  rows={2}
                   style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '10px 13px', fontSize: '14px', color: '#fff', outline: 'none', resize: 'vertical', lineHeight: 1.5 }}
                 />
                 {listError && (
                   <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#fca5a5', fontWeight: 600 }}>{listError}</p>
                 )}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px', gap: '8px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px', gap: '8px', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', cursor: 'pointer', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: '8px', padding: '7px 12px', userSelect: 'none' }}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
