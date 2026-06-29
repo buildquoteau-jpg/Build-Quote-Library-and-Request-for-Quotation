@@ -95,6 +95,22 @@ body {
   width: max-content;
 }
 
+/* Landing manufacturer marquee — slow, edge-faded, pause on hover */
+.bq-marquee {
+  -webkit-mask: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.bq-marquee-track {
+  animation: scroll 48s linear infinite;
+  width: max-content;
+}
+.bq-marquee:hover .bq-marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bq-marquee-track { animation: none; }
+}
+
 @keyframes bq-water-flow {
   0% { background-position: 0% 50%; }
   100% { background-position: 200% 50%; }
