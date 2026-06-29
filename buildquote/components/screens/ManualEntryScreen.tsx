@@ -1161,7 +1161,7 @@ export default function ManualEntryScreen({
                   </button>
                   <button type="submit" disabled={newJobSaving || !newJobRef.trim()}
                     className="flex-1 bg-navy text-white font-bold text-sm py-3 rounded-xl hover:opacity-90 disabled:opacity-50 transition">
-                    {newJobSaving ? 'Saving…' : 'Save &amp; select job'}
+                    {newJobSaving ? 'Saving…' : 'Save & select job'}
                   </button>
                 </div>
               </form>
