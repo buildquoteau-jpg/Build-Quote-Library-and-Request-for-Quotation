@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { getManufacturers, type ManufacturerListItem } from '@/lib/data/getSystems'
 
 export const metadata: Metadata = {
   title: 'South West Building Materials Directory | BuildQuote',
@@ -15,33 +16,8 @@ export const metadata: Metadata = {
   },
 }
 
+// Still used for links to the kept MFP supplier directory.
 const MFP = 'https://search.buildquote.com.au'
-const MFP_API = process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : MFP
-
-// ── Types ────────────────────────────────────────────────────────────────────
-
-type ManufacturerItem = {
-  id: string
-  name: string
-  slug: string
-  description: string | null
-  logo_url: string | null
-  hero_image_url: string | null
-  hero_image_position_y: number | null
-  system_count: number
-}
-
-// ── Data fetching ─────────────────────────────────────────────────────────────
-
-async function getManufacturers(): Promise<ManufacturerItem[]> {
-  try {
-    const res = await fetch(`${MFP_API}/api/manufacturers`, { next: { revalidate: 3600 } })
-    if (!res.ok) return []
-    return res.json()
-  } catch {
-    return []
-  }
-}
 
 // ── Static content ────────────────────────────────────────────────────────────
 
@@ -165,7 +141,7 @@ export default async function SouthWestDirectoryPage() {
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
-              href={`${MFP}/manufacturers`}
+              href="/library"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -219,7 +195,7 @@ export default async function SouthWestDirectoryPage() {
             {CATEGORIES.map(cat => (
               <a
                 key={cat.slug}
-                href={`${MFP}/manufacturers`}
+                href="/library"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -269,7 +245,7 @@ export default async function SouthWestDirectoryPage() {
           )}
 
           <div style={{ textAlign: 'center', marginTop: '44px' }}>
-            <a href={`${MFP}/manufacturers`} style={outlineBtnStyle}>
+            <a href="/library" style={outlineBtnStyle}>
               View all manufacturers →
             </a>
           </div>
@@ -335,7 +311,7 @@ export default async function SouthWestDirectoryPage() {
             Browse the full catalogue of building product systems available through the South West directory.
           </p>
           <div style={{ marginTop: '32px' }}>
-            <a href={`${MFP}/manufacturers`} style={navyBtnStyle}>
+            <a href="/library" style={navyBtnStyle}>
               Browse product systems →
             </a>
           </div>
@@ -433,7 +409,7 @@ export default async function SouthWestDirectoryPage() {
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
-              href={`${MFP}/manufacturers`}
+              href="/library"
               style={{
                 display: 'inline-block',
                 background: '#f97316',
@@ -489,11 +465,11 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
-function ManufacturerCard({ manufacturer }: { manufacturer: ManufacturerItem }) {
+function ManufacturerCard({ manufacturer }: { manufacturer: ManufacturerListItem }) {
   const posY = manufacturer.hero_image_position_y ?? 50
   return (
     <a
-      href={`${MFP}/manufacturers/${manufacturer.slug}`}
+      href="/library"
       style={{
         display: 'block',
         background: '#ffffff',

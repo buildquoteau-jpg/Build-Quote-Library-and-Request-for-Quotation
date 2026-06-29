@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import Button from '../ui/Button'
 import { LineItem } from '@/lib/types'
-import { getOrCreateDraft } from '@/lib/rfqDraft'
 
 interface RFQScreenProps {
   items: LineItem[]
@@ -39,14 +38,9 @@ export default function RFQScreen({
 
   const remove = (id: string) => onChange(items.filter((item) => item.id !== id))
 
-  const handleBrowseManufacturerSystems = async () => {
-    try {
-      setError('')
-      const draft = await getOrCreateDraft()
-      window.open('https://search.buildquote.com.au/?draft=' + draft, '_blank')
-    } catch (err: any) {
-      setError(err?.message || 'Could not open Manufacturer Components.')
-    }
+  const handleBrowseManufacturerSystems = () => {
+    setError('')
+    window.open('/library', '_blank')
   }
 
   const lowCount = items.filter((i) => i.confidence === 'low').length

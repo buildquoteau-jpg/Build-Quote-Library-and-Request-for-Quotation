@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Button from '../ui/Button'
 import { LineItem } from '@/lib/types'
-import { getOrCreateDraft } from '@/lib/rfqDraft'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
 const PARSE_MESSAGES = [
@@ -289,15 +288,8 @@ export default function ManualEntryScreen({
     setFavPickerOpen(false)
   }
 
-  const handleBrowseManufacturerSystems = async () => {
-    try {
-      setError('')
-      const draft = await getOrCreateDraft()
-      const mfpBase = process.env.NEXT_PUBLIC_MFP_URL ?? 'https://search.buildquote.com.au'
-      window.location.href = `${mfpBase}/manufacturers?draft=` + draft
-    } catch (err: any) {
-      setError(err?.message || 'Could not open Manufacturer Components.')
-    }
+  const handleBrowseManufacturerSystems = () => {
+    window.location.href = '/library'
   }
 
   const handleOpenSupplierPicker = async () => {
