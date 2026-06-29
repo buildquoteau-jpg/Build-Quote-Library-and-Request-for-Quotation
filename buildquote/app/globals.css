@@ -67,6 +67,11 @@
 
 }
 
+/* Base font size — scales all rem-based Tailwind utilities down proportionally */
+html {
+  font-size: 15px;
+}
+
 /* Base body styles */
 body {
   background-color: var(--color-page);
