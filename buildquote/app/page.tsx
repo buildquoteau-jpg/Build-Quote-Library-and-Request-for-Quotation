@@ -1,4 +1,22 @@
-export default function Home() {
+import { createSupabaseServerClient } from '@/lib/supabase-server'
+
+export default async function Home() {
+  // Auth-aware: returning signed-in builders are recognised and sent to their
+  // portal; anonymous visitors get a quiet sign-in link. The landing itself
+  // requires no login — the library is free and open.
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  let builderName: string | null = null
+  if (user) {
+    const { data: profile } = await supabase
+      .from('builders')
+      .select('builder_name, company_name')
+      .eq('id', user.id)
+      .maybeSingle()
+    builderName = profile?.builder_name || profile?.company_name || null
+  }
+
   return (
     <main className="min-h-screen bg-page flex flex-col items-center justify-center px-6 py-12 lg:py-16 gap-8 lg:gap-10">
 
@@ -14,40 +32,43 @@ export default function Home() {
 
       {/* ── Hero headline ─────────────────────────────────────── */}
       <div className="text-center max-w-xl lg:max-w-3xl">
+        <p className="text-brand text-xs sm:text-sm font-bold uppercase tracking-widest mb-3">
+          Free · No login required
+        </p>
         <p className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-heading leading-tight">
-          Building materials<br />
-          Request for Quotation<br />
-          <span className="text-brand mt-1 block">Made simple.</span>
+          The Australian Building<br />
+          <span className="text-brand">Materials Library</span>
         </p>
         <p className="text-text-secondary text-sm sm:text-base lg:text-lg mt-3 lg:mt-5 leading-relaxed font-medium max-w-md lg:max-w-2xl mx-auto">
-          Browse manufacturer product systems, build your materials list
-          and send a professional RFQ to your suppliers — in minutes.
+          Build a shopping list from thousands of manufacturer-verified
+          BuildQuote System Cards in seconds — then link to local stockists.
         </p>
       </div>
 
       {/* ── CTAs ──────────────────────────────────────────────── */}
       <div className="flex flex-col items-center w-full max-w-xs lg:max-w-sm gap-2.5">
         <a
-          href="/rfq"
+          href="/library"
           className="bg-brand hover:bg-brand-hover text-white font-bold text-lg lg:text-xl px-10 py-4 rounded-2xl transition-colors text-center shadow-[0_10px_24px_rgba(249,115,22,0.22)] w-full"
         >
-          Get Started
+          Browse the Library
         </a>
         <p className="text-text-muted text-sm font-medium">
           Always free for builders and trades
         </p>
-        <a
-          href="/register"
-          className="w-full text-center bg-heading text-white font-bold text-sm lg:text-base px-6 py-3 rounded-xl hover:opacity-90 transition"
-        >
-          Create free account
-        </a>
-        <a href="/login" className="text-sm font-semibold text-brand hover:underline">
-          Already have an account? Sign in →
-        </a>
-        <a href="/library" className="text-xs font-semibold text-text-muted hover:text-brand transition-colors">
-          Browse product library →
-        </a>
+
+        {user ? (
+          <a
+            href="/dashboard"
+            className="w-full text-center bg-heading text-white font-bold text-sm lg:text-base px-6 py-3 rounded-xl hover:opacity-90 transition mt-1.5"
+          >
+            {builderName ? `Welcome back, ${builderName} — Builder Portal →` : 'Go to your Builder Portal →'}
+          </a>
+        ) : (
+          <a href="/login" className="text-sm font-semibold text-brand hover:underline mt-1.5">
+            Already have a builder account? Sign in →
+          </a>
+        )}
       </div>
 
       {/* ── Footer ────────────────────────────────────────────── */}
