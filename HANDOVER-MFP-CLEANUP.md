@@ -7,9 +7,7 @@ BuildQuote runs two apps on the same Supabase project (`oxvhmulxuvlfjyjzleki`):
 - **buildquote.com.au** — builder-facing RFQ app (`Build-Quote-v6/buildquote/`)
 - **search.buildquote.com.au** — the "Manufacturer Portal" (MFP) (`manufacturer-portal/manufacturer-portal-main/`)
 
-The MFP was originally a supplier admin portal. Over time, customer-facing product search features were bolted on (`/manufacturers` page). Those features are now being migrated to `buildquote.com.au/library`. This cleanup session is the first step: tidy the MFP so it clearly does one job, remove stale routes, update navigation, and update the CLAUDE.md to reflect reality.
-
-**The `/manufacturers` feature is NOT being deleted yet** — it stays live until the full port to buildquote.com.au/library is complete. What we're cleaning up is dead routes, stale nav links, and the CLAUDE.md.
+The MFP was originally a supplier admin portal. Customer-facing product search features were added over time (`/manufacturers` page). Those features have now been **fully ported** to `buildquote.com.au/library`. The Half 2 routes are ready to be deleted in this session.
 
 ---
 
@@ -24,7 +22,7 @@ The MFP was originally a supplier admin portal. Over time, customer-facing produ
 
 ## MFP Purpose — Two Distinct Halves
 
-### Half 1 — Supplier/Admin Portal (KEEP — core purpose)
+### Half 1 — Supplier/Admin Portal (KEEP — do not touch)
 | Route | Purpose |
 |---|---|
 | `/supplier/login` | Supplier auth |
@@ -39,118 +37,130 @@ The MFP was originally a supplier admin portal. Over time, customer-facing produ
 | `/auth/reset-password` | Password reset handler |
 | `/legal` | Legal/terms |
 
-### Half 2 — Customer-Facing Product Search (MIGRATING to buildquote.com.au/library)
-| Route | Status |
-|---|---|
-| `/manufacturers` | Being migrated to buildquote.com.au/library — keep live for now |
-| `/manufacturers/[slug]` | Per-manufacturer product page — keep live for now |
-| `/api/search/ask` | AI Q&A — will move to buildquote as `/api/library/ask` |
-| `/api/search/parse-list` | AI list parse — will move to `/api/library/parse-list` |
-| `/api/search/extract-from-image` | AI OCR — will move to `/api/library/extract-from-image` |
-| `/api/create-draft` | Proxy → buildquote `/api/create-draft` — used by /manufacturers only |
-| `/api/add-to-draft` | Proxy → buildquote `/api/save-draft-items` — used by /manufacturers only |
+### Half 2 — Customer-Facing Product Search (FULLY PORTED — DELETE NOW)
 
-### Stale / Dead Routes (DELETE or REDIRECT)
+All features from this half have been ported to `buildquote.com.au/library`. Delete everything below.
+
+| Route / File | Action | Notes |
+|---|---|---|
+| `app/manufacturers/page.tsx` | **DELETE** | Index page — ported to buildquote `/library` |
+| `app/manufacturers/layout.tsx` | **DELETE** | Layout wrapper |
+| `app/manufacturers/ManufacturersClient.tsx` | **DELETE** | Main client component — ported |
+| `app/manufacturers/ManufacturerPageClient.tsx` | **DELETE** | Per-mfr client — ported |
+| `app/manufacturers/[slug]/page.tsx` | **DELETE** | Per-manufacturer page |
+| `app/api/search/ask/route.ts` | **DELETE** | AI Q&A — ported to buildquote `/api/library/ask` (not yet built but MFP version no longer needed) |
+| `app/api/search/parse-list/route.ts` | **DELETE** | AI list parse — ported to buildquote `/api/library/parse-list` ✅ |
+| `app/api/search/extract-from-image/route.ts` | **DELETE** | AI OCR — ported to buildquote `/api/library/extract-from-image` ✅ |
+| `app/api/create-draft/route.ts` | **DELETE** | Proxy to buildquote — only used by /manufacturers |
+| `app/api/add-to-draft/route.ts` | **DELETE** | Proxy to buildquote — only used by /manufacturers |
+| `lib/data/getManufacturers.ts` | **DELETE** | Data layer for /manufacturers index — no longer needed |
+| `lib/data/getManufacturerData.ts` | **DELETE** | Data layer for /manufacturers/[slug] — no longer needed |
+
+After deleting the `app/manufacturers/` directory entirely, also update:
+- `app/page.tsx` — currently `redirect('/manufacturers')` → change to `redirect('https://buildquote.com.au/library')`
+- `app/components/GlobalNav.tsx` — item 3 currently `{ label: '3  Search Products', href: '/manufacturers', external: false }` → change to `{ label: '3  Product Library', href: 'https://buildquote.com.au/library', external: true }`
+
+### Stale / Dead Routes (DELETE)
 | Route | Verdict | Reason |
 |---|---|---|
-| `/browse` | **Delete** | Old customer browse page, entirely superseded by `/manufacturers` then by `/library`. Client component, no server data, no inbound links. |
-| `/showroom` | **Delete** | Demo/test page for widgets. No real purpose in production. Hidden from GlobalNav already. |
-| `/embed/[slug]` | **Investigate** | Old embed route — check if any active suppliers use it vs `/widget/[token]`. May be dead. |
+| `app/browse/` | **DELETE** | Old customer browse page, superseded by /manufacturers then /library |
+| `app/showroom/` | **DELETE** | Demo/test page for widgets, not used in production |
+| `app/embed/[slug]/` | **Investigate first** | Old embed route — check if distinct from `/widget/[token]`. If dead, delete. |
 
 ---
 
-## Cleanup Tasks
+## Cleanup Tasks — In Order
 
-### 1. Delete `/browse`
-Delete the entire directory:
+### 1. Delete Half 2 routes
+Delete these entire directories and files:
 ```
-app/browse/page.tsx
+app/manufacturers/          ← entire directory
+app/api/search/             ← entire directory (ask, parse-list, extract-from-image)
+app/api/create-draft/       ← entire directory
+app/api/add-to-draft/       ← entire directory
+lib/data/getManufacturers.ts
+lib/data/getManufacturerData.ts
 ```
-If anything imports or links to `/browse`, update it. Do a grep for `"/browse"` across the repo first.
 
-### 2. Delete `/showroom`
-Delete the entire directory:
+Grep for any remaining imports of these files before deleting:
+```bash
+grep -r "getManufacturers\|getManufacturerData\|ManufacturersClient\|ManufacturerPageClient\|add-to-draft\|create-draft" --include="*.ts" --include="*.tsx" .
 ```
-app/showroom/page.tsx
-app/showroom/layout.tsx
-app/showroom/ShowroomClient.tsx
+Fix any broken imports found.
+
+### 2. Delete stale routes
 ```
-The GlobalNav already excludes `/showroom` from rendering (`pathname.startsWith('/showroom')`). Remove that exclusion from GlobalNav after deleting the route.
+app/browse/
+app/showroom/
+```
+After deleting `/showroom`, remove the `pathname.startsWith('/showroom')` exclusion from `app/components/GlobalNav.tsx`.
 
 ### 3. Investigate `/embed/[slug]`
-Read `app/embed/[slug]/page.tsx` and `EmbedClient.tsx`. Check if this route is distinct from `/widget/[token]`. If it's dead (no active supplier tokens use `/embed/`), delete the directory. If it's still in use, leave it and document it.
+Read `app/embed/[slug]/page.tsx` and `EmbedClient.tsx`. If this is just an old alias for `/widget/[token]` with no active usage, delete it. If suppliers still use it, leave it and document it in CLAUDE.md.
 
-### 4. Update GlobalNav — fix item "3 Search Products"
-File: `app/components/GlobalNav.tsx`
-
-Current:
+### 4. Update `app/page.tsx` root redirect
 ```ts
-{ label: '3  Search Products', href: '/manufacturers', external: false },
+// Before:
+redirect('/manufacturers')
+
+// After:
+redirect('https://buildquote.com.au/library')
 ```
 
-Change to point to the new buildquote library (external):
+### 5. Update GlobalNav item 3
+File: `app/components/GlobalNav.tsx`
 ```ts
+// Before:
+{ label: '3  Search Products', href: '/manufacturers', external: false },
+
+// After:
 { label: '3  Product Library', href: 'https://buildquote.com.au/library', external: true },
 ```
 
-This means when the MFP /manufacturers feature is eventually removed, the nav is already pointing the right way.
-
-### 5. Update root redirect (`app/page.tsx`)
-Current: redirects to `/manufacturers`
-```ts
-redirect('/manufacturers')
-```
-
-Once the product search is migrated to buildquote, `/manufacturers` will be removed. For now, leave the redirect as-is but add a code comment:
-```ts
-// TODO: once /manufacturers is fully migrated to buildquote.com.au/library,
-// change this redirect to: redirect('https://buildquote.com.au/library')
-redirect('/manufacturers')
-```
-
 ### 6. Rewrite CLAUDE.md
-The current CLAUDE.md (`app/../CLAUDE.md`) describes a narrow supplier portal scope and is missing all the customer-facing work added in sessions 7–9. Rewrite it to accurately describe both halves, the full route map, the cleanup status, and what's being migrated. Use the STATE.md as the source of truth for what's been built.
-
-Key things the new CLAUDE.md must include:
-- Both halves clearly labelled (supplier portal vs customer-facing search)
-- The full route table above
-- Which routes are being migrated/deleted and why
-- Env vars (including the `RESEND_API_KEY` warning)
+The MFP CLAUDE.md is stale — describes a narrow supplier portal and doesn't reflect the customer-facing work or its removal. Rewrite it to accurately describe:
+- The MFP's sole purpose now: supplier/admin portal
+- Full route table for Half 1 (keep)
+- Note that Half 2 was deleted and when
+- Env vars (RESEND_API_KEY warning)
 - Supabase project ref and key tables
-- Link to STATE.md for detailed session history
 - Workflow rules: commit to main, verify on localhost:3001
+- Link to STATE.md for session history
 
-### 7. Verify no broken imports after deletions
-After deleting `/browse` and `/showroom`, run:
-```
+### 7. TypeScript check + build
+```bash
 npx tsc --noEmit
+npm run build
 ```
-Fix any import errors. Then run `npm run build` to confirm no build errors.
+Fix any errors before pushing.
 
 ---
 
 ## What NOT to Touch
 
-- `/manufacturers` and `/manufacturers/[slug]` — still live, not deleted yet
-- `/api/search/*` — still used by `/manufacturers`
-- `/api/create-draft` and `/api/add-to-draft` — still used by `/manufacturers` shopping list
 - All supplier portal routes (`/supplier/*`, `/widget/*`, `/supplierdirectory/*`, `/admin`, `/supplier-review/*`)
 - `supabase/schema.sql` — don't modify
-- `lib/data/*` — don't modify
+- `lib/data/getWidgetData.ts` — keep (used by widget)
+- `lib/data/getPublicSuppliers.ts` — keep (used by supplierdirectory)
+- Any `lib/data/` files NOT listed for deletion above
 
 ---
 
 ## Key Files Reference
 
 ```
-app/components/GlobalNav.tsx           ← UPDATE (item 3 redirect)
-app/page.tsx                           ← ADD TODO comment
-app/browse/page.tsx                    ← DELETE entire directory
-app/showroom/page.tsx                  ← DELETE entire directory
-app/showroom/layout.tsx                ← DELETE
-app/showroom/ShowroomClient.tsx        ← DELETE
-app/embed/[slug]/                      ← INVESTIGATE then delete if dead
-CLAUDE.md                              ← REWRITE
+app/manufacturers/             ← DELETE entire directory
+app/api/search/                ← DELETE entire directory
+app/api/create-draft/          ← DELETE entire directory
+app/api/add-to-draft/          ← DELETE entire directory
+lib/data/getManufacturers.ts   ← DELETE
+lib/data/getManufacturerData.ts ← DELETE
+app/browse/                    ← DELETE entire directory
+app/showroom/                  ← DELETE entire directory
+app/embed/[slug]/              ← INVESTIGATE then delete if dead
+app/page.tsx                   ← UPDATE redirect target
+app/components/GlobalNav.tsx   ← UPDATE item 3 href + external flag
+CLAUDE.md                      ← REWRITE
 ```
 
 ---
@@ -176,17 +186,25 @@ chore:   cleanup, docs, config (no functional change)
 refactor: restructure without behaviour change
 ```
 
-Commit after each logical task. Push to `origin main` when all tasks are done.
+Commit after each logical task (e.g. one commit per major deletion, one for nav updates, one for CLAUDE.md). Push to `origin main` when all tasks are done.
 
 ---
 
-## What Comes Next (not in this session)
+## What Was Ported (for confidence check)
 
-Once the full product search feature is ported to `buildquote.com.au/library` (AI search bar, Quick List panel, Upload photo, Speak list, Read list, voice input, system modal), then in a future session:
-- Delete `/manufacturers` and `/manufacturers/[slug]`
-- Delete `/api/create-draft` and `/api/add-to-draft` (MFP proxy routes)
-- Delete `/api/search/ask`, `/api/search/parse-list`, `/api/search/extract-from-image`
-- Update `app/page.tsx` root redirect → `https://buildquote.com.au/library`
-- Update GlobalNav item 3 to remove the `/manufacturers` internal fallback
+Before deleting, confirm these exist on buildquote.com.au:
 
-That future session is tracked in `Build-Quote-v6/CLAUDE.md` under "Known Gaps / Next Work".
+| MFP feature | Ported to buildquote | File |
+|---|---|---|
+| Product search + category filter | ✅ | `components/library/LibraryPageClient.tsx` |
+| Example chips | ✅ | `components/library/LibraryPageClient.tsx` |
+| Quick List panel (type/paste) | ✅ | `components/library/LibraryPageClient.tsx` |
+| Upload photo → AI OCR | ✅ | `app/api/library/extract-from-image/route.ts` |
+| Speak list (voice) | ✅ | `components/library/LibraryPageClient.tsx` |
+| Read list → AI parse | ✅ | `app/api/library/parse-list/route.ts` |
+| Shopping list drawer | ✅ | `components/library/ShoppingListDrawerUI.tsx` |
+| Convert to RFQ | ✅ | `components/library/ShoppingListDrawerUI.tsx` |
+| System card tiles | ✅ | `components/library/SystemCardTileUI.tsx` |
+| Per-system detail page | ✅ | `app/library/[slug]/page.tsx` |
+| AI Q&A (streaming) | ❌ Not yet ported | Low priority — delete MFP version anyway |
+| System detail modal (inline) | ❌ Not yet ported | /library navigates to new page instead |
