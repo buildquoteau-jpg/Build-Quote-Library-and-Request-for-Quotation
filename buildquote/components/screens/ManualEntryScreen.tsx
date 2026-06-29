@@ -125,6 +125,14 @@ export default function ManualEntryScreen({
   const [jobPickerOpen, setJobPickerOpen] = useState(false)
   const [savedJobs, setSavedJobs] = useState<any[]>([])
   const [jobsLoading, setJobsLoading] = useState(false)
+  const [creatingJob,    setCreatingJob]    = useState(false)
+  const [newJobRef,      setNewJobRef]      = useState('')
+  const [newJobAddr,     setNewJobAddr]     = useState('')
+  const [newJobBuildType,setNewJobBuildType]= useState('')
+  const [newJobPm,       setNewJobPm]       = useState('')
+  const [newJobPmPhone,  setNewJobPmPhone]  = useState('')
+  const [newJobAccess,   setNewJobAccess]   = useState('')
+  const [newJobSaving,   setNewJobSaving]   = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -327,6 +335,44 @@ export default function ManualEntryScreen({
       } finally {
         setJobsLoading(false)
       }
+    }
+  }
+
+  const handleCreateJob = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!builderId || !newJobRef.trim()) return
+    setNewJobSaving(true)
+    try {
+      const supabase = createSupabaseBrowserClient()
+      const payload = {
+        builder_id: builderId,
+        project_reference: newJobRef.trim(),
+        project_address_manual: newJobAddr.trim(),
+        build_type: newJobBuildType,
+        pm_name: newJobPm.trim(),
+        pm_mobile: newJobPmPhone.trim(),
+        site_access_notes: newJobAccess.trim(),
+      }
+      const { data, error } = await supabase.from('builder_jobs').insert(payload).select('id, project_reference, project_address, project_address_manual, pm_name, pm_mobile, site_access_notes').single()
+      if (error || !data) throw error
+      // Add to local list and select it
+      setSavedJobs(prev => [data, ...prev])
+      onChangeJob?.({
+        jobId: data.id,
+        projectReference: data.project_reference || '',
+        siteAddress: data.project_address_manual || data.project_address || '',
+        pmName: data.pm_name || '',
+        pmPhone: data.pm_mobile || '',
+        siteAccessNotes: data.site_access_notes || '',
+      })
+      // Reset and close
+      setNewJobRef(''); setNewJobAddr(''); setNewJobBuildType(''); setNewJobPm(''); setNewJobPmPhone(''); setNewJobAccess('')
+      setCreatingJob(false)
+      setJobPickerOpen(false)
+    } catch {
+      // keep modal open on error
+    } finally {
+      setNewJobSaving(false)
     }
   }
 
@@ -1030,77 +1076,143 @@ export default function ManualEntryScreen({
           style={{ background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(2px)' }}
           onClick={e => { if (e.target === e.currentTarget) setJobPickerOpen(false) }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[75vh] flex flex-col overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden">
+
+            {/* Header */}
             <div className="px-5 pt-5 pb-4 border-b border-border flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-text-primary">Choose a job</h3>
-                <p className="text-xs text-text-muted mt-0.5">Select from your job cards</p>
+                <h3 className="text-base font-bold text-text-primary">
+                  {creatingJob ? 'Create a new job' : 'Choose a job'}
+                </h3>
+                <p className="text-xs text-text-muted mt-0.5">
+                  {creatingJob ? 'Fill in the details below' : 'Select from your job cards'}
+                </p>
               </div>
               <button
                 type="button"
-                onClick={() => setJobPickerOpen(false)}
+                onClick={() => { setJobPickerOpen(false); setCreatingJob(false) }}
                 className="w-8 h-8 rounded-lg border border-border text-text-muted hover:text-text-primary flex items-center justify-center text-lg"
               >×</button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2">
-              {jobsLoading && (
-                <p className="text-sm text-text-muted text-center py-8">Loading your jobs…</p>
-              )}
-              {!jobsLoading && savedJobs.length === 0 && (
-                <div className="text-center py-10">
-                  <p className="text-sm font-semibold text-text-muted">No jobs saved yet.</p>
-                  <p className="text-xs text-text-muted mt-1">Create job cards from your dashboard.</p>
+            {/* Create new job form */}
+            {creatingJob ? (
+              <form onSubmit={handleCreateJob} className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-text-secondary mb-1.5">Project Reference <span className="text-error">*</span></label>
+                  <input
+                    required autoFocus
+                    value={newJobRef} onChange={e => setNewJobRef(e.target.value)}
+                    placeholder="e.g. Smith Residence 2025"
+                    className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-navy focus:ring-2 focus:ring-navy/10 transition"
+                  />
                 </div>
-              )}
-              {savedJobs.map(j => {
-                const addr = j.project_address || j.project_address_manual || ''
-                return (
-                  <button
-                    key={j.id}
-                    type="button"
-                    onClick={() => {
-                      onChangeJob?.({
-                        jobId: j.id,
-                        projectReference: j.project_reference || '',
-                        siteAddress: addr,
-                        pmName: j.pm_name || '',
-                        pmPhone: j.pm_mobile || '',
-                        siteAccessNotes: j.site_access_notes || '',
-                      })
-                      setJobPickerOpen(false)
-                    }}
-                    className="w-full text-left rounded-xl border-2 border-border bg-white hover:border-heading/40 hover:bg-heading/[0.02] p-3.5 transition-all"
+                <div>
+                  <label className="block text-sm font-semibold text-text-secondary mb-1.5">Project Address</label>
+                  <input
+                    value={newJobAddr} onChange={e => setNewJobAddr(e.target.value)}
+                    placeholder="Lot 42 Smith St, Dunsborough WA 6281"
+                    className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-navy focus:ring-2 focus:ring-navy/10 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-text-secondary mb-1.5">Build Type</label>
+                  <select
+                    value={newJobBuildType} onChange={e => setNewJobBuildType(e.target.value)}
+                    className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-navy transition bg-white"
                   >
-                    <p className="font-bold text-sm text-text-primary">{j.project_reference || 'Unnamed job'}</p>
-                    {addr && <p className="text-xs text-text-muted mt-0.5">{addr}</p>}
-                    {j.pm_name && <p className="text-xs text-brand font-semibold mt-0.5">PM: {j.pm_name}</p>}
+                    <option value="">Select type…</option>
+                    {['New Home','Renovation','Extension','Swimming Pool','Landscape','Commercial','Other'].map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-text-secondary mb-1.5">PM Name</label>
+                    <input
+                      value={newJobPm} onChange={e => setNewJobPm(e.target.value)}
+                      placeholder="Jane Smith"
+                      className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-navy transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-text-secondary mb-1.5">PM Mobile</label>
+                    <input
+                      value={newJobPmPhone} onChange={e => setNewJobPmPhone(e.target.value)}
+                      placeholder="0400 000 000"
+                      className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-navy transition"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-text-secondary mb-1.5">Site Access Notes</label>
+                  <textarea
+                    value={newJobAccess} onChange={e => setNewJobAccess(e.target.value)}
+                    placeholder="Gate code, dog on site, etc."
+                    rows={2}
+                    className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-navy focus:ring-2 focus:ring-navy/10 transition resize-none"
+                  />
+                </div>
+                <div className="flex gap-3 pt-1 pb-2">
+                  <button type="button" onClick={() => setCreatingJob(false)}
+                    className="flex-1 border border-border text-text-secondary font-semibold text-sm py-3 rounded-xl hover:bg-surface-subtle transition">
+                    ← Back
                   </button>
-                )
-              })}
-            </div>
+                  <button type="submit" disabled={newJobSaving || !newJobRef.trim()}
+                    className="flex-1 bg-navy text-white font-bold text-sm py-3 rounded-xl hover:opacity-90 disabled:opacity-50 transition">
+                    {newJobSaving ? 'Saving…' : 'Save &amp; select job'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <>
+                {/* Job list */}
+                <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2">
+                  {jobsLoading && <p className="text-sm text-text-muted text-center py-8">Loading your jobs…</p>}
+                  {!jobsLoading && savedJobs.length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-sm font-semibold text-text-muted">No jobs saved yet.</p>
+                      <p className="text-xs text-text-muted mt-1">Create one below to link it to this RFQ.</p>
+                    </div>
+                  )}
+                  {savedJobs.map(j => {
+                    const addr = j.project_address || j.project_address_manual || ''
+                    return (
+                      <button key={j.id} type="button"
+                        onClick={() => {
+                          onChangeJob?.({ jobId: j.id, projectReference: j.project_reference || '', siteAddress: addr, pmName: j.pm_name || '', pmPhone: j.pm_mobile || '', siteAccessNotes: j.site_access_notes || '' })
+                          setJobPickerOpen(false)
+                        }}
+                        className="w-full text-left rounded-xl border-2 border-border bg-white hover:border-heading/40 hover:bg-heading/[0.02] p-3.5 transition-all"
+                      >
+                        <p className="font-bold text-sm text-text-primary">{j.project_reference || 'Unnamed job'}</p>
+                        {addr && <p className="text-xs text-text-muted mt-0.5">{addr}</p>}
+                        {j.pm_name && <p className="text-xs text-brand font-semibold mt-0.5">PM: {j.pm_name}</p>}
+                      </button>
+                    )
+                  })}
+                </div>
 
-            <div className="px-5 py-4 border-t border-border flex gap-3">
-              <button
-                type="button"
-                onClick={() => setJobPickerOpen(false)}
-                className="flex-1 border border-border text-text-secondary font-semibold text-sm py-3 rounded-xl hover:bg-surface-subtle transition"
-              >
-                Cancel
-              </button>
-              {projectReference && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChangeJob?.(null)
-                    setJobPickerOpen(false)
-                  }}
-                  className="flex-1 border border-error-border text-error font-semibold text-sm py-3 rounded-xl hover:bg-error-bg transition"
-                >
-                  Remove job
-                </button>
-              )}
-            </div>
+                {/* Footer */}
+                <div className="px-5 py-4 border-t border-border flex gap-3">
+                  <button type="button" onClick={() => setJobPickerOpen(false)}
+                    className="flex-1 border border-border text-text-secondary font-semibold text-sm py-3 rounded-xl hover:bg-surface-subtle transition">
+                    Cancel
+                  </button>
+                  {projectReference && (
+                    <button type="button" onClick={() => { onChangeJob?.(null); setJobPickerOpen(false) }}
+                      className="flex-1 border border-error-border text-error font-semibold text-sm py-3 rounded-xl hover:bg-error-bg transition">
+                      Remove job
+                    </button>
+                  )}
+                  <button type="button" onClick={() => setCreatingJob(true)}
+                    className="flex-1 bg-navy text-white font-bold text-sm py-3 rounded-xl hover:opacity-90 transition">
+                    + New job
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
