@@ -1,6 +1,7 @@
 export default function PrivacyPolicy() {
   return (
     <main className="min-h-screen bg-page px-6 py-12">
+      <div className="max-w-3xl mx-auto">
       <div className="mb-8">
         <a href="/" className="text-brand text-sm font-medium hover:underline">&larr; Back to BuildQuote</a>
       </div>
@@ -35,6 +36,7 @@ export default function PrivacyPolicy() {
           <h2 className="text-text-primary font-semibold text-base mb-2">7. Contact</h2>
           <p>For privacy questions, contact <a href="mailto:buildquoteau@gmail.com" className="text-brand hover:underline">buildquoteau@gmail.com</a>.</p>
         </section>
+      </div>
       </div>
     </main>
   )
