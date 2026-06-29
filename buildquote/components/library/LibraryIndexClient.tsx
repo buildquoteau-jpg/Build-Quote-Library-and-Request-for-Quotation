@@ -151,7 +151,7 @@ export function LibraryIndexClient({ initialSystems, categories }: Props) {
       </div>
 
       {/* ── Results ──────────────────────────────────────────────────────────── */}
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '48px 24px 80px' }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: 'clamp(24px, 4vw, 40px) 24px 80px' }}>
 
         {/* Loading / error states */}
         {isPending && (

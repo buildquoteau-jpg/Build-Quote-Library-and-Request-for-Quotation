@@ -44,42 +44,42 @@ export default async function LibraryPage() {
         {/* ── Hero ──────────────────────────────────────────────────────────── */}
         <section style={{
           background: 'linear-gradient(155deg, #0d3347 0%, #185D7A 55%, #1e7399 100%)',
-          padding: '72px 24px 64px',
+          padding: 'clamp(28px, 5vw, 52px) 24px clamp(24px, 4vw, 44px)',
         }}>
           <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '16px' }}>
+            <div style={{ marginBottom: '10px' }}>
               <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>
                 Build<span style={{ color: '#f97316' }}>Quote</span> — Product Library
               </span>
             </div>
             <h1 style={{
-              fontSize: 'clamp(26px, 4.5vw, 48px)',
+              fontSize: 'clamp(22px, 3.5vw, 40px)',
               fontWeight: 800,
               color: '#ffffff',
               letterSpacing: '-0.02em',
               lineHeight: 1.1,
-              marginBottom: '14px',
+              marginBottom: '10px',
               fontFamily: 'var(--font-barlow-condensed), sans-serif',
             }}>
               Building Product Library
             </h1>
             <p style={{
-              fontSize: 'clamp(14px, 1.8vw, 17px)',
+              fontSize: 'clamp(13px, 1.5vw, 15px)',
               color: 'rgba(255,255,255,0.75)',
-              maxWidth: '520px',
-              lineHeight: 1.65,
-              marginBottom: '32px',
+              maxWidth: '480px',
+              lineHeight: 1.55,
+              marginBottom: 'clamp(16px, 3vw, 24px)',
             }}>
               Browse product systems, add to your list and convert to an RFQ — sent directly to local South West WA suppliers.
             </p>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <a href="/rfq" style={{
                 display: 'inline-block',
                 background: '#f97316',
                 color: '#ffffff',
                 fontWeight: 700,
-                fontSize: '15px',
-                padding: '11px 26px',
+                fontSize: '14px',
+                padding: '10px 22px',
                 borderRadius: '8px',
                 textDecoration: 'none',
                 boxShadow: '0 4px 14px rgba(249,115,22,0.35)',
@@ -92,8 +92,8 @@ export default async function LibraryPage() {
                 border: '1px solid rgba(255,255,255,0.28)',
                 color: '#ffffff',
                 fontWeight: 600,
-                fontSize: '14px',
-                padding: '11px 22px',
+                fontSize: '13px',
+                padding: '10px 18px',
                 borderRadius: '8px',
                 textDecoration: 'none',
               }}>
