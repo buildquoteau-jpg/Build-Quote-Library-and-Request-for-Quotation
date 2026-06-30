@@ -545,6 +545,11 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
   async function requestQuoteFromStockist(stockist: Stockist) {
     if (rfqStockistId) return
 
+    // Require a selection first — the quote is seeded from the ticked
+    // profiles/components, so there must be at least one.
+    const items = buildSelectedItems()
+    if (items.length === 0) return
+
     if (isLoggedIn === false) {
       const next = encodeURIComponent(`/library/${system.slug}`)
       window.location.href = `/login?next=${next}`
@@ -573,18 +578,15 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
         }),
       }).then(r => r.json())
 
-      const items = buildSelectedItems()
-      if (items.length > 0) {
-        await fetch('/api/save-draft-items', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            draftId,
-            items: items.map(i => ({ name: i.name, sku: i.sku, desc: i.desc, uom: i.uom, qty: String(i.qty) })),
-            mode: 'replace',
-          }),
-        })
-      }
+      await fetch('/api/save-draft-items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          draftId,
+          items: items.map(i => ({ name: i.name, sku: i.sku, desc: i.desc, uom: i.uom, qty: String(i.qty) })),
+          mode: 'replace',
+        }),
+      })
 
       window.location.href = `/rfq?draft=${draftId}`
     } catch {
@@ -744,6 +746,7 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
                       key={s.id}
                       stockist={s}
                       isLoggedIn={isLoggedIn}
+                      hasSelections={hasSelections}
                       pending={rfqStockistId === s.id}
                       onRequestQuote={() => requestQuoteFromStockist(s)}
                     />
@@ -825,16 +828,19 @@ function normaliseUrl(url: string): string {
 function StockistRow({
   stockist,
   isLoggedIn,
+  hasSelections,
   pending,
   onRequestQuote,
 }: {
   stockist: Stockist
   isLoggedIn: boolean | null
+  hasSelections: boolean
   pending: boolean
   onRequestQuote: () => void
 }) {
   const locationBits = [stockist.suburb, stockist.state].filter(Boolean).join(', ')
   const regionLabel = stockist.region ? (REGION_LABELS[stockist.region] ?? stockist.region) : null
+  const canRequest = hasSelections && !pending
 
   return (
     <div style={{ border: '1px solid #d1d9e0', borderRadius: '12px', overflow: 'hidden', background: '#fbfdfe' }}>
@@ -894,25 +900,30 @@ function StockistRow({
           </div>
         )}
 
-        {/* Auth-aware RFQ action */}
+        {/* Auth-aware RFQ action — requires a profile/component selection first */}
         <button
           type="button"
           onClick={onRequestQuote}
-          disabled={pending}
+          disabled={!canRequest}
           style={{
             marginTop: '12px', width: '100%',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
             padding: '12px 16px', fontSize: '14px', fontWeight: 700,
-            color: '#ffffff', background: '#185D7A', border: '1.5px solid #185D7A',
-            borderRadius: '10px', cursor: pending ? 'wait' : 'pointer',
+            color: canRequest ? '#ffffff' : '#9ca3af',
+            background: canRequest ? '#185D7A' : '#f1f5f9',
+            border: `1.5px solid ${canRequest ? '#185D7A' : '#e2e8f0'}`,
+            borderRadius: '10px',
+            cursor: pending ? 'wait' : canRequest ? 'pointer' : 'default',
             opacity: pending ? 0.7 : 1, boxSizing: 'border-box',
           }}
         >
           {pending
             ? 'Starting…'
-            : isLoggedIn === false
-              ? 'Log in to request a quote'
-              : 'Request a quote from this stockist'}
+            : !hasSelections
+              ? 'Select profiles or components above'
+              : isLoggedIn === false
+                ? 'Log in to request a quote'
+                : 'Request a quote from this stockist'}
         </button>
       </div>
     </div>
