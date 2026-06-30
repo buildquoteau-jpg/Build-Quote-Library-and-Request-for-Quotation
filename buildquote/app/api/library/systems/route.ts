@@ -25,9 +25,16 @@ export async function GET(req: NextRequest) {
     }
 
     if (q) {
-      query = query.or(
-        `name.ilike.%${q}%,description.ilike.%${q}%,category.ilike.%${q}%,subcategory.ilike.%${q}%`
-      )
+      // Split into individual keywords (≥3 chars, skip common stop words) and
+      // OR-search each across all text columns so "Bal 29 cladding" matches
+      // products that have "cladding" in category even if the full phrase doesn't match.
+      const STOP = new Set(['the','and','for','with','this','that','from','into','are','was','not','you','but'])
+      const words = q.split(/\s+/).filter(w => w.length >= 3 && !STOP.has(w.toLowerCase()))
+      const terms = words.length > 0 ? words : [q]
+      const conditions = terms
+        .map(w => `name.ilike.%${w}%,description.ilike.%${w}%,category.ilike.%${w}%,subcategory.ilike.%${w}%`)
+        .join(',')
+      query = query.or(conditions)
     }
 
     const { data, error } = await query
