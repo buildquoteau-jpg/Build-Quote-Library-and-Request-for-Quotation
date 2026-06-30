@@ -97,6 +97,21 @@ export type Stockist = {
   delivery_info: string | null
   bio: string | null
   hero_photo_url: string | null
+  // Postcodes this supplier services, used to flag "services your area".
+  service_postcodes: string[]
+}
+
+// `suppliers.service_postcodes` is stored as text holding a JSON array
+// (e.g. '["6281","6282"]'). Parse defensively — fall back to splitting on
+// non-digits so a plain "6281, 6282" string still works.
+function parseServicePostcodes(raw: string | string[] | null): string[] {
+  if (!raw) return []
+  if (Array.isArray(raw)) return raw.map(String)
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) return parsed.map(String)
+  } catch { /* not JSON — fall through */ }
+  return raw.split(/\D+/).filter(Boolean)
 }
 
 export type ManufacturerListItem = {
@@ -201,7 +216,7 @@ export async function getStockistsForSystem(systemId: string): Promise<Stockist[
       suppliers (
         id, name, slug, suburb, state, region, address,
         phone, email, website_url, google_maps_url,
-        opening_hours, delivery_info, bio, hero_photo_url
+        opening_hours, delivery_info, bio, hero_photo_url, service_postcodes
       )
     `)
     .eq('system_id', systemId)
@@ -211,14 +226,18 @@ export async function getStockistsForSystem(systemId: string): Promise<Stockist[
     return []
   }
 
+  type RawSupplier = Omit<Stockist, 'service_postcodes'> & {
+    service_postcodes: string | string[] | null
+  }
+
   // Dedupe in case a supplier is linked more than once.
   const seen = new Set<string>()
   const stockists: Stockist[] = []
-  for (const row of data as unknown as { suppliers: Stockist | null }[]) {
+  for (const row of data as unknown as { suppliers: RawSupplier | null }[]) {
     const s = row.suppliers
     if (!s || seen.has(s.id)) continue
     seen.add(s.id)
-    stockists.push(s)
+    stockists.push({ ...s, service_postcodes: parseServicePostcodes(s.service_postcodes) })
   }
 
   return stockists.sort((a, b) => a.name.localeCompare(b.name))

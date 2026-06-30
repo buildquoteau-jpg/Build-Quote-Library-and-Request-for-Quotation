@@ -468,6 +468,7 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
   const [stockistsOpen,      setStockistsOpen]      = useState(false)
   const [isLoggedIn,         setIsLoggedIn]         = useState<boolean | null>(null)
   const [rfqStockistId,      setRfqStockistId]      = useState<string | null>(null)
+  const [postcode,           setPostcode]           = useState('')
 
   const posX = system.hero_image_position_x ?? 50
   const posY = system.hero_image_position_y ?? 50
@@ -711,7 +712,7 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
             >
               {hasSelections
                 ? `Add ${totalSelected} item${totalSelected !== 1 ? 's' : ''} to shopping list`
-                : 'Select profiles or components above'}
+                : 'Select items above to add to your shopping list'}
             </button>
           )}
 
@@ -739,20 +740,47 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
                 </svg>
               </button>
 
-              {stockistsOpen && (
-                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {stockists.map(s => (
-                    <StockistRow
-                      key={s.id}
-                      stockist={s}
-                      isLoggedIn={isLoggedIn}
-                      hasSelections={hasSelections}
-                      pending={rfqStockistId === s.id}
-                      onRequestQuote={() => requestQuoteFromStockist(s)}
+              {stockistsOpen && (() => {
+                const validPostcode = /^\d{4}$/.test(postcode)
+                // Show every stockist; just float the ones servicing the
+                // entered postcode to the top (never hide any).
+                const ordered = validPostcode
+                  ? [...stockists].sort((a, b) =>
+                      Number(b.service_postcodes.includes(postcode)) -
+                      Number(a.service_postcodes.includes(postcode)))
+                  : stockists
+                return (
+                  <div style={{ marginTop: '12px' }}>
+                    <input
+                      value={postcode}
+                      onChange={e => setPostcode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      inputMode="numeric"
+                      placeholder="Your postcode (optional) — see who services your area"
+                      style={{
+                        width: '100%', boxSizing: 'border-box', marginBottom: '12px',
+                        border: '1.5px solid #d1d9e0', borderRadius: '8px',
+                        padding: '10px 12px', fontSize: '13px', color: '#0f172a',
+                        outline: 'none', background: '#fff',
+                      }}
+                      onFocus={e => { e.currentTarget.style.borderColor = '#185D7A' }}
+                      onBlur={e => { e.currentTarget.style.borderColor = '#d1d9e0' }}
                     />
-                  ))}
-                </div>
-              )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      {ordered.map(s => (
+                        <StockistRow
+                          key={s.id}
+                          stockist={s}
+                          isLoggedIn={isLoggedIn}
+                          hasSelections={hasSelections}
+                          servesPostcode={validPostcode && s.service_postcodes.includes(postcode)}
+                          pending={rfqStockistId === s.id}
+                          onRequestQuote={() => requestQuoteFromStockist(s)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           )}
 
@@ -829,12 +857,14 @@ function StockistRow({
   stockist,
   isLoggedIn,
   hasSelections,
+  servesPostcode,
   pending,
   onRequestQuote,
 }: {
   stockist: Stockist
   isLoggedIn: boolean | null
   hasSelections: boolean
+  servesPostcode: boolean
   pending: boolean
   onRequestQuote: () => void
 }) {
@@ -862,11 +892,18 @@ function StockistRow({
           <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#0f172a', fontFamily: 'var(--font-barlow-condensed), sans-serif' }}>
             {stockist.name}
           </h4>
-          {regionLabel && (
-            <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#185D7A', background: '#eef6fa', border: '1px solid #b6dcea', borderRadius: '20px', padding: '2px 9px' }}>
-              {regionLabel}
-            </span>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            {servesPostcode && (
+              <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#166534', background: '#dcfce7', border: '1px solid #86efac', borderRadius: '20px', padding: '2px 9px' }}>
+                ✓ Services your area
+              </span>
+            )}
+            {regionLabel && (
+              <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#185D7A', background: '#eef6fa', border: '1px solid #b6dcea', borderRadius: '20px', padding: '2px 9px' }}>
+                {regionLabel}
+              </span>
+            )}
+          </div>
         </div>
 
         {locationBits && (
@@ -920,7 +957,7 @@ function StockistRow({
           {pending
             ? 'Starting…'
             : !hasSelections
-              ? 'Select profiles or components above'
+              ? 'Select items above to request a quote'
               : isLoggedIn === false
                 ? 'Log in to request a quote'
                 : 'Request a quote from this stockist'}
