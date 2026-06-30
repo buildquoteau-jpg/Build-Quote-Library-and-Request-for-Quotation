@@ -116,19 +116,40 @@ export default function RFQPage() {
     }
   }
 
-  async function saveDraftMeta(supplierName: string, projectRef: string, jobId?: string | null) {
+  // Persist the supplier snapshot (name + email + account number) and job/project
+  // context onto the draft so they survive navigation away from /rfq (e.g. the
+  // /library round-trip). Account number is point-in-time per the quote.
+  async function saveDraftMeta(
+    supplier: { supplierName: string; supplierEmail?: string; accountNumber?: string; supplierId?: string | null },
+    projectRef: string,
+    jobId?: string | null
+  ) {
     try {
       const draftId = getDraftId()
       if (!draftId) return
       const supabase = createSupabaseBrowserClient()
+      // Core meta — columns that exist in every deployed schema.
       await supabase
         .from('rfq_drafts')
         .update({
-          supplier_name: supplierName || null,
+          supplier_name: supplier.supplierName || null,
+          supplier_email: supplier.supplierEmail || null,
           project_reference: projectRef || null,
           ...(jobId !== undefined ? { job_id: jobId || null } : {}),
         })
         .eq('id', draftId)
+
+      // Account-number snapshot + supplier link — added by the 20260630 migration.
+      // Best-effort and isolated so a deploy that lands before the migration
+      // doesn't take down core meta persistence.
+      const { error: acctError } = await supabase
+        .from('rfq_drafts')
+        .update({
+          supplier_account_number: supplier.accountNumber || null,
+          ...(supplier.supplierId !== undefined ? { supplier_id: supplier.supplierId || null } : {}),
+        })
+        .eq('id', draftId)
+      if (acctError) console.warn('Supplier account snapshot skipped (run 20260630 migration):', acctError.message)
     } catch (e) {
       console.error('Draft meta save failed', e)
     }
@@ -237,7 +258,16 @@ export default function RFQPage() {
         // Save supplier/job context to draft immediately so the My Quote Requests
         // card shows context even if the user doesn't proceed to step 4.
         // Also save job_id so the full job data can be re-fetched on any future resume.
-        await saveDraftMeta(resolvedSupplierName, resolvedProjectRef, jobId || null)
+        await saveDraftMeta(
+          {
+            supplierName: resolvedSupplierName,
+            supplierEmail: supplierResult.data?.supplier_email || supplierEmailParam || '',
+            accountNumber: supplierResult.data?.account_number || '',
+            supplierId: supplierId || null,
+          },
+          resolvedProjectRef,
+          jobId || null,
+        )
 
         setStep(2)
         setInitialLoading(false)
@@ -259,12 +289,25 @@ export default function RFQPage() {
           fetch('/api/get-draft-items?draft=' + existingDraftId),
           supabase
             .from('rfq_drafts')
-            .select('supplier_name, project_reference, job_id')
+            .select('supplier_name, supplier_email, project_reference, job_id')
             .eq('id', existingDraftId)
             .single(),
         ])
         const res = itemsRes
         const data = await res.json()
+
+        // Account-number snapshot — added by the 20260630 migration. Fetched
+        // separately and best-effort so a pre-migration deploy still loads the
+        // rest of the draft meta (supplier name/email, job_id) cleanly.
+        let draftAccount = ''
+        try {
+          const { data: acct } = await supabase
+            .from('rfq_drafts')
+            .select('supplier_account_number')
+            .eq('id', existingDraftId)
+            .single()
+          draftAccount = (acct as { supplier_account_number?: string } | null)?.supplier_account_number || ''
+        } catch { /* column not migrated yet */ }
 
         // If draft has a job_id and we're logged in, re-fetch all job fields
         let jobData: any = null
@@ -324,22 +367,26 @@ export default function RFQPage() {
             // Fall back to saved draft meta for project ref if no job data
             projectReference: p.projectReference || draftMeta?.project_reference || '',
           }),
-          // Supplier: URL params win (returning from MFP), else saved draft meta
+          // Supplier: URL params win (returning from MFP), else the saved draft
+          // snapshot (name + email + account number all survive the round-trip).
           supplier: supplierNameParam ? {
             supplierName: supplierNameParam,
             supplierEmail: supplierEmailParam || '',
             accountNumber: p.supplier.accountNumber,
           } : draftMeta?.supplier_name ? {
             supplierName: draftMeta.supplier_name,
-            supplierEmail: p.supplier.supplierEmail,
-            accountNumber: p.supplier.accountNumber,
+            supplierEmail: draftMeta.supplier_email || p.supplier.supplierEmail,
+            accountNumber: draftAccount || p.supplier.accountNumber,
           } : p.supplier,
         }))
         if (cleaned.length) setItems(cleaned)
         // If returning from MFP with a supplier name, save it to the draft
         // so the My Quote Requests card shows the context immediately.
         if (supplierNameParam) {
-          await saveDraftMeta(supplierNameParam, '')
+          await saveDraftMeta(
+            { supplierName: supplierNameParam, supplierEmail: supplierEmailParam || '' },
+            '',
+          )
         }
         // Always go to Enter Items — this is a resumed draft, not a fresh session
         setStep(2)
@@ -423,10 +470,18 @@ export default function RFQPage() {
             }}
             onNext={async () => {
               await saveDraft(items)
-              await saveDraftMeta(payload.supplier.supplierName, payload.projectReference)
+              await saveDraftMeta(payload.supplier, payload.projectReference)
               setStep(4)
             }}
             onParsed={handleParsed}
+            onBrowseManufacturers={async () => {
+              // Persist current items + supplier/job context, then carry the draft
+              // id to the library so "Add these N items to quote request" works.
+              const draftId = getDraftId()
+              await saveDraft(items)
+              await saveDraftMeta(payload.supplier, payload.projectReference, currentJobId)
+              window.location.href = draftId ? `/library?draft=${draftId}` : '/library'
+            }}
             builderId={builderId}
             builderName={builderName}
             builderCompany={builderCompany}
@@ -440,7 +495,7 @@ export default function RFQPage() {
             onChangeSupplier={async (supplier) => {
               const next = supplier ?? { supplierName: '', supplierEmail: '', accountNumber: '' }
               setPayload(p => ({ ...p, supplier: next }))
-              await saveDraftMeta(next.supplierName, payload.projectReference, currentJobId)
+              await saveDraftMeta(next, payload.projectReference, currentJobId)
             }}
             onChangeJob={async (job) => {
               if (job) {
@@ -454,7 +509,7 @@ export default function RFQPage() {
                   siteAccessNotes: job.siteAccessNotes,
                 }))
                 setContextFlags(f => ({ ...f, fromJob: true }))
-                await saveDraftMeta(payload.supplier.supplierName, job.projectReference, job.jobId)
+                await saveDraftMeta(payload.supplier, job.projectReference, job.jobId)
               } else {
                 setCurrentJobId(null)
                 setPayload(p => ({
@@ -466,7 +521,7 @@ export default function RFQPage() {
                   siteAccessNotes: '',
                 }))
                 setContextFlags(f => ({ ...f, fromJob: false }))
-                await saveDraftMeta(payload.supplier.supplierName, '', null)
+                await saveDraftMeta(payload.supplier, '', null)
               }
             }}
           />

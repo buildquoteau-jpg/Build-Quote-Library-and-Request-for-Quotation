@@ -31,11 +31,15 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Protect /dashboard — redirect unauthenticated users to /login
-  if (pathname.startsWith('/dashboard') && !user) {
+  // Protect /dashboard and /rfq — redirect unauthenticated users to /login.
+  // The library and shopping list stay public; only the quote-request flow
+  // requires a builder login. Preserve the full path + query so draft/supplier
+  // params survive the round-trip through login.
+  if ((pathname.startsWith('/dashboard') || pathname.startsWith('/rfq')) && !user) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
-    loginUrl.searchParams.set('next', pathname)
+    loginUrl.search = '' // drop the original query; carry it only inside `next`
+    loginUrl.searchParams.set('next', pathname + request.nextUrl.search)
     return NextResponse.redirect(loginUrl)
   }
 

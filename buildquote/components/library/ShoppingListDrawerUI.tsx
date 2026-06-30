@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useShoppingList } from '@/components/library/ShoppingListProvider'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
@@ -37,11 +37,32 @@ const qtyBtnStyle: React.CSSProperties = {
 }
 
 export function ShoppingListDrawerUI() {
-  const { shoppingList, addItems, removeItem, updateQty, updateName, updateUom, clearList } = useShoppingList()
+  const { shoppingList, addItems, removeItem, updateQty, updateName, updateUom, clearList,
+          activeDraftId, setActiveDraftId } = useShoppingList()
   const [drawerOpen,    setDrawerOpen]    = useState(false)
   const [newItemName,   setNewItemName]   = useState('')
   const [sharing,       setSharing]       = useState(false)
   const [converting,    setConverting]    = useState(false)
+  const autoConvertRef = useRef(false)
+
+  // Resume a conversion after the login round-trip: a logged-out user who
+  // pressed "Request a Quote" is sent to /login?next=/library?convert=1; on
+  // return, if they now have a session and a basket, finish the conversion.
+  // Waits for the basket to hydrate from localStorage before firing.
+  useEffect(() => {
+    if (autoConvertRef.current) return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('convert') !== '1') return
+    if (shoppingList.length === 0) return // basket not loaded yet
+    autoConvertRef.current = true
+    // Strip the flag so a refresh doesn't re-fire.
+    params.delete('convert')
+    const url = new URL(window.location.href)
+    url.search = params.toString()
+    window.history.replaceState({}, '', url.toString())
+    void convertToRFQ()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shoppingList.length])
 
   if (shoppingList.length === 0) return null
 
@@ -238,14 +259,33 @@ export function ShoppingListDrawerUI() {
 
   // ── Convert to RFQ ─────────────────────────────────────────────────────────
 
+  function itemsPayload() {
+    return shoppingList.map(i => ({
+      name: i.name,
+      sku: i.sku,
+      desc: i.desc,
+      uom: i.uom,
+      qty: String(i.qty),
+    }))
+  }
+
+  // Public action: requires a builder login. Logged-out users are sent to
+  // /login and bounced back to finish the conversion (basket persists in
+  // localStorage). Logged-in users get a fresh draft owned by them.
   async function convertToRFQ() {
-    if (converting) return
+    if (converting || shoppingList.length === 0) return
     setConverting(true)
     try {
-      // Check if builder is logged in — pass builderId if so
       const supabase = createSupabaseBrowserClient()
       const { data: { session } } = await supabase.auth.getSession()
       const builderId = session?.user?.id ?? null
+
+      // Not logged in — go authenticate, then return to auto-resume the convert.
+      if (!builderId) {
+        const next = encodeURIComponent('/library?convert=1')
+        window.location.href = `/login?next=${next}`
+        return
+      }
 
       const { draftId } = await fetch('/api/create-draft', {
         method: 'POST',
@@ -256,18 +296,32 @@ export function ShoppingListDrawerUI() {
       await fetch('/api/save-draft-items', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          draftId,
-          items: shoppingList.map(i => ({
-            name: i.name,
-            sku: i.sku,
-            desc: i.desc,
-            uom: i.uom,
-            qty: String(i.qty),
-          })),
-        }),
+        body: JSON.stringify({ draftId, items: itemsPayload(), mode: 'replace' }),
       })
 
+      clearList()
+      window.location.href = `/rfq?draft=${draftId}`
+    } catch {
+      setConverting(false)
+    }
+  }
+
+  // Draft-context action: append the basket to the quote request already in
+  // progress (the builder came here via "Browse manufacturer products").
+  async function addToActiveDraft() {
+    if (converting || !activeDraftId || shoppingList.length === 0) return
+    setConverting(true)
+    try {
+      const res = await fetch('/api/save-draft-items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draftId: activeDraftId, items: itemsPayload(), mode: 'append' }),
+      })
+      if (!res.ok) { setConverting(false); return }
+
+      const draftId = activeDraftId
+      clearList()
+      setActiveDraftId(null)
       window.location.href = `/rfq?draft=${draftId}`
     } catch {
       setConverting(false)
@@ -433,14 +487,27 @@ export function ShoppingListDrawerUI() {
             {sharing ? 'Sharing…' : 'Share'}
           </button>
 
-          {/* Convert to RFQ */}
-          <button
-            onClick={convertToRFQ}
-            disabled={converting}
-            style={{ background: '#ffffff', color: '#185D7A', border: 'none', borderRadius: '8px', padding: '9px 18px', fontWeight: 800, fontSize: '14px', cursor: converting ? 'wait' : 'pointer', letterSpacing: '-0.01em', opacity: converting ? 0.7 : 1, transition: 'opacity 0.15s', whiteSpace: 'nowrap' }}
-          >
-            {converting ? 'Creating…' : 'Request a Quote →'}
-          </button>
+          {/* Primary action — context-aware:
+              draft in progress → add to it; otherwise start a new quote request */}
+          {activeDraftId ? (
+            <button
+              onClick={addToActiveDraft}
+              disabled={converting}
+              style={{ background: '#ffffff', color: '#185D7A', border: 'none', borderRadius: '8px', padding: '9px 18px', fontWeight: 800, fontSize: '14px', cursor: converting ? 'wait' : 'pointer', letterSpacing: '-0.01em', opacity: converting ? 0.7 : 1, transition: 'opacity 0.15s', whiteSpace: 'nowrap' }}
+            >
+              {converting
+                ? 'Adding…'
+                : `Add ${shoppingList.length} item${shoppingList.length !== 1 ? 's' : ''} to quote request →`}
+            </button>
+          ) : (
+            <button
+              onClick={convertToRFQ}
+              disabled={converting}
+              style={{ background: '#ffffff', color: '#185D7A', border: 'none', borderRadius: '8px', padding: '9px 18px', fontWeight: 800, fontSize: '14px', cursor: converting ? 'wait' : 'pointer', letterSpacing: '-0.01em', opacity: converting ? 0.7 : 1, transition: 'opacity 0.15s', whiteSpace: 'nowrap' }}
+            >
+              {converting ? 'Creating…' : 'Request a Quote →'}
+            </button>
+          )}
         </div>
       </div>
     </div>

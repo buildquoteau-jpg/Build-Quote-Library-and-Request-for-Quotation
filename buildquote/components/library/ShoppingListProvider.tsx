@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import type { ShoppingListItem } from '@/components/library/SystemCardUI'
 
 const LIST_KEY = 'bq_shopping_list'
+const ACTIVE_DRAFT_KEY = 'bq_active_draft'
 
 type ShoppingListContextType = {
   shoppingList: ShoppingListItem[]
@@ -13,6 +14,11 @@ type ShoppingListContextType = {
   updateName: (id: string, name: string) => void
   updateUom: (id: string, uom: string) => void
   clearList: () => void
+  // Active RFQ draft the library is adding to (set when arriving from /rfq).
+  // Backed by sessionStorage: survives in-tab navigation, dies with the tab,
+  // never leaks into a fresh public visit in another tab.
+  activeDraftId: string | null
+  setActiveDraftId: (id: string | null) => void
 }
 
 const ShoppingListContext = createContext<ShoppingListContextType | null>(null)
@@ -25,6 +31,7 @@ export function useShoppingList() {
 
 export function ShoppingListProvider({ children }: { children: ReactNode }) {
   const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>([])
+  const [activeDraftId, setActiveDraftIdState] = useState<string | null>(null)
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -32,7 +39,19 @@ export function ShoppingListProvider({ children }: { children: ReactNode }) {
       const saved = localStorage.getItem(LIST_KEY)
       if (saved) setShoppingList(JSON.parse(saved))
     } catch {}
+    try {
+      const draft = sessionStorage.getItem(ACTIVE_DRAFT_KEY)
+      if (draft) setActiveDraftIdState(draft)
+    } catch {}
   }, [])
+
+  function setActiveDraftId(id: string | null) {
+    setActiveDraftIdState(id)
+    try {
+      if (id) sessionStorage.setItem(ACTIVE_DRAFT_KEY, id)
+      else sessionStorage.removeItem(ACTIVE_DRAFT_KEY)
+    } catch {}
+  }
 
   // Persist to localStorage on change
   useEffect(() => {
@@ -80,6 +99,7 @@ export function ShoppingListProvider({ children }: { children: ReactNode }) {
   return (
     <ShoppingListContext.Provider value={{
       shoppingList, addItems, removeItem, updateQty, updateName, updateUom, clearList,
+      activeDraftId, setActiveDraftId,
     }}>
       {children}
     </ShoppingListContext.Provider>

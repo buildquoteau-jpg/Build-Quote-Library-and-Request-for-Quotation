@@ -31,6 +31,9 @@ interface ManualEntryScreenProps {
   fromMfp?: boolean
   onChangeSupplier?: (supplier: { supplierName: string; supplierEmail: string; accountNumber: string } | null) => void
   onChangeJob?: (job: { projectReference: string; siteAddress: string; pmName: string; pmPhone: string; siteAccessNotes: string; jobId: string } | null) => void
+  // Flush the draft (items + supplier/job meta) then navigate to /library?draft=,
+  // so the in-progress quote persists across the manufacturer-library round-trip.
+  onBrowseManufacturers?: () => void
 }
 
 function generateId(): string {
@@ -103,6 +106,7 @@ export default function ManualEntryScreen({
   fromMfp,
   onChangeSupplier,
   onChangeJob,
+  onBrowseManufacturers,
 }: ManualEntryScreenProps) {
   const [error, setError] = useState('')
   const [showQtyTip, setShowQtyTip] = useState(true)
@@ -289,6 +293,9 @@ export default function ManualEntryScreen({
   }
 
   const handleBrowseManufacturerSystems = () => {
+    // Flush the draft and carry its id to the library so the in-progress quote
+    // persists; fall back to a plain library visit if no flush handler is wired.
+    if (onBrowseManufacturers) { onBrowseManufacturers(); return }
     window.location.href = '/library'
   }
 

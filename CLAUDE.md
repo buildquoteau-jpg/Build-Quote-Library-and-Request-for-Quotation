@@ -248,6 +248,19 @@ system_colours             — id, system_id, colour_name, image_url, is_stocked
   to `/library` (`next.config.ts`).
 - **Google Maps API key** — not restricted to production domains yet
 - **Supabase migration** — `20260520_my_quotes.sql` must be run before testing My Quotes tab
+- **Supabase migration** — `20260630_supplier_account_on_drafts.sql` (adds `supplier_account_number`
+  + `supplier_id` to `rfq_drafts`) must be run before deploying the draft-persistence work, or
+  the supplier account-number snapshot is silently skipped (code degrades gracefully — core meta
+  still saves — but the account number won't persist across the /library round-trip until applied)
+- **Auth model** — `/library` + shopping list are public (no login). `/rfq` is login-gated in
+  `proxy.ts`; "Request a Quote" sends logged-out users through `/login?next=/library?convert=1`
+  and auto-resumes the conversion on return. Draft writes (`/api/save-draft-items`) verify the
+  draft's `builder_id` matches the session (guest drafts with null builder stay open).
+- **Draft round-trip** — `/rfq` → "Browse manufacturer products" carries `?draft=` to `/library`;
+  the library holds it as `activeDraftId` (sessionStorage, via `ShoppingListProvider` +
+  `DraftContextSync`) and the drawer shows "Add N items to quote request" (append mode).
+- **Draft read auth (follow-up)** — `/api/get-draft-items` is still capability-based (UUID = bearer);
+  only writes are owner-checked. Consider owner-scoping reads if draft ids ever leak.
 - **Passkey flow** — not tested end-to-end
 - **Hero image data** — some records have trailing `\r\n` in `hero_image_url`; guarded with `.trim()` in UI but fix at source in Supabase
 
