@@ -1,13 +1,30 @@
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 import { NextResponse } from 'next/server'
+import { extractListItems } from '@/lib/extractListItems'
 
-const client = new Anthropic()
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 type ImageMediaType = 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
 
+const PROMPT = `Extract all items from this building materials list or handwritten note. The handwriting may be rough and use trade shorthand (e.g. "H2 90x35", "Ext Cnr", "Window Adpt", "@" for length, "sausages" for adhesive tubes).
+
+Return ONLY a raw JSON array — no markdown, no code fences, no explanation. The first character must be [.
+Each object must have exactly these keys:
+- "qty": number — the count. For "6 @ 4.8m" qty is 6; for "x 10 sheets" qty is 10; for "24 length @ 6.0m" qty is 24. Default to 1 if no count is given.
+- "name": string — the product name including brand/profile, e.g. "Linea Weatherboard 150mm", "H2 Pine 90x35", "Construction Adhesive".
+- "desc": string — specs/dimensions/length only, e.g. "150mm", "90x35 • 4.8m", "@ 6.0m". Empty string if none.
+- "uom": string — best unit: EA, LM, BAG, SHEET, M2, TUBE, BOX, ROLL, LENGTH. Infer if not stated. Use LENGTH for timber/lineal lengths, TUBE for adhesive/sealant sausages, BOX for boxed screws/fixings.
+
+Rules:
+- For "N @ Xm" entries: qty = N, put "@ Xm" / the length into desc, never multiply or concatenate the numbers.
+- If a single item lists two length breakdowns (e.g. "24 length @ 6.0m + 12 length @ 3.6m"), split it into TWO separate items with the same name.
+- Always keep dimension specs and grade. Put dimensions in desc, not qty.
+- Treat spaces/dots/smudges between numbers as separators — do not merge digits (e.g. "1 @ 3.6m" is qty 1, not 13.6).
+- Do not invent items. Skip the "Materials list" heading and crossed-out lines.`
+
 export async function POST(req: Request) {
   try {
-    const { imageBase64, mediaType } = await req.json() as {
+    const { imageBase64, mediaType } = (await req.json()) as {
       imageBase64: string
       mediaType: ImageMediaType
     }
@@ -16,52 +33,35 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing image data' }, { status: 400 })
     }
 
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      messages: [{
-        role: 'user',
-        content: [
+    const completion = (await Promise.race([
+      client.chat.completions.create({
+        model: 'gpt-4o',
+        max_tokens: 1024,
+        messages: [
           {
-            type: 'image',
-            source: { type: 'base64', media_type: mediaType, data: imageBase64 },
-          },
-          {
-            type: 'text',
-            text: `Extract all items from this building materials list or handwritten note.
-Return a JSON array where each item has:
-- qty: number (the count — e.g. for "6 @ 2.7M", qty is 6; for "x 10 sheets", qty is 10)
-- name: string (include all specs, grade, dimensions and length — e.g. "H2 190x35 @ 3.6m", "H4 100x100 F7 Pine Post @ 2.7m")
-- uom: string (infer: EA, LM, BAG, SHEET, M2, TUBE, ROLL — LM for timber lengths)
-Rules:
-- For "N @ Xm" entries: qty = N, include "@ Xm" in the name
-- If two lengths are offered (e.g. "2.7m or 3.0m"), include both in the name
-- Always include dimension specs and grade in the name (e.g. "100mm x 100mm F7")
-Return ONLY a valid JSON array, no markdown, no explanation.`,
+            role: 'user',
+            content: [
+              {
+                type: 'image_url',
+                image_url: { url: `data:${mediaType};base64,${imageBase64}`, detail: 'high' },
+              },
+              { type: 'text', text: PROMPT },
+            ],
           },
         ],
-      }],
-    })
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Parse timeout')), 55000)),
+    ])) as OpenAI.Chat.ChatCompletion
 
-    const content = message.content[0]
-    if (content.type !== 'text') {
-      return NextResponse.json({ error: 'Unexpected AI response' }, { status: 500 })
-    }
-
-    let items: unknown
-    try {
-      items = JSON.parse(content.text.trim())
-    } catch {
-      const match = content.text.match(/\[[\s\S]*\]/)
-      if (match) {
-        items = JSON.parse(match[0])
-      } else {
-        return NextResponse.json({ error: 'Could not read items from image' }, { status: 422 })
-      }
-    }
+    const responseText = completion.choices[0]?.message?.content ?? ''
+    const items = extractListItems(responseText)
 
     return NextResponse.json({ items })
   } catch (err) {
+    if (err instanceof OpenAI.APIError && err.status === 401) {
+      console.error('[library/extract-from-image] OpenAI key invalid/missing')
+      return NextResponse.json({ error: 'OpenAI API key is invalid or missing.' }, { status: 401 })
+    }
     console.error('[library/extract-from-image]', err)
     return NextResponse.json({ error: 'Extraction error' }, { status: 500 })
   }

@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef, useTransition } from 'react'
+import { useState, useEffect, useRef, useMemo, useTransition } from 'react'
 import type { LibrarySystem } from '@/lib/data/getSystems'
 import { SystemCardTileUI } from '@/components/library/SystemCardTileUI'
 import { useShoppingList } from '@/components/library/ShoppingListProvider'
+import { useDictation } from '@/lib/useDictation'
+
+type Facet = 'manufacturer' | 'category'
 
 const EXAMPLES = ['fibre cement cladding', 'composite decking', 'window hood', 'waterproofing']
 
@@ -27,7 +30,8 @@ export function LibraryPageClient({ initialSystems, categories }: {
   const { addItems } = useShoppingList()
 
   const [query,          setQuery]          = useState('')
-  const [activeCategory, setActiveCategory] = useState('All')
+  const [facet,          setFacet]          = useState<Facet>('manufacturer')
+  const [activeFacet,    setActiveFacet]    = useState('All')
   const [results,        setResults]        = useState<LibrarySystem[] | null>(null)
   const [searchError,    setSearchError]    = useState(false)
   const [isPending,      startTransition]   = useTransition()
@@ -39,15 +43,13 @@ export function LibraryPageClient({ initialSystems, categories }: {
   const [listError,      setListError]      = useState('')
   const [loadingMsgIdx,  setLoadingMsgIdx]  = useState(0)
   const [dragOver,       setDragOver]       = useState(false)
-  const [speechAvailable, setSpeechAvailable] = useState(false)
-  const [listListening,  setListListening]  = useState(false)
+
+  // Live dictation for the search bar and the quick-list textarea
+  const searchVoice = useDictation(setQuery)
+  const listVoice   = useDictation(setListInput)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const listBusy = listParsing || extracting
-
-  useEffect(() => {
-    setSpeechAvailable(!!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition))
-  }, [])
 
   useEffect(() => {
     if (!listBusy) { setLoadingMsgIdx(0); return }
@@ -57,44 +59,57 @@ export function LibraryPageClient({ initialSystems, categories }: {
 
   // ── Search ────────────────────────────────────────────────────────────────
 
+  // Available facet values — manufacturers derived from the data, categories passed in.
+  const manufacturers = useMemo(
+    () => Array.from(new Set(initialSystems.map(s => s.manufacturer?.name || 'Other'))).sort(),
+    [initialSystems]
+  )
+  const facetValues = facet === 'manufacturer' ? manufacturers : categories
+  const facetOf = (s: LibrarySystem) =>
+    facet === 'manufacturer' ? (s.manufacturer?.name || 'Other') : (s.category || 'Other')
+
+  // Text search hits the API; facet (manufacturer/category) filtering is applied client-side.
   const displaySystems = results ?? initialSystems
-  const filtered = query
+  const filtered = activeFacet === 'All'
     ? displaySystems
-    : activeCategory === 'All' ? displaySystems : displaySystems.filter(s => s.category === activeCategory)
+    : displaySystems.filter(s => facetOf(s) === activeFacet)
 
   const grouped = filtered.reduce<Record<string, LibrarySystem[]>>((acc, sys) => {
-    const cat = sys.category || 'Other'
-    if (!acc[cat]) acc[cat] = []
-    acc[cat].push(sys)
+    const key = facetOf(sys)
+    if (!acc[key]) acc[key] = []
+    acc[key].push(sys)
     return acc
   }, {})
 
-  const visibleCategories = activeCategory === 'All' ? categories : categories.filter(c => c === activeCategory)
-  const isFiltering = query.trim() !== '' || activeCategory !== 'All'
+  const visibleFacets = activeFacet === 'All' ? facetValues : [activeFacet]
+  const isFiltering = query.trim() !== '' || activeFacet !== 'All'
+
+  // Switch facet (manufacturer ↔ category) — reset the active pill.
+  function changeFacet(next: Facet) {
+    setFacet(next)
+    setActiveFacet('All')
+  }
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    const q = query.trim(), cat = activeCategory === 'All' ? '' : activeCategory
-    if (!q && !cat) { setResults(null); setSearchError(false); return }
+    const q = query.trim()
+    if (!q) { setResults(null); setSearchError(false); return }
     debounceRef.current = setTimeout(() => {
-      const params = new URLSearchParams()
-      if (q) params.set('q', q)
-      if (cat) params.set('category', cat)
       startTransition(() => {
-        fetch(`/api/library/systems?${params}`)
+        fetch(`/api/library/systems?q=${encodeURIComponent(q)}`)
           .then(r => r.json())
           .then((d: LibrarySystem[]) => { setResults(Array.isArray(d) ? d : []); setSearchError(false) })
           .catch(() => setSearchError(true))
       })
     }, 300)
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [query, activeCategory])
+  }, [query])
 
   // ── Quick List ────────────────────────────────────────────────────────────
 
-  function addParsed(raw: { qty: number; name: string; uom: string }[]) {
+  function addParsed(raw: { qty: number; name: string; uom: string; desc?: string }[]) {
     addItems(raw.map((item, i) => ({
-      id: `parsed-${Date.now()}-${i}`, name: item.name, sku: '', desc: '',
+      id: `parsed-${Date.now()}-${i}`, name: item.name, sku: '', desc: item.desc ?? '',
       uom: item.uom ?? 'EA', qty: Number(item.qty) || 1,
     })))
     setListInput('')
@@ -135,20 +150,6 @@ export function LibraryPageClient({ initialSystems, categories }: {
     finally { setExtracting(false); if (fileInputRef.current) fileInputRef.current.value = '' }
   }
 
-  function startListVoice() {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!SR) return
-    setListError('')
-    const r = new SR(); r.lang = 'en-AU'
-    r.onresult = (e: any) => {
-      const t = e.results[0][0].transcript
-      setListInput(prev => prev.trim() ? `${prev.trim()}, ${t}` : t)
-    }
-    r.onerror = () => setListListening(false)
-    r.onend   = () => setListListening(false)
-    r.start(); setListListening(true)
-  }
-
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -172,11 +173,22 @@ export function LibraryPageClient({ initialSystems, categories }: {
             <input
               type="search" value={query} onChange={e => setQuery(e.target.value)}
               placeholder="Search or ask a question…"
-              style={{ width: '100%', boxSizing: 'border-box', border: 0, borderRadius: '14px', padding: '13px 44px 13px 42px', fontSize: '15px', color: '#0f172a', background: '#fff', outline: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.18)', fontWeight: 500 }}
+              style={{ width: '100%', boxSizing: 'border-box', border: 0, borderRadius: '14px', padding: `13px ${searchVoice.supported ? '76px' : '44px'} 13px 42px`, fontSize: '15px', color: '#0f172a', background: '#fff', outline: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.18)', fontWeight: 500 }}
             />
             {query && (
-              <button onClick={() => setQuery('')} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#9ca3af', lineHeight: 1, padding: '4px' }}>×</button>
+              <button onClick={() => setQuery('')} aria-label="Clear search" style={{ position: 'absolute', right: searchVoice.supported ? '46px' : '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#9ca3af', lineHeight: 1, padding: '4px' }}>×</button>
             )}
+            {searchVoice.supported && (
+              <button
+                onClick={() => { searchVoice.toggle(query) }}
+                aria-label={searchVoice.listening ? 'Stop dictation' : 'Search by voice'}
+                title={searchVoice.listening ? 'Stop dictation' : 'Search by voice'}
+                style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', cursor: 'pointer', border: 'none', background: searchVoice.listening ? '#ef4444' : '#eef6fa', color: searchVoice.listening ? '#fff' : '#185D7A', animation: searchVoice.listening ? 'bq-pulse 1.2s ease-in-out infinite' : 'none' }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+              </button>
+            )}
+            <style>{`@keyframes bq-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.5)}50%{box-shadow:0 0 0 5px rgba(239,68,68,0)}}`}</style>
           </div>
 
           {/* Example chips */}
@@ -245,11 +257,11 @@ export function LibraryPageClient({ initialSystems, categories }: {
                       <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: 'none' }}
                         onChange={e => { if (e.target.files?.[0]) handleFileUpload(e.target.files[0]) }} />
                     </label>
-                    {speechAvailable && (
-                      <button onClick={startListVoice}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, color: listListening ? '#fff' : 'rgba(255,255,255,0.8)', background: listListening ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.1)', border: `1px solid ${listListening ? 'rgba(239,68,68,0.6)' : 'rgba(255,255,255,0.22)'}`, borderRadius: '8px', padding: '7px 12px', cursor: 'pointer' }}>
+                    {listVoice.supported && (
+                      <button onClick={() => { setListError(''); listVoice.toggle(listInput) }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, color: listVoice.listening ? '#fff' : 'rgba(255,255,255,0.8)', background: listVoice.listening ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.1)', border: `1px solid ${listVoice.listening ? 'rgba(239,68,68,0.7)' : 'rgba(255,255,255,0.22)'}`, borderRadius: '8px', padding: '7px 12px', cursor: 'pointer' }}>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
-                        {listListening ? 'Listening…' : 'Speak list'}
+                        {listVoice.listening ? 'Tap to stop' : 'Speak list'}
                       </button>
                     )}
                   </div>
@@ -264,18 +276,38 @@ export function LibraryPageClient({ initialSystems, categories }: {
         </div>
       </section>
 
-      {/* Category pills — single scrollable row */}
+      {/* Browse-by toggle + facet pills */}
       <div style={{ background: '#fff', borderBottom: '1px solid #d1d9e0' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '10px 16px', display: 'flex', gap: '6px', alignItems: 'center', overflowX: 'auto', whiteSpace: 'nowrap' as const }}>
-          {['All', ...categories].map(cat => {
-            const active = activeCategory === cat
-            return (
-              <button key={cat} onClick={() => setActiveCategory(cat)}
-                style={{ flexShrink: 0, fontSize: '12px', fontWeight: active ? 700 : 500, padding: '5px 12px', borderRadius: '20px', cursor: 'pointer', border: `1.5px solid ${active ? '#185D7A' : '#d1d9e0'}`, background: active ? '#185D7A' : '#fff', color: active ? '#fff' : '#334155', transition: 'all 0.12s' }}>
-                {cat}
-              </button>
-            )
-          })}
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '10px 16px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+
+          {/* Manufacturer / Category segmented toggle */}
+          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Browse by</span>
+            <div style={{ display: 'inline-flex', background: '#f1f5f9', border: '1px solid #d1d9e0', borderRadius: '8px', padding: '2px' }}>
+              {(['manufacturer', 'category'] as Facet[]).map(f => {
+                const on = facet === f
+                return (
+                  <button key={f} onClick={() => changeFacet(f)}
+                    style={{ fontSize: '12px', fontWeight: on ? 700 : 500, padding: '4px 11px', borderRadius: '6px', cursor: 'pointer', border: 'none', background: on ? '#185D7A' : 'transparent', color: on ? '#fff' : '#475569', transition: 'all 0.12s', textTransform: 'capitalize' }}>
+                    {f}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Facet value pills — single scrollable row */}
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', overflowX: 'auto', whiteSpace: 'nowrap' as const, flex: 1, borderLeft: '1px solid #e5e7eb', paddingLeft: '10px' }}>
+            {['All', ...facetValues].map(val => {
+              const active = activeFacet === val
+              return (
+                <button key={val} onClick={() => setActiveFacet(val)}
+                  style={{ flexShrink: 0, fontSize: '12px', fontWeight: active ? 700 : 500, padding: '5px 12px', borderRadius: '20px', cursor: 'pointer', border: `1.5px solid ${active ? '#185D7A' : '#d1d9e0'}`, background: active ? '#185D7A' : '#fff', color: active ? '#fff' : '#334155', transition: 'all 0.12s' }}>
+                  {val}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 
@@ -287,7 +319,7 @@ export function LibraryPageClient({ initialSystems, categories }: {
         {!isPending && filtered.length === 0 && (
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
             <p style={{ fontSize: '15px', color: '#374151', fontWeight: 600, marginBottom: '8px' }}>No products match {query ? `"${query}"` : 'that filter'}</p>
-            <button onClick={() => { setQuery(''); setActiveCategory('All') }}
+            <button onClick={() => { setQuery(''); setActiveFacet('All') }}
               style={{ fontSize: '13px', color: '#185D7A', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
               Clear filters
             </button>
@@ -304,14 +336,14 @@ export function LibraryPageClient({ initialSystems, categories }: {
         )}
 
         {!isFiltering && !isPending && (
-          visibleCategories.filter(cat => grouped[cat]?.length > 0).map(cat => (
-            <section key={cat} id={slugifyCategory(cat)} style={{ marginBottom: '40px' }}>
+          visibleFacets.filter(val => grouped[val]?.length > 0).map(val => (
+            <section key={val} id={slugifyCategory(val)} style={{ marginBottom: '40px' }}>
               <div style={{ marginBottom: '14px' }}>
-                <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#f97316', marginBottom: '3px' }}>Product category</div>
-                <h2 style={{ fontSize: 'clamp(16px, 2vw, 22px)', fontWeight: 800, color: '#185D7A', fontFamily: 'var(--font-barlow-condensed), sans-serif', letterSpacing: '-0.01em', lineHeight: 1.15, margin: 0 }}>{cat}</h2>
+                <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#f97316', marginBottom: '3px' }}>{facet === 'manufacturer' ? 'Manufacturer' : 'Product category'}</div>
+                <h2 style={{ fontSize: 'clamp(16px, 2vw, 22px)', fontWeight: 800, color: '#185D7A', fontFamily: 'var(--font-barlow-condensed), sans-serif', letterSpacing: '-0.01em', lineHeight: 1.15, margin: 0 }}>{val}</h2>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '14px' }}>
-                {grouped[cat].map(sys => <SystemCardTileUI key={sys.id} system={sys} />)}
+                {grouped[val].map(sys => <SystemCardTileUI key={sys.id} system={sys} />)}
               </div>
             </section>
           ))

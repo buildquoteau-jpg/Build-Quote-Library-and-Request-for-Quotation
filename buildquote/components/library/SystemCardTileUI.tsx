@@ -56,6 +56,9 @@ export function SystemCardTileUI({
           <img
             src={system.hero_image_url.trim()}
             alt={system.name}
+            loading="lazy"
+            decoding="async"
+            sizes="(max-width: 600px) 100vw, 280px"
             style={{
               position: 'absolute', inset: 0, width: '100%', height: '100%',
               objectFit: 'cover', objectPosition: `${posX}% ${posY}%`,

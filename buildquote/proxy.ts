@@ -1,36 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { verifyAccessCookie } from '@/app/api/access/route'
-
-// Routes that are always public — no demo password required
-const PUBLIC_PATHS = ['/', '/coming-soon', '/privacy', '/terms', '/access', '/flyer']
-
-function isPublicPath(pathname: string) {
-  return (
-    PUBLIC_PATHS.includes(pathname) ||
-    pathname.startsWith('/api/') ||
-    pathname.startsWith('/_next/') ||
-    pathname.startsWith('/favicon') ||
-    /\.(png|ico|svg|jpg|jpeg|webp|woff2?)$/.test(pathname)
-  )
-}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-
-  // ── Demo password gate ────────────────────────────────────────────────────
-  // When DEMO_PASSWORD is set in env, all non-public routes require the cookie.
-  const demoPassword = process.env.DEMO_PASSWORD
-  if (demoPassword && !isPublicPath(pathname)) {
-    const accessCookie = request.cookies.get('bq_access')?.value
-    if (!verifyAccessCookie(accessCookie, demoPassword)) {
-      const accessUrl = request.nextUrl.clone()
-      accessUrl.pathname = '/access'
-      // Preserve full path + query string so draft/supplier params survive the redirect
-      accessUrl.searchParams.set('next', pathname + request.nextUrl.search)
-      return NextResponse.redirect(accessUrl)
-    }
-  }
 
   // ── Supabase auth ─────────────────────────────────────────────────────────
   // Skip auth entirely when Supabase credentials aren't configured (local dev without .env.local)

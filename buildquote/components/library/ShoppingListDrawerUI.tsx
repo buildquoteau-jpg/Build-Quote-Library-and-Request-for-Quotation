@@ -63,64 +63,153 @@ export function ShoppingListDrawerUI() {
     if (sharing || shoppingList.length === 0) return
     setSharing(true)
     try {
-      const PAD = 28, IH = 56, HH = 88, FH = 52, W = 560
-      const H = HH + shoppingList.length * IH + FH
+      // Layout — full table: # | Profile & Specs | SKU | UOM | QTY
+      const W = 660, PAD = 26
+      const HH = 80   // header band
+      const CH = 30   // column-header row
+      const FH = 46   // footer band
+      const ROW_PAD_Y = 11
+      const NAME_LH = 18, DESC_LH = 15, SKU_LH = 14
+
+      // Column x positions
+      const xIndex   = PAD                    // # (left)
+      const xName    = PAD + 24                // name / specs (left)
+      const xSku     = 392                     // SKU column (left)
+      const skuMaxW  = 150
+      const xUom     = 568                     // UOM (center)
+      const xQty     = W - PAD                 // QTY (right)
+      const nameMaxW = xSku - xName - 16
+
+      // Measure pass — need a context to wrap text and compute row heights.
+      const measureCanvas = document.createElement('canvas')
+      const mctx = measureCanvas.getContext('2d')!
+
+      function wrap(text: string, font: string, maxW: number): string[] {
+        if (!text) return []
+        mctx.font = font
+        const words = text.split(/\s+/)
+        const lines: string[] = []
+        let line = ''
+        for (const word of words) {
+          const test = line ? `${line} ${word}` : word
+          if (mctx.measureText(test).width > maxW && line) {
+            lines.push(line)
+            line = word
+          } else {
+            line = test
+          }
+        }
+        if (line) lines.push(line)
+        return lines
+      }
+
+      const NAME_FONT = '600 14px Arial, Helvetica, sans-serif'
+      const DESC_FONT = '12px Arial, Helvetica, sans-serif'
+      const SKU_FONT  = '11px "Courier New", monospace'
+
+      const rows = shoppingList.map(item => {
+        const nameLines = wrap(item.name, NAME_FONT, nameMaxW)
+        const descLines = item.desc ? wrap(item.desc, DESC_FONT, nameMaxW) : []
+        const skuLines  = item.sku ? wrap(item.sku, SKU_FONT, skuMaxW) : []
+        const leftH = nameLines.length * NAME_LH + descLines.length * DESC_LH
+        const skuH  = skuLines.length * SKU_LH
+        const contentH = Math.max(leftH, skuH, NAME_LH)
+        return { item, nameLines, descLines, skuLines, height: contentH + ROW_PAD_Y * 2 }
+      })
+
+      const bodyH = rows.reduce((sum, r) => sum + r.height, 0)
+      const H = HH + CH + bodyH + FH
 
       const canvas = document.createElement('canvas')
       canvas.width = W * 2; canvas.height = H * 2
       const ctx = canvas.getContext('2d')!
       ctx.scale(2, 2)
+      ctx.textBaseline = 'alphabetic'
 
       // White bg
       ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H)
 
-      // Header gradient
+      // Header gradient band
       const g = ctx.createLinearGradient(0, 0, W, 0)
       g.addColorStop(0, '#185D7A'); g.addColorStop(1, '#0f4461')
       ctx.fillStyle = g; ctx.fillRect(0, 0, W, HH)
 
       // BuildQuote wordmark
+      ctx.textAlign = 'left'
       ctx.font = 'bold 22px Arial, Helvetica, sans-serif'
-      ctx.fillStyle = '#ffffff'; ctx.fillText('Build', PAD, HH / 2 + 8)
+      ctx.fillStyle = '#ffffff'; ctx.fillText('Build', PAD, HH / 2)
       const bw = ctx.measureText('Build').width
-      ctx.fillStyle = '#f97316'; ctx.fillText('Quote', PAD + bw, HH / 2 + 8)
+      ctx.fillStyle = '#f97316'; ctx.fillText('Quote', PAD + bw, HH / 2)
 
       // Subtitle
       ctx.font = '12px Arial, Helvetica, sans-serif'
-      ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.fillText('Materials List', PAD, HH / 2 + 28)
+      ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.fillText('Materials List', PAD, HH / 2 + 20)
 
       // Date
       ctx.font = '11px Arial, Helvetica, sans-serif'
       ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.textAlign = 'right'
-      ctx.fillText(new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }), W - PAD, HH / 2 + 8)
+      ctx.fillText(new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }), W - PAD, HH / 2)
       ctx.textAlign = 'left'
 
-      // Items
-      shoppingList.forEach((item, i) => {
-        const y = HH + i * IH
-        ctx.fillStyle = i % 2 === 0 ? '#f8fafc' : '#ffffff'; ctx.fillRect(0, y, W, IH)
+      // Column header row
+      ctx.fillStyle = '#f1f5f9'; ctx.fillRect(0, HH, W, CH)
+      ctx.font = '700 10px Arial, Helvetica, sans-serif'; ctx.fillStyle = '#64748b'
+      const chY = HH + CH / 2 + 4
+      ctx.textAlign = 'left'
+      ctx.fillText('#', xIndex, chY)
+      ctx.fillText('PROFILE & SPECS', xName, chY)
+      ctx.fillText('SKU / PART NO', xSku, chY)
+      ctx.textAlign = 'center'; ctx.fillText('UOM', xUom, chY)
+      ctx.textAlign = 'right';  ctx.fillText('QTY', xQty, chY)
+      ctx.textAlign = 'left'
 
-        // Name (truncate)
-        ctx.font = '600 15px Arial, Helvetica, sans-serif'; ctx.fillStyle = '#0f172a'
-        const maxW = W - PAD * 2 - 90
-        let name = item.name
-        while (name.length > 8 && ctx.measureText(name).width > maxW) name = name.slice(0, -4) + '…'
-        ctx.fillText(name, PAD, y + IH / 2 + 6)
+      // Item rows
+      let y = HH + CH
+      rows.forEach(({ item, nameLines, descLines, skuLines, height }, i) => {
+        ctx.fillStyle = i % 2 === 0 ? '#f8fafc' : '#ffffff'; ctx.fillRect(0, y, W, height)
 
-        // Qty + UOM
-        ctx.font = 'bold 15px Arial, Helvetica, sans-serif'; ctx.fillStyle = '#185D7A'; ctx.textAlign = 'right'
-        ctx.fillText(`${item.qty} ${item.uom}`, W - PAD, y + IH / 2 + 6); ctx.textAlign = 'left'
+        // Index
+        ctx.font = '12px Arial, Helvetica, sans-serif'; ctx.fillStyle = '#9ca3af'; ctx.textAlign = 'left'
+        ctx.fillText(String(i + 1), xIndex, y + ROW_PAD_Y + 12)
+
+        // Name (wrapped) + specs
+        let ly = y + ROW_PAD_Y + 12
+        ctx.font = NAME_FONT; ctx.fillStyle = '#0f172a'
+        for (const line of nameLines) { ctx.fillText(line, xName, ly); ly += NAME_LH }
+        if (descLines.length) {
+          ctx.font = DESC_FONT; ctx.fillStyle = '#6b7280'
+          for (const line of descLines) { ctx.fillText(line, xName, ly); ly += DESC_LH }
+        }
+
+        // SKU (wrapped, monospace)
+        let sy = y + ROW_PAD_Y + 11
+        ctx.font = SKU_FONT; ctx.fillStyle = '#475569'
+        if (skuLines.length) {
+          for (const line of skuLines) { ctx.fillText(line, xSku, sy); sy += SKU_LH }
+        } else {
+          ctx.fillStyle = '#cbd5e1'; ctx.fillText('—', xSku, sy)
+        }
+
+        // UOM (centered)
+        ctx.font = '700 11px Arial, Helvetica, sans-serif'; ctx.fillStyle = '#185D7A'; ctx.textAlign = 'center'
+        ctx.fillText(item.uom || 'EA', xUom, y + ROW_PAD_Y + 12)
+
+        // Qty (right)
+        ctx.font = 'bold 15px Arial, Helvetica, sans-serif'; ctx.fillStyle = '#0f172a'; ctx.textAlign = 'right'
+        ctx.fillText(String(item.qty), xQty, y + ROW_PAD_Y + 13)
+        ctx.textAlign = 'left'
 
         // Divider
         ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 0.5
-        ctx.beginPath(); ctx.moveTo(PAD, y + IH); ctx.lineTo(W - PAD, y + IH); ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(0, y + height); ctx.lineTo(W, y + height); ctx.stroke()
+
+        y += height
       })
 
       // Footer
-      const fY = HH + shoppingList.length * IH
-      ctx.fillStyle = '#f1f5f9'; ctx.fillRect(0, fY, W, FH)
+      ctx.fillStyle = '#f1f5f9'; ctx.fillRect(0, y, W, FH)
       ctx.font = '11px Arial, Helvetica, sans-serif'; ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'center'
-      ctx.fillText(`buildquote.com.au  ·  ${shoppingList.length} item${shoppingList.length !== 1 ? 's' : ''}`, W / 2, fY + FH / 2 + 4)
+      ctx.fillText(`buildquote.com.au  ·  ${shoppingList.length} item${shoppingList.length !== 1 ? 's' : ''}`, W / 2, y + FH / 2 + 4)
       ctx.textAlign = 'left'
 
       await new Promise<void>(resolve => {
