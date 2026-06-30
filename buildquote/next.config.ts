@@ -38,6 +38,16 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  images: {
+    // The library aggregates manufacturer imagery from many external CDNs
+    // (Supabase, Wix, manufacturer sites…). Allow any HTTPS host so new
+    // manufacturers work without a config change. Image bytes can't execute
+    // code, and the CSP already permits `img-src 'self' data: https:`.
+    remotePatterns: [{ protocol: 'https', hostname: '**' }],
+    // Serve modern formats — AVIF first, WebP fallback.
+    formats: ['image/avif', 'image/webp'],
+  },
+
   async headers() {
     return [
       {

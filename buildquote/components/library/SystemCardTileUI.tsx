@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import type { LibrarySystem } from '@/lib/data/getSystems'
 
 export const CATEGORY_COLOURS: Record<string, { bg: string; color: string }> = {
@@ -53,16 +54,13 @@ export function SystemCardTileUI({
         background: system.hero_image_url?.trim() ? undefined : 'linear-gradient(135deg, #185D7A 0%, #0f3d52 100%)',
       }}>
         {system.hero_image_url?.trim() && (
-          <img
+          <Image
             src={system.hero_image_url.trim()}
             alt={system.name}
+            fill
             loading="lazy"
-            decoding="async"
             sizes="(max-width: 600px) 100vw, 280px"
-            style={{
-              position: 'absolute', inset: 0, width: '100%', height: '100%',
-              objectFit: 'cover', objectPosition: `${posX}% ${posY}%`,
-            }}
+            style={{ objectFit: 'cover', objectPosition: `${posX}% ${posY}%` }}
           />
         )}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,30,45,0.88) 0%, rgba(15,30,45,0.18) 55%, transparent 100%)' }} />

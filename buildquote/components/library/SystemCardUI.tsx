@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import type { LibrarySystem, LibraryProfile, LibraryColour, LibraryComponent } from '@/lib/data/getSystems'
 
 // Strip trailing " System" / " Systems" from display names
@@ -538,13 +539,13 @@ export function SystemCardUI({ system, onAddToList }: Props) {
         overflow: 'hidden',
       }}>
         {system.hero_image_url?.trim() && (
-          <img
+          <Image
             src={system.hero_image_url.trim()}
             alt={system.name}
-            style={{
-              position: 'absolute', inset: 0, width: '100%', height: '100%',
-              objectFit: 'cover', objectPosition: `${posX}% ${posY}%`,
-            }}
+            fill
+            priority
+            sizes="(max-width: 720px) 100vw, 680px"
+            style={{ objectFit: 'cover', objectPosition: `${posX}% ${posY}%` }}
           />
         )}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,30,45,0.88) 0%, rgba(15,30,45,0.2) 60%, transparent 100%)' }} />
