@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseService as supabase } from '@/lib/supabase-service'
+import { cleanSearchQuery, expandSearchTerms } from '@/lib/searchSynonyms'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -25,16 +26,22 @@ export async function GET(req: NextRequest) {
     }
 
     if (q) {
-      // Split into individual keywords (≥3 chars, skip common stop words) and
-      // OR-search each across all text columns so "Bal 29 cladding" matches
-      // products that have "cladding" in category even if the full phrase doesn't match.
-      const STOP = new Set(['the','and','for','with','this','that','from','into','are','was','not','you','but'])
-      const words = q.split(/\s+/).filter(w => w.length >= 3 && !STOP.has(w.toLowerCase()))
-      const terms = words.length > 0 ? words : [q]
-      const conditions = terms
-        .map(w => `name.ilike.%${w}%,description.ilike.%${w}%,category.ilike.%${w}%,subcategory.ilike.%${w}%`)
-        .join(',')
-      query = query.or(conditions)
+      // Clean conversational phrasing ("I need BAL 29 cladding" → "BAL 29 cladding"),
+      // then expand into builder-vocabulary synonyms and OR-search every term across
+      // the text + attribute columns. Shares the exact same dictionary the instant
+      // client-side search uses (lib/searchSynonyms.ts) so behaviour stays in sync.
+      const cleaned = cleanSearchQuery(q)
+      const terms = expandSearchTerms(cleaned)
+      const safe = (terms.length > 0 ? terms : [cleaned])
+        // ilike treats % and , as special inside .or() — strip them to avoid breaking the filter.
+        .map(t => t.replace(/[%,]/g, '').trim())
+        .filter(Boolean)
+      if (safe.length > 0) {
+        const conditions = safe
+          .map(w => `name.ilike.%${w}%,description.ilike.%${w}%,category.ilike.%${w}%,subcategory.ilike.%${w}%,bal_rating.ilike.%${w}%,fire_rating.ilike.%${w}%,structural_grade.ilike.%${w}%`)
+          .join(',')
+        query = query.or(conditions)
+      }
     }
 
     const { data, error } = await query

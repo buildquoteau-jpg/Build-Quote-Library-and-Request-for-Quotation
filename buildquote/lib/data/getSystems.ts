@@ -170,8 +170,8 @@ export async function getAllSystems(): Promise<LibrarySystem[]> {
         australian_made, bal_rating, fire_rating, moisture_resistant,
         acoustic_rating, structural_grade, notes, sort_order,
         system_colours ( colour_name, image_url, sort_order, is_stocked ),
-        system_profiles ( id ),
-        system_components ( id, components ( id ) )
+        system_profiles ( id, name, profile_name, product_code ),
+        system_components ( id, components ( id, name ) )
       )
     `)
     .order('name')

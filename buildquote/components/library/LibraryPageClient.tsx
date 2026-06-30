@@ -1,14 +1,22 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo, useTransition } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import type { LibrarySystem } from '@/lib/data/getSystems'
 import { SystemCardTileUI } from '@/components/library/SystemCardTileUI'
 import { useShoppingList } from '@/components/library/ShoppingListProvider'
 import { useDictation } from '@/lib/useDictation'
+import {
+  searchLibrarySystems,
+  getConversationalSummary,
+  getSuggestedChips,
+  getSearchIntent,
+  type SearchChip,
+  type LibrarySearchResult,
+} from '@/lib/searchSynonyms'
 
 type Facet = 'manufacturer' | 'category'
 
-const EXAMPLES = ['fibre cement cladding', 'composite decking', 'window hood', 'waterproofing']
+const EXAMPLES = ['BAL 29 cladding', 'waterproofing', 'vertical lining', 'composite decking']
 
 const LOADING_MESSAGES = [
   "Measuring twice, reading once…",
@@ -106,10 +114,6 @@ export function LibraryPageClient({ initialSystems, categories }: {
   const [facet,          setFacet]          = useState<Facet>('manufacturer')
   const [activeFacet,    setActiveFacet]    = useState('All')
   const [mfrFilter,      setMfrFilter]      = useState('')
-  const [results,        setResults]        = useState<LibrarySystem[] | null>(null)
-  const [searchError,    setSearchError]    = useState(false)
-  const [isPending,      startTransition]   = useTransition()
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [listInput,      setListInput]      = useState('')
   const [listParsing,    setListParsing]    = useState(false)
@@ -171,11 +175,78 @@ export function LibraryPageClient({ initialSystems, categories }: {
     ? manufacturerTiles.filter(m => m.name.toLowerCase().includes(mfrFilter.trim().toLowerCase()))
     : manufacturerTiles
 
-  // Text search hits the API; facet (manufacturer/category) filtering is applied client-side.
-  const displaySystems = results ?? initialSystems
+  // Search runs entirely in the browser against the systems already loaded —
+  // instant, relevance-ranked, and synonym-aware (see lib/searchSynonyms.ts).
+  // Facet (manufacturer/category) filtering is layered on top, preserving rank.
+  const search = useMemo(
+    () => (query.trim() ? searchLibrarySystems(query, initialSystems) : null),
+    [query, initialSystems],
+  )
+
+  // ── AI fallback (Phase 3) ──────────────────────────────────────────────────
+  // Only fires on explicit submit (Enter / button) AND only when the instant
+  // local search has no confident match. gpt-4o turns a natural-language job
+  // question into product keywords that are run back through the SAME local
+  // search. Fails silent — local results always stand if the API is unavailable.
+  const [aiSearch, setAiSearch] = useState<{ result: LibrarySearchResult; interpretation: string } | null>(null)
+  const [aiBusy,   setAiBusy]   = useState(false)
+  const latestQueryRef = useRef(query)
+  latestQueryRef.current = query
+
+  // The local search is "weak" (worth an AI assist) when it found nothing or only
+  // associative/synonym matches rather than a word the user actually typed.
+  const localWeak = !!search && (search.systems.length === 0 || !search.exact)
+
+  // Any change to the query invalidates a prior AI interpretation.
+  useEffect(() => { setAiSearch(null); setAiBusy(false) }, [query])
+
+  async function runAiInterpret() {
+    const q = query.trim()
+    if (!q || aiBusy) return
+    setAiBusy(true)
+    try {
+      const res = await fetch('/api/library/interpret-query', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q, categories }),
+      })
+      const data = (await res.json()) as { terms?: string[]; interpretation?: string }
+      if (latestQueryRef.current.trim() !== q) return // user moved on — discard
+      const terms = Array.isArray(data.terms) ? data.terms.filter(Boolean) : []
+      const result = terms.length > 0
+        ? searchLibrarySystems(terms.join(' '), initialSystems)
+        : { systems: [], intent: getSearchIntent(q), exact: false }
+      setAiSearch({ result, interpretation: data.interpretation ?? '' })
+    } catch {
+      if (latestQueryRef.current.trim() === q) {
+        setAiSearch({ result: { systems: [], intent: getSearchIntent(q), exact: false }, interpretation: '' })
+      }
+    } finally {
+      setAiBusy(false)
+    }
+  }
+
+  // Effective result = AI interpretation when present, otherwise the local search.
+  const effectiveSearch = aiSearch ? aiSearch.result : search
+  const displaySystems = effectiveSearch ? effectiveSearch.systems : initialSystems
   const filtered = activeFacet === 'All'
     ? displaySystems
     : displaySystems.filter(s => facetOf(s) === activeFacet)
+
+  // Conversational interpretation + refinement chips for the "Ask BuildQuote" panel.
+  let searchSummary = ''
+  let searchChips: SearchChip[] = []
+  if (aiSearch) {
+    searchChips = getSuggestedChips(aiSearch.result.intent)
+    if (filtered.length === 0) {
+      searchSummary = `BuildQuote AI couldn’t find a close match in the library for “${query.trim()}”. Try a broader product type, or check with a supplier or manufacturer.`
+    } else {
+      const read = aiSearch.interpretation ? `read that as “${aiSearch.interpretation}” and ` : ''
+      searchSummary = `BuildQuote AI ${read}found related systems below. Open a manufacturer’s guide to confirm suitability, then add products to your list or request a quote.`
+    }
+  } else if (search) {
+    searchSummary = getConversationalSummary(search.intent, filtered.length, search.exact)
+    searchChips = getSuggestedChips(search.intent)
+  }
 
   const grouped = filtered.reduce<Record<string, LibrarySystem[]>>((acc, sys) => {
     const key = facetOf(sys)
@@ -193,30 +264,6 @@ export function LibraryPageClient({ initialSystems, categories }: {
     setActiveFacet('All')
     setMfrFilter('')
   }
-
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    const q = query.trim()
-    if (!q) { setResults(null); setSearchError(false); return }
-    debounceRef.current = setTimeout(() => {
-      // Strip conversational prefixes so natural-language queries still hit the DB.
-      // e.g. "I'm looking for waterproofing" → "waterproofing"
-      const cleanQ = q
-        .replace(/^(i'?m?\s+)?(looking for|searching for|trying to find|after)\s+/i, '')
-        .replace(/^(i\s+)?(want|need|want some|need some|need a|want a|need an|want an)\s+/i, '')
-        .replace(/^(find|show|get)\s+(me\s+)?/i, '')
-        .replace(/^(do you have|have you got|can i get|can i have|can you show me)\s+/i, '')
-        .replace(/^(some|a|an|the)\s+/i, '')
-        .trim()
-      startTransition(() => {
-        fetch(`/api/library/systems?q=${encodeURIComponent(cleanQ)}`)
-          .then(r => r.json())
-          .then((d: LibrarySystem[]) => { setResults(Array.isArray(d) ? d : []); setSearchError(false) })
-          .catch(() => setSearchError(true))
-      })
-    }, 300)
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [query])
 
   // ── Quick List ────────────────────────────────────────────────────────────
 
@@ -285,7 +332,8 @@ export function LibraryPageClient({ initialSystems, categories }: {
             </div>
             <input
               type="search" value={query} onChange={e => setQuery(e.target.value)}
-              placeholder="Search products, categories or brands…"
+              onKeyDown={e => { if (e.key === 'Enter' && localWeak && !aiSearch && !aiBusy) runAiInterpret() }}
+              placeholder="Search products, or describe your job…"
               style={{ width: '100%', boxSizing: 'border-box', border: 0, borderRadius: '12px', padding: `11px ${searchVoice.supported ? '76px' : '44px'} 11px 42px`, fontSize: '15px', color: '#0f172a', background: '#fff', outline: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.18)', fontWeight: 500 }}
             />
             {query && (
@@ -426,12 +474,63 @@ export function LibraryPageClient({ initialSystems, categories }: {
 
       {/* Product grid */}
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '28px 16px 80px' }}>
-        {isPending && <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '10px' }}>Searching…</p>}
-        {searchError && !isPending && <p style={{ fontSize: '13px', color: '#ef4444', marginBottom: '10px' }}>Search failed — showing all products.</p>}
 
-        {!isPending && filtered.length === 0 && (
+        {/* Ask BuildQuote — plain-English interpretation of the search. Guides the
+            user toward results; never asserts compliance or suitability. */}
+        {search && (
+          <div style={{ background: '#fff', border: '1px solid #d8e3e9', borderLeft: '3px solid #185D7A', borderRadius: '12px', padding: '14px 16px', marginBottom: '20px', boxShadow: '0 1px 6px rgba(15,30,45,0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '6px' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#185D7A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              <span style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: '#185D7A' }}>
+                {aiSearch ? 'Ask BuildQuote · AI' : 'Ask BuildQuote'}
+              </span>
+            </div>
+
+            {aiBusy ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                <style>{`@keyframes bq-ai-spin{to{transform:rotate(360deg)}}`}</style>
+                <svg width="16" height="16" viewBox="0 0 36 36" fill="none" style={{ animation: 'bq-ai-spin 1s linear infinite', flexShrink: 0 }}>
+                  <circle cx="18" cy="18" r="15" stroke="#dbe7ee" strokeWidth="4"/>
+                  <path d="M18 3 A15 15 0 0 1 33 18" stroke="#185D7A" strokeWidth="4" strokeLinecap="round"/>
+                </svg>
+                <p style={{ margin: 0, fontSize: '13.5px', color: '#334155', lineHeight: 1.5 }}>Reading your request and finding related products…</p>
+              </div>
+            ) : (
+              <>
+                <p style={{ margin: 0, fontSize: '13.5px', color: '#334155', lineHeight: 1.5 }}>{searchSummary}</p>
+                {searchChips.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', marginTop: '12px' }}>
+                    {searchChips.map(chip => (
+                      <button key={chip.label} onClick={() => setQuery(chip.query)}
+                        style={{ fontSize: '12.5px', fontWeight: 600, padding: '5px 13px', borderRadius: '99px', border: '1.5px solid #cfe0e8', background: '#f3f8fb', color: '#185D7A', cursor: 'pointer', transition: 'all 0.12s' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#185D7A'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f3f8fb'; (e.currentTarget as HTMLButtonElement).style.color = '#185D7A' }}>
+                        {chip.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {/* Offer the AI assist only when the instant search came up weak. */}
+                {localWeak && !aiSearch && (
+                  <button onClick={runAiInterpret}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', marginTop: '12px', fontSize: '13px', fontWeight: 700, padding: '8px 15px', borderRadius: '9px', border: 'none', background: '#185D7A', color: '#fff', cursor: 'pointer' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/>
+                    </svg>
+                    Let BuildQuote AI find it
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Facet-only filter with no matches (no active text search). */}
+        {!search && filtered.length === 0 && (
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
-            <p style={{ fontSize: '15px', color: '#374151', fontWeight: 600, marginBottom: '8px' }}>No products match {query ? `"${query}"` : 'that filter'}</p>
+            <p style={{ fontSize: '15px', color: '#374151', fontWeight: 600, marginBottom: '8px' }}>No products match that filter</p>
             <button onClick={() => { setQuery(''); setActiveFacet('All') }}
               style={{ fontSize: '13px', color: '#185D7A', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
               Clear filters
@@ -439,9 +538,21 @@ export function LibraryPageClient({ initialSystems, categories }: {
           </div>
         )}
 
-        {isFiltering && !isPending && filtered.length > 0 && (
+        {/* Search with no matches — the panel above explains; offer a reset. */}
+        {search && filtered.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '16px 0 40px' }}>
+            <button onClick={() => { setQuery(''); setActiveFacet('All') }}
+              style={{ fontSize: '13px', color: '#185D7A', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+              Clear search
+            </button>
+          </div>
+        )}
+
+        {isFiltering && filtered.length > 0 && (
           <div>
-            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '16px' }}>{filtered.length} product{filtered.length !== 1 ? 's' : ''} found</p>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '16px' }}>
+              {filtered.length} {effectiveSearch && !effectiveSearch.exact ? `closest match${filtered.length !== 1 ? 'es' : ''}` : `product${filtered.length !== 1 ? 's' : ''} found`}
+            </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '14px' }}>
               {filtered.map(sys => <SystemCardTileUI key={sys.id} system={sys} />)}
             </div>
@@ -449,7 +560,7 @@ export function LibraryPageClient({ initialSystems, categories }: {
         )}
 
         {/* Default "Browse by Manufacturer · All" — compact manufacturer tiles */}
-        {!isFiltering && !isPending && facet === 'manufacturer' && (
+        {!isFiltering && facet === 'manufacturer' && (
           <div>
             {/* Search by manufacturer name */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px', flexWrap: 'wrap' }}>
@@ -489,7 +600,7 @@ export function LibraryPageClient({ initialSystems, categories }: {
           </div>
         )}
 
-        {!isFiltering && !isPending && facet === 'category' && (
+        {!isFiltering && facet === 'category' && (
           visibleFacets.filter(val => grouped[val]?.length > 0).map(val => (
             <section key={val} id={slugifyCategory(val)} style={{ marginBottom: '40px' }}>
               <div style={{ marginBottom: '14px' }}>
