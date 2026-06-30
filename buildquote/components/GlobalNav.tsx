@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
 const MFP = 'https://search.buildquote.com.au'
 
@@ -25,8 +26,28 @@ const LEGAL_LINKS = [
 
 export function GlobalNav() {
   const [open, setOpen] = useState(false)
+  const [isSignedIn, setIsSignedIn] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
+  const supabase = createSupabaseBrowserClient()
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setIsSignedIn(!!data.session)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsSignedIn(!!session)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    setOpen(false)
+    router.push('/')
+    router.refresh()
+  }
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -133,6 +154,32 @@ export function GlobalNav() {
                 )}
               </a>
             )
+          )}
+
+          {isSignedIn && (
+            <>
+              <div style={{ margin: '3px 0', borderTop: '1px solid #e5e7eb' }} />
+              <button
+                onClick={handleSignOut}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  width: '100%', padding: '8px 14px',
+                  fontSize: '13px', fontWeight: 500,
+                  color: '#dc2626', background: 'transparent',
+                  border: 'none', cursor: 'pointer', transition: 'background 0.12s',
+                  textAlign: 'left',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Sign out
+              </button>
+            </>
           )}
 
           <div style={{ height: '4px' }} />
