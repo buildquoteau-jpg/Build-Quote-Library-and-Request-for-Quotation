@@ -27,6 +27,8 @@ const securityHeaders = [
       "img-src 'self' data: https:",
       // Connections: self + Supabase + Vercel analytics + Google Maps + Places API
       "connect-src 'self' https://*.supabase.co https://*.supabase.in https://va.vercel-scripts.com https://maps.googleapis.com https://maps.gstatic.com https://places.googleapis.com",
+      // Frames: self + Google Maps embed (stockist location maps on /library)
+      "frame-src 'self' https://www.google.com",
       // No plugins, no object embeds
       "object-src 'none'",
       // Restrict framing to same origin (belt-and-suspenders with X-Frame-Options)

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import type { LibrarySystem, LibraryProfile, LibraryColour, LibraryComponent } from '@/lib/data/getSystems'
+import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import type { LibrarySystem, LibraryProfile, LibraryColour, LibraryComponent, Stockist } from '@/lib/data/getSystems'
 
 // Strip trailing " System" / " Systems" from display names
 function stripSystem(name: string): string {
@@ -24,6 +25,7 @@ export type ShoppingListItem = {
 
 type Props = {
   system: LibrarySystem
+  stockists?: Stockist[]
   onAddToList?: (items: ShoppingListItem[]) => void
 }
 
@@ -459,13 +461,26 @@ function ColoursSection({ colours, selected, onSelect }: {
 
 // ── Main card ─────────────────────────────────────────────────────────────────
 
-export function SystemCardUI({ system, onAddToList }: Props) {
+export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
   const [selectedProfiles,   setSelectedProfiles]   = useState<Set<number>>(new Set())
   const [selectedComponents, setSelectedComponents] = useState<Set<number>>(new Set())
   const [selectedColour,     setSelectedColour]     = useState<string | null>(null)
+  const [stockistsOpen,      setStockistsOpen]      = useState(false)
+  const [isLoggedIn,         setIsLoggedIn]         = useState<boolean | null>(null)
+  const [rfqStockistId,      setRfqStockistId]      = useState<string | null>(null)
 
   const posX = system.hero_image_position_x ?? 50
   const posY = system.hero_image_position_y ?? 50
+
+  // Auth gates the "Request a quote" action: only logged-in builders reach the
+  // RFQ flow; logged-out visitors get the shopping list path instead.
+  useEffect(() => {
+    let active = true
+    createSupabaseBrowserClient().auth.getSession().then(({ data: { session } }) => {
+      if (active) setIsLoggedIn(!!session?.user?.id)
+    })
+    return () => { active = false }
+  }, [])
 
   function toggleProfile(idx: number) {
     setSelectedProfiles(prev => { const n = new Set(prev); n.has(idx) ? n.delete(idx) : n.add(idx); return n })
@@ -474,8 +489,9 @@ export function SystemCardUI({ system, onAddToList }: Props) {
     setSelectedComponents(prev => { const n = new Set(prev); n.has(idx) ? n.delete(idx) : n.add(idx); return n })
   }
 
-  function handleAddToList() {
-    if (!onAddToList) return
+  // Build shopping-list items from the current profile/component selections.
+  // Shared by "Add to shopping list" and "Request a quote from this stockist".
+  function buildSelectedItems(): ShoppingListItem[] {
     const items: ShoppingListItem[] = []
 
     system.system_profiles.forEach((p, idx) => {
@@ -510,10 +526,69 @@ export function SystemCardUI({ system, onAddToList }: Props) {
       })
     })
 
+    return items
+  }
+
+  function handleAddToList() {
+    if (!onAddToList) return
+    const items = buildSelectedItems()
     if (items.length > 0) {
       onAddToList(items)
       setSelectedProfiles(new Set())
       setSelectedComponents(new Set())
+    }
+  }
+
+  // Start an RFQ pre-addressed to a stockist. Logged-in builders get a draft
+  // seeded with the supplier snapshot + any current selections, then land on
+  // /rfq. Logged-out visitors are sent to log in first (RFQ is gated).
+  async function requestQuoteFromStockist(stockist: Stockist) {
+    if (rfqStockistId) return
+
+    if (isLoggedIn === false) {
+      const next = encodeURIComponent(`/library/${system.slug}`)
+      window.location.href = `/login?next=${next}`
+      return
+    }
+
+    setRfqStockistId(stockist.id)
+    try {
+      const supabase = createSupabaseBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const builderId = session?.user?.id ?? null
+      if (!builderId) {
+        const next = encodeURIComponent(`/library/${system.slug}`)
+        window.location.href = `/login?next=${next}`
+        return
+      }
+
+      const { draftId } = await fetch('/api/create-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          builderId,
+          supplierName: stockist.name,
+          supplierEmail: stockist.email ?? '',
+          supplierId: stockist.id,
+        }),
+      }).then(r => r.json())
+
+      const items = buildSelectedItems()
+      if (items.length > 0) {
+        await fetch('/api/save-draft-items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            draftId,
+            items: items.map(i => ({ name: i.name, sku: i.sku, desc: i.desc, uom: i.uom, qty: String(i.qty) })),
+            mode: 'replace',
+          }),
+        })
+      }
+
+      window.location.href = `/rfq?draft=${draftId}`
+    } catch {
+      setRfqStockistId(null)
     }
   }
 
@@ -638,11 +713,45 @@ export function SystemCardUI({ system, onAddToList }: Props) {
             </button>
           )}
 
-          {/* See local stockists — coming soon */}
-          <span style={{ ...ghostLinkStyle, opacity: 0.45, cursor: 'default', userSelect: 'none' }}>
-            See local stockists
-            <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', marginLeft: '6px' }}>Coming soon</span>
-          </span>
+          {/* See local stockists */}
+          {stockists.length === 0 ? (
+            <span style={{ ...ghostLinkStyle, opacity: 0.5, cursor: 'default', userSelect: 'none' }}>
+              No local stockists listed yet
+            </span>
+          ) : (
+            <div>
+              <button
+                type="button"
+                onClick={() => setStockistsOpen(o => !o)}
+                style={{ ...ghostLinkStyle, width: '100%', cursor: 'pointer' }}
+              >
+                {stockistsOpen ? 'Hide' : 'See'} local stockist{stockists.length !== 1 ? 's' : ''}
+                <span style={{
+                  fontSize: '12px', fontWeight: 800, color: '#fff', background: '#185D7A',
+                  borderRadius: '20px', padding: '1px 8px', marginLeft: '2px',
+                }}>
+                  {stockists.length}
+                </span>
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ marginLeft: '2px' }}>
+                  <path d={stockistsOpen ? 'M2 8L6 4L10 8' : 'M2 4L6 8L10 4'} stroke="#185D7A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+
+              {stockistsOpen && (
+                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {stockists.map(s => (
+                    <StockistRow
+                      key={s.id}
+                      stockist={s}
+                      isLoggedIn={isLoggedIn}
+                      pending={rfqStockistId === s.id}
+                      onRequestQuote={() => requestQuoteFromStockist(s)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Manufacturer website */}
           {system.website_url && (
@@ -690,6 +799,124 @@ const ghostLinkStyle: React.CSSProperties = {
   padding: '13px 16px', fontSize: '14px', fontWeight: 600,
   color: '#185D7A', background: '#eef6fa', border: '1.5px solid #b6dcea',
   borderRadius: '10px', textDecoration: 'none', boxSizing: 'border-box',
+}
+
+const contactChipStyle: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', gap: '5px',
+  fontSize: '12.5px', fontWeight: 600, color: '#185D7A',
+  background: '#fff', border: '1.5px solid #d1d9e0', borderRadius: '8px',
+  padding: '6px 11px', textDecoration: 'none',
+}
+
+// Pretty labels for the supplier `region` slug (no lat/lng yet — service-area
+// based). Falls back to the raw value for unmapped regions.
+const REGION_LABELS: Record<string, string> = {
+  sw_wa: 'South West WA',
+  perth: 'Perth',
+  wa: 'WA',
+}
+
+function normaliseUrl(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`
+}
+
+// ── Stockist row ──────────────────────────────────────────────────────────────
+
+function StockistRow({
+  stockist,
+  isLoggedIn,
+  pending,
+  onRequestQuote,
+}: {
+  stockist: Stockist
+  isLoggedIn: boolean | null
+  pending: boolean
+  onRequestQuote: () => void
+}) {
+  const locationBits = [stockist.suburb, stockist.state].filter(Boolean).join(', ')
+  const regionLabel = stockist.region ? (REGION_LABELS[stockist.region] ?? stockist.region) : null
+
+  return (
+    <div style={{ border: '1px solid #d1d9e0', borderRadius: '12px', overflow: 'hidden', background: '#fbfdfe' }}>
+      {/* Location map (Google Maps embed — CSP frame-src allows google.com) */}
+      {stockist.google_maps_url && (
+        <div style={{ position: 'relative', height: '150px', background: '#eef2f5' }}>
+          <iframe
+            src={stockist.google_maps_url}
+            title={`${stockist.name} location`}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+          />
+        </div>
+      )}
+
+      <div style={{ padding: '14px 16px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+          <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#0f172a', fontFamily: 'var(--font-barlow-condensed), sans-serif' }}>
+            {stockist.name}
+          </h4>
+          {regionLabel && (
+            <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#185D7A', background: '#eef6fa', border: '1px solid #b6dcea', borderRadius: '20px', padding: '2px 9px' }}>
+              {regionLabel}
+            </span>
+          )}
+        </div>
+
+        {locationBits && (
+          <p style={{ margin: '4px 0 0', fontSize: '12.5px', color: '#64748b' }}>{locationBits}</p>
+        )}
+        {stockist.opening_hours && (
+          <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#64748b', whiteSpace: 'pre-line', lineHeight: 1.5 }}>
+            {stockist.opening_hours}
+          </p>
+        )}
+        {stockist.delivery_info && (
+          <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#64748b', lineHeight: 1.5 }}>
+            {stockist.delivery_info}
+          </p>
+        )}
+
+        {/* Contact chips */}
+        {(stockist.phone || stockist.website_url) && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+            {stockist.phone && (
+              <a href={`tel:${stockist.phone.replace(/\s+/g, '')}`} style={contactChipStyle}>
+                {stockist.phone}
+              </a>
+            )}
+            {stockist.website_url && (
+              <a href={normaliseUrl(stockist.website_url)} target="_blank" rel="noopener noreferrer" style={contactChipStyle}>
+                Website
+                <ExternalIcon />
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* Auth-aware RFQ action */}
+        <button
+          type="button"
+          onClick={onRequestQuote}
+          disabled={pending}
+          style={{
+            marginTop: '12px', width: '100%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+            padding: '12px 16px', fontSize: '14px', fontWeight: 700,
+            color: '#ffffff', background: '#185D7A', border: '1.5px solid #185D7A',
+            borderRadius: '10px', cursor: pending ? 'wait' : 'pointer',
+            opacity: pending ? 0.7 : 1, boxSizing: 'border-box',
+          }}
+        >
+          {pending
+            ? 'Starting…'
+            : isLoggedIn === false
+              ? 'Log in to request a quote'
+              : 'Request a quote from this stockist'}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 function ExternalIcon({ color = '#185D7A' }: { color?: string }) {

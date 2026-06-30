@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getSystemBySlug } from '@/lib/data/getSystems'
+import { getSystemBySlug, getStockistsForSystem } from '@/lib/data/getSystems'
 import { SystemCardWrapper } from '@/app/library/[slug]/SystemCardWrapper'
 
 export const dynamic = 'force-dynamic'
@@ -49,6 +49,8 @@ export default async function SystemPage({
   const system = await getSystemBySlug(slug)
   if (!system) notFound()
 
+  const stockists = await getStockistsForSystem(system.id)
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -88,7 +90,7 @@ export default async function SystemPage({
 
         {/* Card */}
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '32px 24px 80px' }}>
-          <SystemCardWrapper system={system} />
+          <SystemCardWrapper system={system} stockists={stockists} />
 
           {/* Back link */}
           <div style={{ marginTop: '24px', textAlign: 'center' }}>

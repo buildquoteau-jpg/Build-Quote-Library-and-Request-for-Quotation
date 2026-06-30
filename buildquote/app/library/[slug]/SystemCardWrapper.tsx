@@ -2,9 +2,15 @@
 
 import { useShoppingList } from '@/components/library/ShoppingListProvider'
 import { SystemCardUI } from '@/components/library/SystemCardUI'
-import type { LibrarySystem } from '@/lib/data/getSystems'
+import type { LibrarySystem, Stockist } from '@/lib/data/getSystems'
 
-export function SystemCardWrapper({ system }: { system: LibrarySystem }) {
+export function SystemCardWrapper({
+  system,
+  stockists = [],
+}: {
+  system: LibrarySystem
+  stockists?: Stockist[]
+}) {
   const { addItems } = useShoppingList()
-  return <SystemCardUI system={system} onAddToList={addItems} />
+  return <SystemCardUI system={system} stockists={stockists} onAddToList={addItems} />
 }

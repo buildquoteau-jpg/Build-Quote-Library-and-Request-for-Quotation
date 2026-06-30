@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { supabaseService } from '@/lib/supabase-service'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -74,6 +75,27 @@ export type LibrarySystem = {
   system_colours: LibraryColour[]
   system_profiles: LibraryProfile[]
   system_components: LibraryComponent[]
+}
+
+// A supplier that stocks a given system (via the supplier_systems link table).
+// Location is service-area based for now — suppliers carry suburb/region/state
+// and a Google Maps embed URL, but no lat/lng, so there's no distance sort yet.
+export type Stockist = {
+  id: string
+  name: string
+  slug: string
+  suburb: string | null
+  state: string | null
+  region: string | null
+  address: string | null
+  phone: string | null
+  email: string | null
+  website_url: string | null
+  google_maps_url: string | null
+  opening_hours: string | null
+  delivery_info: string | null
+  bio: string | null
+  hero_photo_url: string | null
 }
 
 export type ManufacturerListItem = {
@@ -166,6 +188,39 @@ export async function getAllSystems(): Promise<LibrarySystem[]> {
   }
 
   return systems.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+}
+
+// Suppliers who stock a given system, via the supplier_systems link table.
+// Uses the service client: the portal `suppliers`/`supplier_systems` tables may
+// not have anon SELECT policies, and this only ever runs server-side.
+export async function getStockistsForSystem(systemId: string): Promise<Stockist[]> {
+  const { data, error } = await supabaseService
+    .from('supplier_systems')
+    .select(`
+      suppliers (
+        id, name, slug, suburb, state, region, address,
+        phone, email, website_url, google_maps_url,
+        opening_hours, delivery_info, bio, hero_photo_url
+      )
+    `)
+    .eq('system_id', systemId)
+
+  if (error || !data) {
+    console.error('[getStockistsForSystem]', error)
+    return []
+  }
+
+  // Dedupe in case a supplier is linked more than once.
+  const seen = new Set<string>()
+  const stockists: Stockist[] = []
+  for (const row of data as unknown as { suppliers: Stockist | null }[]) {
+    const s = row.suppliers
+    if (!s || seen.has(s.id)) continue
+    seen.add(s.id)
+    stockists.push(s)
+  }
+
+  return stockists.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export async function getSystemBySlug(slug: string): Promise<LibrarySystem | null> {

@@ -23,6 +23,57 @@ function slugifyCategory(cat: string) {
   return cat.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
 
+type ManufacturerTile = {
+  name: string
+  logo: string | null
+  hero: string | null
+  posY: number
+  count: number
+}
+
+// Compact manufacturer tile — image + name + system count. Clicking drills into
+// that manufacturer's systems (sets the active facet pill), no navigation.
+function ManufacturerTileUI({ mfr, onClick }: { mfr: ManufacturerTile; onClick: () => void }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        position: 'relative', height: '120px', width: '100%', padding: 0,
+        borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', textAlign: 'left',
+        border: hovered ? '1.5px solid #185D7A' : '1px solid #d1d5db',
+        background: mfr.hero ? undefined : 'linear-gradient(135deg, #185D7A 0%, #0f3d52 100%)',
+        boxShadow: hovered ? '0 8px 24px rgba(24,93,122,0.18)' : '0 2px 8px rgba(0,0,0,0.06)',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+        transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s',
+      }}
+    >
+      {mfr.hero && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: `url(${mfr.hero})`, backgroundSize: 'cover',
+          backgroundPosition: `center ${mfr.posY}%`,
+        }} />
+      )}
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,30,45,0.9) 0%, rgba(15,30,45,0.3) 55%, rgba(15,30,45,0.1) 100%)' }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 14px 12px' }}>
+        <div style={{
+          fontSize: '15px', fontWeight: 800, color: '#fff', lineHeight: 1.15,
+          letterSpacing: '-0.01em', textShadow: '0 1px 6px rgba(0,0,0,0.35)',
+          fontFamily: 'var(--font-barlow-condensed), sans-serif',
+        }}>
+          {mfr.name}
+        </div>
+        <div style={{ marginTop: '3px', fontSize: '11px', color: 'rgba(255,255,255,0.72)', fontWeight: 600 }}>
+          {mfr.count} system{mfr.count !== 1 ? 's' : ''}
+        </div>
+      </div>
+    </button>
+  )
+}
+
 export function LibraryPageClient({ initialSystems, categories }: {
   initialSystems: LibrarySystem[]
   categories: string[]
@@ -67,6 +118,26 @@ export function LibraryPageClient({ initialSystems, categories }: {
   const facetValues = facet === 'manufacturer' ? manufacturers : categories
   const facetOf = (s: LibrarySystem) =>
     facet === 'manufacturer' ? (s.manufacturer?.name || 'Other') : (s.category || 'Other')
+
+  // Compact manufacturer tiles for the default "Browse by Manufacturer · All" view —
+  // one tile per manufacturer (image + name + count) instead of every system card.
+  const manufacturerTiles = useMemo<ManufacturerTile[]>(() => {
+    const map = new Map<string, ManufacturerTile>()
+    for (const s of initialSystems) {
+      const name = s.manufacturer?.name || 'Other'
+      let entry = map.get(name)
+      if (!entry) {
+        entry = { name, logo: s.manufacturer?.logo_url ?? null, hero: null, posY: 50, count: 0 }
+        map.set(name, entry)
+      }
+      entry.count++
+      if (!entry.hero && s.hero_image_url?.trim()) {
+        entry.hero = s.hero_image_url.trim()
+        entry.posY = s.hero_image_position_y ?? 50
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
+  }, [initialSystems])
 
   // Text search hits the API; facet (manufacturer/category) filtering is applied client-side.
   const displaySystems = results ?? initialSystems
@@ -335,11 +406,25 @@ export function LibraryPageClient({ initialSystems, categories }: {
           </div>
         )}
 
-        {!isFiltering && !isPending && (
+        {/* Default "Browse by Manufacturer · All" — compact manufacturer tiles */}
+        {!isFiltering && !isPending && facet === 'manufacturer' && (
+          <div>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '16px' }}>
+              {manufacturerTiles.length} manufacturer{manufacturerTiles.length !== 1 ? 's' : ''}
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
+              {manufacturerTiles.map(mfr => (
+                <ManufacturerTileUI key={mfr.name} mfr={mfr} onClick={() => setActiveFacet(mfr.name)} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!isFiltering && !isPending && facet === 'category' && (
           visibleFacets.filter(val => grouped[val]?.length > 0).map(val => (
             <section key={val} id={slugifyCategory(val)} style={{ marginBottom: '40px' }}>
               <div style={{ marginBottom: '14px' }}>
-                <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#f97316', marginBottom: '3px' }}>{facet === 'manufacturer' ? 'Manufacturer' : 'Product category'}</div>
+                <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#f97316', marginBottom: '3px' }}>Product category</div>
                 <h2 style={{ fontSize: 'clamp(16px, 2vw, 22px)', fontWeight: 800, color: '#185D7A', fontFamily: 'var(--font-barlow-condensed), sans-serif', letterSpacing: '-0.01em', lineHeight: 1.15, margin: 0 }}>{val}</h2>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '14px' }}>
