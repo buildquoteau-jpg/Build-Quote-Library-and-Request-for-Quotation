@@ -101,50 +101,7 @@ export default async function Home() {
         )}
       </div>
 
-      {/* ── Manufacturer marquee (decorative) ─────────────────── */}
-      {marquee.length > 0 && (
-        <div className="bq-marquee" style={{ overflow: 'hidden', padding: 'clamp(28px, 5vh, 44px) 0 clamp(28px, 5vh, 48px)' }} aria-hidden="true">
-          <div className="bq-marquee-track" style={{ display: 'flex', gap: 'clamp(10px, 1.5vw, 16px)' }}>
-            {marquee.map((m, i) => {
-              const hero = m.hero_image_url?.trim()
-              const posY = m.hero_image_position_y ?? 50
-              return (
-                <a
-                  key={`${m.id}-${i}`}
-                  href="/library"
-                  tabIndex={-1}
-                  style={{
-                    flex: '0 0 clamp(140px, 38vw, 168px)',
-                    width: 'clamp(140px, 38vw, 168px)',
-                    height: 'clamp(86px, 24vw, 104px)',
-                    borderRadius: '11px',
-                    overflow: 'hidden',
-                    position: 'relative',
-                    display: 'flex',
-                    alignItems: 'flex-end',
-                    padding: '10px 12px',
-                    textDecoration: 'none',
-                    backgroundImage: `linear-gradient(rgba(13,30,45,0.15), rgba(13,30,45,0.66)), url(${hero})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: `center ${posY}%`,
-                  }}
-                >
-                  <span style={{
-                    fontFamily: 'var(--font-barlow-condensed), sans-serif',
-                    fontWeight: 700,
-                    fontSize: 'clamp(13px, 2.2vw, 15px)',
-                    color: '#fff',
-                    lineHeight: 1.1,
-                    textShadow: '0 1px 4px rgba(0,0,0,0.55)',
-                  }}>
-                    {m.name}
-                  </span>
-                </a>
-              )
-            })}
-          </div>
-        </div>
-      )}
+      {/* ── Manufacturer marquee (decorative) — hidden for now ── */}
 
       {/* ── Footer ────────────────────────────────────────────── */}
       <div style={{ textAlign: 'center', padding: '0 clamp(20px, 5vw, 56px) 22px' }}>
