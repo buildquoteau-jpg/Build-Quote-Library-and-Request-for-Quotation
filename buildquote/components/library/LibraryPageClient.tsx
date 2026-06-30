@@ -259,25 +259,25 @@ export function LibraryPageClient({ initialSystems, categories }: {
   return (
     <>
       {/* Hero */}
-      <section style={{ background: 'linear-gradient(155deg, #0d3347 0%, #185D7A 55%, #1e7399 100%)', padding: '32px 20px 28px' }}>
+      <section style={{ background: 'linear-gradient(155deg, #0d3347 0%, #185D7A 55%, #1e7399 100%)', padding: '20px 20px 16px' }}>
         <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center' }}>
 
-          <h1 style={{ margin: '0 0 6px', fontSize: 'clamp(22px, 3.5vw, 30px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.15, fontFamily: 'var(--font-barlow-condensed), sans-serif' }}>
+          <h1 style={{ margin: '0 0 4px', fontSize: 'clamp(20px, 3vw, 26px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.1, fontFamily: 'var(--font-barlow-condensed), sans-serif' }}>
             Building Product Library
           </h1>
-          <p style={{ margin: '0 0 16px', fontSize: '14px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.5 }}>
+          <p style={{ margin: '0 0 12px', fontSize: '13.5px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.45 }}>
             Browse product systems and find local WA suppliers — in seconds.
           </p>
 
           {/* Search bar */}
-          <div style={{ position: 'relative', marginBottom: '10px' }}>
+          <div style={{ position: 'relative', marginBottom: '8px' }}>
             <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="6" stroke="#94a3b8" strokeWidth="2"/><path d="M13 13l3 3" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round"/></svg>
             </div>
             <input
               type="search" value={query} onChange={e => setQuery(e.target.value)}
               placeholder="Search or ask a question…"
-              style={{ width: '100%', boxSizing: 'border-box', border: 0, borderRadius: '14px', padding: `13px ${searchVoice.supported ? '76px' : '44px'} 13px 42px`, fontSize: '15px', color: '#0f172a', background: '#fff', outline: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.18)', fontWeight: 500 }}
+              style={{ width: '100%', boxSizing: 'border-box', border: 0, borderRadius: '12px', padding: `11px ${searchVoice.supported ? '76px' : '44px'} 11px 42px`, fontSize: '15px', color: '#0f172a', background: '#fff', outline: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.18)', fontWeight: 500 }}
             />
             {query && (
               <button onClick={() => setQuery('')} aria-label="Clear search" style={{ position: 'absolute', right: searchVoice.supported ? '46px' : '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#9ca3af', lineHeight: 1, padding: '4px' }}>×</button>
@@ -297,11 +297,11 @@ export function LibraryPageClient({ initialSystems, categories }: {
 
           {/* Example chips */}
           {!query && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.55)' }}>Try:</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
+              <span style={{ fontSize: '12.5px', color: 'rgba(255,255,255,0.55)' }}>Try:</span>
               {EXAMPLES.map(ex => (
                 <button key={ex} onClick={() => setQuery(ex)}
-                  style={{ fontSize: '13px', padding: '6px 14px', background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: '99px', color: 'rgba(255,255,255,0.9)', cursor: 'pointer', fontWeight: 500 }}
+                  style={{ fontSize: '12.5px', padding: '4px 12px', background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: '99px', color: 'rgba(255,255,255,0.9)', cursor: 'pointer', fontWeight: 500 }}
                   onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.24)' }}
                   onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.14)' }}>
                   {ex}
@@ -322,9 +322,9 @@ export function LibraryPageClient({ initialSystems, categories }: {
               const text = e.dataTransfer.getData('text')
               if (text) { setListInput(prev => prev ? `${prev}\n${text}` : text); setListError('') }
             }}
-            style={{ background: dragOver ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.18)', border: dragOver ? '2px dashed rgba(255,255,255,0.6)' : '1px solid rgba(255,255,255,0.18)', borderRadius: '12px', padding: '12px 14px', textAlign: 'left', transition: 'background 0.15s, border 0.15s' }}
+            style={{ background: dragOver ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.18)', border: dragOver ? '2px dashed rgba(255,255,255,0.6)' : '1px solid rgba(255,255,255,0.18)', borderRadius: '12px', padding: '10px 12px', textAlign: 'left', transition: 'background 0.15s, border 0.15s' }}
           >
-            <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 700, color: '#fff', letterSpacing: '-0.01em', lineHeight: 1.3 }}>Already know what you need? <span style={{ fontWeight: 400, opacity: 0.65 }}>Paste a list, upload a photo or speak it.</span></p>
+            <p style={{ margin: '0 0 7px', fontSize: '13px', fontWeight: 700, color: '#fff', letterSpacing: '-0.01em', lineHeight: 1.3 }}>Already know what you need? <span style={{ fontWeight: 400, opacity: 0.65 }}>Paste a list, upload a photo or speak it.</span></p>
 
             {listBusy ? (
               <div style={{ padding: '20px 0', textAlign: 'center' }}>
