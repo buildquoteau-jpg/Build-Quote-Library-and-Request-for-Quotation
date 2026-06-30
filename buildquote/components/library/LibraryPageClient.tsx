@@ -285,7 +285,7 @@ export function LibraryPageClient({ initialSystems, categories }: {
             </div>
             <input
               type="search" value={query} onChange={e => setQuery(e.target.value)}
-              placeholder="Search or ask a question…"
+              placeholder="Search products, categories or brands…"
               style={{ width: '100%', boxSizing: 'border-box', border: 0, borderRadius: '12px', padding: `11px ${searchVoice.supported ? '76px' : '44px'} 11px 42px`, fontSize: '15px', color: '#0f172a', background: '#fff', outline: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.18)', fontWeight: 500 }}
             />
             {query && (
