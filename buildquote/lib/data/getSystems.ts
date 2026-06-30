@@ -71,6 +71,7 @@ export type LibrarySystem = {
     name: string
     slug: string
     logo_url: string | null
+    description?: string | null
   } | null
   system_colours: LibraryColour[]
   system_profiles: LibraryProfile[]
@@ -147,7 +148,7 @@ export async function getAllSystems(): Promise<LibrarySystem[]> {
   const { data, error } = await supabase
     .from('manufacturers')
     .select(`
-      name, slug, logo_url,
+      name, slug, logo_url, description,
       systems (
         id, name, product_code, slug, category, subcategory,
         description, hero_image_url, hero_image_position_x, hero_image_position_y,
@@ -178,7 +179,7 @@ export async function getAllSystems(): Promise<LibrarySystem[]> {
         install_guide_urls: null,
         design_guide_url: null,
         tech_data_url: null,
-        manufacturer: { name: mfr.name, slug: mfr.slug, logo_url: mfr.logo_url },
+        manufacturer: { name: mfr.name, slug: mfr.slug, logo_url: mfr.logo_url, description: mfr.description ?? null },
         system_colours: ((sys.system_colours || []) as LibraryColour[])
           .sort((a, b) => a.sort_order - b.sort_order),
         system_profiles: sys.system_profiles || [],

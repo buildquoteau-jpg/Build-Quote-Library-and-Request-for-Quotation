@@ -28,11 +28,12 @@ type ManufacturerTile = {
   logo: string | null
   hero: string | null
   posY: number
-  count: number
+  description: string | null
 }
 
-// Compact manufacturer tile — image + name + system count. Clicking drills into
-// that manufacturer's systems (sets the active facet pill), no navigation.
+// Manufacturer tile — hero image with name overlay on top, then a white strip
+// with a short description and a "View products" link. Clicking drills into that
+// manufacturer's systems (sets the active facet pill), no navigation.
 function ManufacturerTileUI({ mfr, onClick }: { mfr: ManufacturerTile; onClick: () => void }) {
   const [hovered, setHovered] = useState(false)
   return (
@@ -41,34 +42,55 @@ function ManufacturerTileUI({ mfr, onClick }: { mfr: ManufacturerTile; onClick: 
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        position: 'relative', height: '120px', width: '100%', padding: 0,
-        borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', textAlign: 'left',
+        display: 'flex', flexDirection: 'column', width: '100%', padding: 0, textAlign: 'left',
+        background: '#fff', borderRadius: '14px', overflow: 'hidden', cursor: 'pointer',
         border: hovered ? '1.5px solid #185D7A' : '1px solid #d1d5db',
-        background: mfr.hero ? undefined : 'linear-gradient(135deg, #185D7A 0%, #0f3d52 100%)',
-        boxShadow: hovered ? '0 8px 24px rgba(24,93,122,0.18)' : '0 2px 8px rgba(0,0,0,0.06)',
+        boxShadow: hovered ? '0 8px 28px rgba(24,93,122,0.18)' : '0 2px 10px rgba(0,0,0,0.07)',
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
         transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s',
       }}
     >
-      {mfr.hero && (
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: `url(${mfr.hero})`, backgroundSize: 'cover',
-          backgroundPosition: `center ${mfr.posY}%`,
-        }} />
-      )}
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,30,45,0.9) 0%, rgba(15,30,45,0.3) 55%, rgba(15,30,45,0.1) 100%)' }} />
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 14px 12px' }}>
-        <div style={{
-          fontSize: '15px', fontWeight: 800, color: '#fff', lineHeight: 1.15,
-          letterSpacing: '-0.01em', textShadow: '0 1px 6px rgba(0,0,0,0.35)',
-          fontFamily: 'var(--font-barlow-condensed), sans-serif',
-        }}>
-          {mfr.name}
+      {/* Hero — manufacturer name overlaid on image */}
+      <div style={{
+        height: '150px', flexShrink: 0, position: 'relative', overflow: 'hidden',
+        background: mfr.hero ? undefined : 'linear-gradient(135deg, #185D7A 0%, #0f3d52 100%)',
+      }}>
+        {mfr.hero && (
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: `url(${mfr.hero})`, backgroundSize: 'cover',
+            backgroundPosition: `center ${mfr.posY}%`,
+          }} />
+        )}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,30,45,0.88) 0%, rgba(15,30,45,0.18) 55%, transparent 100%)' }} />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 14px 12px' }}>
+          <h3 style={{
+            margin: 0, fontSize: '17px', fontWeight: 800, color: '#fff', lineHeight: 1.15,
+            letterSpacing: '-0.01em', textShadow: '0 1px 6px rgba(0,0,0,0.35)',
+            fontFamily: 'var(--font-barlow-condensed), sans-serif',
+          }}>
+            {mfr.name}
+          </h3>
         </div>
-        <div style={{ marginTop: '3px', fontSize: '11px', color: 'rgba(255,255,255,0.72)', fontWeight: 600 }}>
-          {mfr.count} system{mfr.count !== 1 ? 's' : ''}
-        </div>
+      </div>
+
+      {/* Content strip — description + View products */}
+      <div style={{ padding: '12px 14px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {mfr.description && (
+          <p style={{
+            margin: 0, fontSize: '13px', color: '#6b7280', lineHeight: 1.5,
+            display: '-webkit-box', WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical' as const, overflow: 'hidden',
+          }}>
+            {mfr.description}
+          </p>
+        )}
+        <span style={{ marginTop: 'auto', fontSize: '13px', fontWeight: 700, color: '#185D7A', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          View products
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M4.5 2.5L8 6L4.5 9.5" stroke="#185D7A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </span>
       </div>
     </button>
   )
@@ -83,6 +105,7 @@ export function LibraryPageClient({ initialSystems, categories }: {
   const [query,          setQuery]          = useState('')
   const [facet,          setFacet]          = useState<Facet>('manufacturer')
   const [activeFacet,    setActiveFacet]    = useState('All')
+  const [mfrFilter,      setMfrFilter]      = useState('')
   const [results,        setResults]        = useState<LibrarySystem[] | null>(null)
   const [searchError,    setSearchError]    = useState(false)
   const [isPending,      startTransition]   = useTransition()
@@ -127,10 +150,14 @@ export function LibraryPageClient({ initialSystems, categories }: {
       const name = s.manufacturer?.name || 'Other'
       let entry = map.get(name)
       if (!entry) {
-        entry = { name, logo: s.manufacturer?.logo_url ?? null, hero: null, posY: 50, count: 0 }
+        entry = {
+          name,
+          logo: s.manufacturer?.logo_url ?? null,
+          hero: null, posY: 50,
+          description: s.manufacturer?.description?.trim() || null,
+        }
         map.set(name, entry)
       }
-      entry.count++
       if (!entry.hero && s.hero_image_url?.trim()) {
         entry.hero = s.hero_image_url.trim()
         entry.posY = s.hero_image_position_y ?? 50
@@ -138,6 +165,11 @@ export function LibraryPageClient({ initialSystems, categories }: {
     }
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
   }, [initialSystems])
+
+  // Manufacturer-tile view has its own name filter (independent of product search).
+  const visibleManufacturerTiles = mfrFilter.trim()
+    ? manufacturerTiles.filter(m => m.name.toLowerCase().includes(mfrFilter.trim().toLowerCase()))
+    : manufacturerTiles
 
   // Text search hits the API; facet (manufacturer/category) filtering is applied client-side.
   const displaySystems = results ?? initialSystems
@@ -159,6 +191,7 @@ export function LibraryPageClient({ initialSystems, categories }: {
   function changeFacet(next: Facet) {
     setFacet(next)
     setActiveFacet('All')
+    setMfrFilter('')
   }
 
   useEffect(() => {
@@ -347,19 +380,19 @@ export function LibraryPageClient({ initialSystems, categories }: {
         </div>
       </section>
 
-      {/* Browse-by toggle + facet pills */}
+      {/* Browse-by toggle (own line) + facet pills (own line) */}
       <div style={{ background: '#fff', borderBottom: '1px solid #d1d9e0' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '10px 16px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '14px 16px 12px' }}>
 
-          {/* Manufacturer / Category segmented toggle */}
-          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {/* Row 1 — Manufacturer / Category segmented toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
             <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Browse by</span>
-            <div style={{ display: 'inline-flex', background: '#f1f5f9', border: '1px solid #d1d9e0', borderRadius: '8px', padding: '2px' }}>
+            <div style={{ display: 'inline-flex', background: '#f1f5f9', border: '1px solid #d1d9e0', borderRadius: '9px', padding: '3px' }}>
               {(['manufacturer', 'category'] as Facet[]).map(f => {
                 const on = facet === f
                 return (
                   <button key={f} onClick={() => changeFacet(f)}
-                    style={{ fontSize: '12px', fontWeight: on ? 700 : 500, padding: '4px 11px', borderRadius: '6px', cursor: 'pointer', border: 'none', background: on ? '#185D7A' : 'transparent', color: on ? '#fff' : '#475569', transition: 'all 0.12s', textTransform: 'capitalize' }}>
+                    style={{ fontSize: '13px', fontWeight: on ? 700 : 500, padding: '6px 16px', borderRadius: '7px', cursor: 'pointer', border: 'none', background: on ? '#185D7A' : 'transparent', color: on ? '#fff' : '#475569', transition: 'all 0.12s', textTransform: 'capitalize' }}>
                     {f}
                   </button>
                 )
@@ -367,13 +400,13 @@ export function LibraryPageClient({ initialSystems, categories }: {
             </div>
           </div>
 
-          {/* Facet value pills — single scrollable row */}
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', overflowX: 'auto', whiteSpace: 'nowrap' as const, flex: 1, borderLeft: '1px solid #e5e7eb', paddingLeft: '10px' }}>
+          {/* Row 2 — facet value pills, full-width scrollable row */}
+          <div style={{ display: 'flex', gap: '7px', alignItems: 'center', overflowX: 'auto', whiteSpace: 'nowrap' as const, paddingBottom: '2px' }}>
             {['All', ...facetValues].map(val => {
               const active = activeFacet === val
               return (
                 <button key={val} onClick={() => setActiveFacet(val)}
-                  style={{ flexShrink: 0, fontSize: '12px', fontWeight: active ? 700 : 500, padding: '5px 12px', borderRadius: '20px', cursor: 'pointer', border: `1.5px solid ${active ? '#185D7A' : '#d1d9e0'}`, background: active ? '#185D7A' : '#fff', color: active ? '#fff' : '#334155', transition: 'all 0.12s' }}>
+                  style={{ flexShrink: 0, fontSize: '13px', fontWeight: active ? 700 : 500, padding: '6px 14px', borderRadius: '20px', cursor: 'pointer', border: `1.5px solid ${active ? '#185D7A' : '#d1d9e0'}`, background: active ? '#185D7A' : '#fff', color: active ? '#fff' : '#334155', transition: 'all 0.12s' }}>
                   {val}
                 </button>
               )
@@ -409,14 +442,41 @@ export function LibraryPageClient({ initialSystems, categories }: {
         {/* Default "Browse by Manufacturer · All" — compact manufacturer tiles */}
         {!isFiltering && !isPending && facet === 'manufacturer' && (
           <div>
-            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '16px' }}>
-              {manufacturerTiles.length} manufacturer{manufacturerTiles.length !== 1 ? 's' : ''}
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
-              {manufacturerTiles.map(mfr => (
-                <ManufacturerTileUI key={mfr.name} mfr={mfr} onClick={() => setActiveFacet(mfr.name)} />
-              ))}
+            {/* Search by manufacturer name */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px', flexWrap: 'wrap' }}>
+              <div style={{ position: 'relative', flex: '1 1 260px', maxWidth: '340px' }}>
+                <svg width="15" height="15" viewBox="0 0 20 20" fill="none" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4, pointerEvents: 'none' }}>
+                  <circle cx="8.5" cy="8.5" r="5.75" stroke="#185D7A" strokeWidth="1.75"/>
+                  <path d="M13 13L17 17" stroke="#185D7A" strokeWidth="1.75" strokeLinecap="round"/>
+                </svg>
+                <input
+                  type="search" value={mfrFilter} onChange={e => setMfrFilter(e.target.value)}
+                  placeholder="Search manufacturers…"
+                  style={{ width: '100%', boxSizing: 'border-box', paddingLeft: '36px', paddingRight: mfrFilter ? '32px' : '12px', paddingTop: '9px', paddingBottom: '9px', fontSize: '14px', color: '#111827', border: '1.5px solid #d1d9e0', borderRadius: '10px', outline: 'none', background: '#fff', transition: 'border-color 0.15s' }}
+                  onFocus={e => { e.currentTarget.style.borderColor = '#185D7A' }}
+                  onBlur={e => { e.currentTarget.style.borderColor = '#d1d9e0' }}
+                />
+                {mfrFilter && (
+                  <button onClick={() => setMfrFilter('')} aria-label="Clear" style={{ position: 'absolute', right: '9px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#9ca3af', padding: '2px', lineHeight: 1 }}>×</button>
+                )}
+              </div>
+              <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                {visibleManufacturerTiles.length} manufacturer{visibleManufacturerTiles.length !== 1 ? 's' : ''}
+              </span>
             </div>
+
+            {visibleManufacturerTiles.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                <p style={{ fontSize: '15px', color: '#374151', fontWeight: 600, marginBottom: '8px' }}>No manufacturers match &ldquo;{mfrFilter}&rdquo;</p>
+                <button onClick={() => setMfrFilter('')} style={{ fontSize: '13px', color: '#185D7A', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Clear search</button>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '14px' }}>
+                {visibleManufacturerTiles.map(mfr => (
+                  <ManufacturerTileUI key={mfr.name} mfr={mfr} onClick={() => setActiveFacet(mfr.name)} />
+                ))}
+              </div>
+            )}
           </div>
         )}
 
