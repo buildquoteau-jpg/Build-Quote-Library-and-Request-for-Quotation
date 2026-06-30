@@ -356,8 +356,8 @@ export function LibraryPageClient({ initialSystems, categories }: {
                     if (imgFile) { e.preventDefault(); handleFileUpload(imgFile) }
                   }}
                   placeholder="Paste or type a list — e.g. 25 bags post set, 13 stirrups, 15 lengths 70×35 …"
-                  rows={2}
-                  style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '10px 13px', fontSize: '14px', color: '#fff', outline: 'none', resize: 'vertical', lineHeight: 1.5 }}
+                  rows={1}
+                  style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '9px 13px', fontSize: '14px', color: '#fff', outline: 'none', resize: 'vertical', lineHeight: 1.45, minHeight: '40px' }}
                 />
                 {listError && (
                   <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#fca5a5', fontWeight: 600 }}>{listError}</p>
