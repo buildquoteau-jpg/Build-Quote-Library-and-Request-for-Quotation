@@ -199,8 +199,17 @@ export function LibraryPageClient({ initialSystems, categories }: {
     const q = query.trim()
     if (!q) { setResults(null); setSearchError(false); return }
     debounceRef.current = setTimeout(() => {
+      // Strip conversational prefixes so natural-language queries still hit the DB.
+      // e.g. "I'm looking for waterproofing" → "waterproofing"
+      const cleanQ = q
+        .replace(/^(i'?m?\s+)?(looking for|searching for|trying to find|after)\s+/i, '')
+        .replace(/^(i\s+)?(want|need|want some|need some|need a|want a|need an|want an)\s+/i, '')
+        .replace(/^(find|show|get)\s+(me\s+)?/i, '')
+        .replace(/^(do you have|have you got|can i get|can i have|can you show me)\s+/i, '')
+        .replace(/^(some|a|an|the)\s+/i, '')
+        .trim()
       startTransition(() => {
-        fetch(`/api/library/systems?q=${encodeURIComponent(q)}`)
+        fetch(`/api/library/systems?q=${encodeURIComponent(cleanQ)}`)
           .then(r => r.json())
           .then((d: LibrarySystem[]) => { setResults(Array.isArray(d) ? d : []); setSearchError(false) })
           .catch(() => setSearchError(true))
