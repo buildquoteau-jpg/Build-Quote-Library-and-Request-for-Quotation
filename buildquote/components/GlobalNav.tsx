@@ -7,11 +7,11 @@ import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 const MFP = 'https://search.buildquote.com.au'
 
 const NAV_LINKS = [
-  { label: 'Home',                          href: '/',                           external: false },
-  { label: '1  Builder Portal',             href: '/dashboard',                  external: false },
-  { label: '2  Start a Quote Request',      href: '/rfq',                        external: false },
-  { label: '3  Product Library',            href: '/library',                    external: false },
-  { label: '4  Supplier Directory',         href: `${MFP}/supplierdirectory`,   external: true  },
+  { label: 'Home',                href: '/',                          external: false },
+  { label: 'Product Library',     href: '/library',                   external: false },
+  { label: 'Supplier Directory',  href: `${MFP}/supplierdirectory`,  external: true  },
+  { label: 'Builder Portal',      href: '/dashboard',                 external: false },
+  { label: 'Start a Quote',       href: '/rfq',                       external: false },
 ]
 
 const INTERNAL_LINKS = [
@@ -112,7 +112,7 @@ export function GlobalNav() {
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-          width: '200px', background: '#ffffff',
+          width: '170px', background: '#ffffff',
           border: '1px solid #d1d9e0', borderRadius: '12px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
           maxHeight: 'calc(100vh - 100px)',
@@ -124,7 +124,7 @@ export function GlobalNav() {
             link === null ? (
               <div key={`divider-${i}`} style={{ margin: '3px 0', borderTop: '1px solid #e5e7eb' }} />
             ) : link === 'internal-header' ? (
-              <div key="internal-header" style={{ padding: '4px 18px 2px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.08em', color: '#94a3b8', textTransform: 'uppercase' }}>
+              <div key="internal-header" style={{ padding: '4px 12px 2px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.08em', color: '#94a3b8', textTransform: 'uppercase' }}>
                 Team Links
               </div>
             ) : (
@@ -136,8 +136,8 @@ export function GlobalNav() {
                 onClick={() => setOpen(false)}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '8px 14px',
-                  fontSize: '13px',
+                  padding: '7px 12px',
+                  fontSize: '12px',
                   fontWeight: (!link.external && pathname === link.href) ? 700 : 500,
                   color: (!link.external && pathname === link.href) ? '#185D7A' : '#334155',
                   background: (!link.external && pathname === link.href) ? '#f0f9ff' : 'transparent',
