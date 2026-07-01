@@ -38,12 +38,25 @@ const qtyBtnStyle: React.CSSProperties = {
 
 export function ShoppingListDrawerUI() {
   const { shoppingList, addItems, removeItem, updateQty, updateName, updateUom, clearList,
-          activeDraftId, setActiveDraftId } = useShoppingList()
+          activeDraftId, setActiveDraftId, addFlash } = useShoppingList()
   const [drawerOpen,    setDrawerOpen]    = useState(false)
   const [newItemName,   setNewItemName]   = useState('')
   const [sharing,       setSharing]       = useState(false)
   const [converting,    setConverting]    = useState(false)
   const autoConvertRef = useRef(false)
+
+  // "Items landed here" pulse — the cart bar pops/glows and floats a "+N" up
+  // whenever items are added, so the eye is drawn to where they went.
+  const [pulsing,   setPulsing]   = useState(false)
+  const [floatAdd,  setFloatAdd]  = useState(0)
+  useEffect(() => {
+    if (addFlash.tick === 0) return
+    setPulsing(true)
+    setFloatAdd(addFlash.count)
+    const t1 = setTimeout(() => setPulsing(false), 900)
+    const t2 = setTimeout(() => setFloatAdd(0), 1500)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [addFlash.tick])
 
   // Resume a conversion after the login round-trip: a logged-out user who
   // pressed "Request a Quote" is sent to /login?next=/library?convert=1; on
@@ -452,23 +465,46 @@ export function ShoppingListDrawerUI() {
       )}
 
       {/* Bottom bar */}
-      <div style={{
+      <style>{`
+        @keyframes bq-cartpop { 0%{transform:scale(1)} 30%{transform:scale(1.035)} 60%{transform:scale(0.995)} 100%{transform:scale(1)} }
+        @keyframes bq-countpop { 0%{transform:scale(1)} 40%{transform:scale(1.5)} 100%{transform:scale(1)} }
+        @keyframes bq-floatup { 0%{opacity:0;transform:translate(-50%,4px) scale(0.8)} 20%{opacity:1} 100%{opacity:0;transform:translate(-50%,-34px) scale(1)} }
+        @media (prefers-reduced-motion: reduce) {
+          .bq-cart-bar, .bq-count-pop, .bq-float-badge { animation: none !important; }
+        }
+      `}</style>
+      <div className="bq-cart-bar" style={{
+        position: 'relative',
         background: '#185D7A', color: '#ffffff',
         padding: '12px 20px',
         display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'space-between',
-        boxShadow: '0 -2px 12px rgba(0,0,0,0.2)',
+        boxShadow: pulsing
+          ? '0 -2px 12px rgba(0,0,0,0.2), 0 0 0 3px rgba(249,115,22,0.9), 0 -6px 30px rgba(249,115,22,0.5)'
+          : '0 -2px 12px rgba(0,0,0,0.2)',
+        animation: pulsing ? 'bq-cartpop 0.6s ease-out' : 'none',
+        transformOrigin: 'center bottom',
+        transition: 'box-shadow 0.4s ease',
       }}>
         {/* Item count toggle */}
         <button
           onClick={() => setDrawerOpen(o => !o)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', fontWeight: 700, fontSize: '14px', padding: 0, flexShrink: 0 }}
+          style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', fontWeight: 700, fontSize: '14px', padding: 0, flexShrink: 0 }}
         >
+          {/* Floating "+N" that rises out of the cart when items are added */}
+          {floatAdd > 0 && (
+            <span className="bq-float-badge" style={{ position: 'absolute', left: '50%', top: '-30px', transform: 'translate(-50%,0)', background: '#f97316', color: '#fff', fontWeight: 800, fontSize: '13px', padding: '3px 9px', borderRadius: '99px', whiteSpace: 'nowrap', pointerEvents: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', animation: 'bq-floatup 1.5s ease-out forwards' }}>
+              +{floatAdd} added
+            </span>
+          )}
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
             <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
           </svg>
           <span>Your materials list</span>
-          <span style={{ fontWeight: 600, opacity: 0.75 }}>· {shoppingList.length} item{shoppingList.length !== 1 ? 's' : ''}</span>
+          <span style={{ fontWeight: 600, opacity: 0.75 }}>·&nbsp;
+            <span className="bq-count-pop" style={{ display: 'inline-block', animation: pulsing ? 'bq-countpop 0.6s ease-out' : 'none' }}>{shoppingList.length}</span>
+            &nbsp;item{shoppingList.length !== 1 ? 's' : ''}
+          </span>
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
             <path d={drawerOpen ? 'M2 8L6 4L10 8' : 'M2 4L6 8L10 4'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>

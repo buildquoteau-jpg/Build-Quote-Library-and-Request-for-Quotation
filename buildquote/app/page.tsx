@@ -42,25 +42,25 @@ export default async function Home() {
         justifyContent: 'center',
         textAlign: 'center',
         width: '100%',
-        maxWidth: '900px',
+        maxWidth: '1040px',
         margin: '0 auto',
         paddingInline: 'clamp(20px, 5vw, 56px)',
         paddingTop: 'clamp(40px, 8vh, 80px)',
         paddingBottom: '8px',
       }}>
 
-        <div style={{ fontSize: 'clamp(22px, 3.5vw, 30px)', fontWeight: 800, letterSpacing: '-0.01em' }}>
+        <div style={{ fontSize: 'clamp(22px, 3.5vw, 34px)', fontWeight: 800, letterSpacing: '-0.01em' }}>
           Build<span style={{ color: '#f97316' }}>Quote</span>
         </div>
 
-        <p style={{ color: '#f97316', fontSize: 'clamp(10px, 1.4vw, 12px)', fontWeight: 700, letterSpacing: '0.18em', margin: 'clamp(22px, 4vh, 34px) 0 14px' }}>
+        <p style={{ color: '#f97316', fontSize: 'clamp(10px, 1.4vw, 13px)', fontWeight: 700, letterSpacing: '0.18em', margin: 'clamp(22px, 4vh, 34px) 0 14px' }}>
           FREE · NO LOGIN
         </p>
 
         <h1 style={{
           fontFamily: 'var(--font-barlow-condensed), sans-serif',
           fontWeight: 800,
-          fontSize: 'clamp(30px, 7vw, 60px)',
+          fontSize: 'clamp(30px, 7vw, 76px)',
           lineHeight: 1.0,
           letterSpacing: '-0.01em',
           margin: 0,
@@ -68,7 +68,7 @@ export default async function Home() {
           The Australian Building<br />Materials Library
         </h1>
 
-        <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 'clamp(14px, 2.2vw, 17px)', lineHeight: 1.5, maxWidth: 'min(440px, 90%)', margin: 'clamp(14px, 2.5vh, 20px) auto 0' }}>
+        <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 'clamp(14px, 2.2vw, 20px)', lineHeight: 1.5, maxWidth: 'min(520px, 90%)', margin: 'clamp(14px, 2.5vh, 22px) auto 0' }}>
           Build a list, link to local stockists — in seconds.
         </p>
 
@@ -79,8 +79,8 @@ export default async function Home() {
             background: '#f97316',
             color: '#fff',
             fontWeight: 700,
-            fontSize: 'clamp(15px, 2vw, 17px)',
-            padding: 'clamp(13px, 1.6vh, 16px) clamp(30px, 5vw, 42px)',
+            fontSize: 'clamp(15px, 2vw, 19px)',
+            padding: 'clamp(13px, 1.6vh, 18px) clamp(30px, 5vw, 48px)',
             borderRadius: '12px',
             textDecoration: 'none',
             marginTop: 'clamp(22px, 4vh, 30px)',

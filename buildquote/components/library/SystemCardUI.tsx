@@ -469,6 +469,7 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
   const [isLoggedIn,         setIsLoggedIn]         = useState<boolean | null>(null)
   const [rfqStockistId,      setRfqStockistId]      = useState<string | null>(null)
   const [postcode,           setPostcode]           = useState('')
+  const [justAdded,          setJustAdded]          = useState(0)
 
   const posX = system.hero_image_position_x ?? 50
   const posY = system.hero_image_position_y ?? 50
@@ -537,6 +538,9 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
       onAddToList(items)
       setSelectedProfiles(new Set())
       setSelectedComponents(new Set())
+      // Brief green confirmation on the button itself, at the point of click.
+      setJustAdded(items.length)
+      window.setTimeout(() => setJustAdded(0), 2000)
     }
   }
 
@@ -699,18 +703,23 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
             <button
               type="button"
               onClick={handleAddToList}
-              disabled={!hasSelections}
+              disabled={!hasSelections && justAdded === 0}
               style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px',
                 padding: '13px 16px', fontSize: '14px', fontWeight: 700,
-                color: hasSelections ? '#fff' : '#9ca3af',
-                background: hasSelections ? '#185D7A' : '#f1f5f9',
-                border: `1.5px solid ${hasSelections ? '#185D7A' : '#e2e8f0'}`,
+                color: justAdded > 0 ? '#fff' : hasSelections ? '#fff' : '#9ca3af',
+                background: justAdded > 0 ? '#16a34a' : hasSelections ? '#185D7A' : '#f1f5f9',
+                border: `1.5px solid ${justAdded > 0 ? '#16a34a' : hasSelections ? '#185D7A' : '#e2e8f0'}`,
                 borderRadius: '10px', cursor: hasSelections ? 'pointer' : 'default',
-                transition: 'all 0.15s', boxSizing: 'border-box',
+                transition: 'all 0.2s', boxSizing: 'border-box',
               }}
             >
-              {hasSelections
+              {justAdded > 0 ? (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                  Added {justAdded} item{justAdded !== 1 ? 's' : ''} — see your list below ↓
+                </>
+              ) : hasSelections
                 ? `Add ${totalSelected} item${totalSelected !== 1 ? 's' : ''} to shopping list`
                 : 'Select items above to add to your shopping list'}
             </button>
@@ -784,9 +793,10 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
             </div>
           )}
 
-          {/* Manufacturer website */}
-          {system.website_url && (
-            <a href={system.website_url} target="_blank" rel="noopener noreferrer" style={ghostLinkStyle}>
+          {/* Manufacturer website — only when the column holds a real URL
+              (guard against NULL and whitespace-only/dirty values). */}
+          {system.website_url?.trim() && (
+            <a href={system.website_url.trim()} target="_blank" rel="noopener noreferrer" style={ghostLinkStyle}>
               See {stripSystem(system.name)} on {system.manufacturer?.name ?? 'manufacturer'} website
               <ExternalIcon />
             </a>

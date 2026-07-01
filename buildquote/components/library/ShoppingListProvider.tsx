@@ -19,6 +19,9 @@ type ShoppingListContextType = {
   // never leaks into a fresh public visit in another tab.
   activeDraftId: string | null
   setActiveDraftId: (id: string | null) => void
+  // Bumped every time items are added, carrying how many — the cart bar
+  // watches this to play its "items landed here" pulse. tick 0 = never added.
+  addFlash: { tick: number; count: number }
 }
 
 const ShoppingListContext = createContext<ShoppingListContextType | null>(null)
@@ -32,6 +35,7 @@ export function useShoppingList() {
 export function ShoppingListProvider({ children }: { children: ReactNode }) {
   const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>([])
   const [activeDraftId, setActiveDraftIdState] = useState<string | null>(null)
+  const [addFlash, setAddFlash] = useState<{ tick: number; count: number }>({ tick: 0, count: 0 })
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -73,6 +77,7 @@ export function ShoppingListProvider({ children }: { children: ReactNode }) {
       }
       return updated
     })
+    setAddFlash(f => ({ tick: f.tick + 1, count: items.length }))
   }
 
   function removeItem(id: string) {
@@ -99,7 +104,7 @@ export function ShoppingListProvider({ children }: { children: ReactNode }) {
   return (
     <ShoppingListContext.Provider value={{
       shoppingList, addItems, removeItem, updateQty, updateName, updateUom, clearList,
-      activeDraftId, setActiveDraftId,
+      activeDraftId, setActiveDraftId, addFlash,
     }}>
       {children}
     </ShoppingListContext.Provider>
