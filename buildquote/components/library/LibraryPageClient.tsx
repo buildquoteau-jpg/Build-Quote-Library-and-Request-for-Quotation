@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import type { LibrarySystem, ManufacturerListItem } from '@/lib/data/getSystems'
 import { SystemCardTileUI } from '@/components/library/SystemCardTileUI'
+import { DemoNoticeBox } from '@/components/DemoNoticeBox'
 import { useShoppingList } from '@/components/library/ShoppingListProvider'
 import { useDictation } from '@/lib/useDictation'
 import {
@@ -441,6 +442,21 @@ export function LibraryPageClient({ initialSystems, categories, manufacturerList
           </div>
         </div>
       </section>
+
+      {/* Pre-launch demo notice + manufacturer interest capture */}
+      <DemoNoticeBox
+        storageKey="library-demo"
+        title="You&rsquo;ve landed on the BuildQuote Demonstration Platform"
+        body="The BuildQuote Product Library is pre-launch and is populated with demonstration brands and products. Manufacturers of Australian building products can get more information here."
+        ctaLabel="Get more information"
+        submitType="Manufacturer interest (Library)"
+        successMessage="Thanks — more info is on its way to your inbox."
+        fields={[
+          { name: 'name', label: 'Your name', required: true, placeholder: 'Jane Smith' },
+          { name: 'phone', label: 'Phone', type: 'tel', placeholder: '0400 000 000' },
+          { name: 'email', label: 'Email', type: 'email', required: true, placeholder: 'you@company.com.au' },
+        ]}
+      />
 
       {/* Browse-by toggle (own line) + facet pills (own line) */}
       <div style={{ background: '#fff', borderBottom: '1px solid #d1d9e0' }}>

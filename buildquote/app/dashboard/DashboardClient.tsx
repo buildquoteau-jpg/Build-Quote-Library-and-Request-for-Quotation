@@ -7,6 +7,7 @@ import SuppliersTab from '@/components/builder/SuppliersTab'
 import FavouriteProductsTab from '@/components/builder/FavouriteProductsTab'
 import ProfilePanel from '@/components/builder/ProfilePanel'
 import QuotesTab from '@/components/builder/QuotesTab'
+import { DemoNoticeBox } from '@/components/DemoNoticeBox'
 
 type Tab = 'jobs' | 'suppliers' | 'products' | 'profile' | 'quotes'
 
@@ -98,6 +99,25 @@ export default function DashboardClient({ user, profile }: Props) {
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="-mx-1 mb-2">
+          <DemoNoticeBox
+            storageKey="portal-welcome"
+            badge="Pre-launch"
+            title="Welcome to the BuildQuote Builder Portal"
+            body="BuildQuote is pre-launch — please have a look around. When the BuildQuote Product Library launches, you'll be the first to know. Help us out: tell us the 3 manufacturers you'd most like to see in the Library."
+            ctaLabel="Name your 3 manufacturers"
+            submitType="Builder survey — 3 manufacturers"
+            successMessage="Thanks for your input — we'll be in touch."
+            maxWidth="100%"
+            defaults={{ email: user.email ?? '' }}
+            fields={[
+              { name: 'manufacturer_1', label: 'Manufacturer 1', required: true, placeholder: 'e.g. James Hardie' },
+              { name: 'manufacturer_2', label: 'Manufacturer 2', placeholder: 'e.g. Colorbond' },
+              { name: 'manufacturer_3', label: 'Manufacturer 3', placeholder: 'e.g. Weathertex' },
+              { name: 'email', label: 'Your email', type: 'email', required: true },
+            ]}
+          />
+        </div>
         {tab === 'jobs'      && <JobsTab builderId={user.id} onViewQuotesForJob={handleViewQuotesForJob} />}
         {tab === 'suppliers' && <SuppliersTab builderId={user.id} />}
         {tab === 'products'  && <FavouriteProductsTab builderId={user.id} />}
