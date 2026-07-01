@@ -77,20 +77,16 @@ export default async function SystemPage({
 
       <main style={{ fontFamily: 'var(--font-barlow), sans-serif', background: '#f5f7f9', minHeight: '100vh' }}>
 
-        {/* Breadcrumb */}
-        <div style={{ background: '#ffffff', borderBottom: '1px solid #d1d9e0', padding: '12px 24px' }}>
-          <div style={{ maxWidth: '720px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', flexWrap: 'wrap' }}>
-            <a href="/" style={{ color: '#185D7A', textDecoration: 'none', fontWeight: 600 }}>BuildQuote</a>
-            <span style={{ color: '#d1d9e0' }}>›</span>
-            <a href="/library" style={{ color: '#185D7A', textDecoration: 'none', fontWeight: 600 }}>Library</a>
-            {system.manufacturer && (
-              <>
-                <span style={{ color: '#d1d9e0' }}>›</span>
-                <a href={`/library/${manufacturer}`} style={{ color: '#185D7A', textDecoration: 'none', fontWeight: 600 }}>{system.manufacturer.name}</a>
-              </>
-            )}
-            <span style={{ color: '#d1d9e0' }}>›</span>
-            <span style={{ color: '#64748b' }}>{system.name}</span>
+        {/* Sticky branded nav — back to manufacturer + wordmark, always reachable */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(255,255,255,0.92)', backdropFilter: 'saturate(180%) blur(8px)', WebkitBackdropFilter: 'saturate(180%) blur(8px)', borderBottom: '1px solid #d1d9e0', boxShadow: '0 1px 8px rgba(15,30,45,0.05)' }}>
+          <div style={{ maxWidth: '720px', margin: '0 auto', padding: '9px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <a href={`/library/${manufacturer}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#185D7A', textDecoration: 'none', fontWeight: 700, fontSize: '14px', minWidth: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}><path d="M10 3.5L5.5 8L10 12.5" stroke="#185D7A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{system.manufacturer?.name ?? 'Library'}</span>
+            </a>
+            <a href="/library" style={{ fontSize: '16px', fontWeight: 800, letterSpacing: '-0.01em', color: '#185D7A', textDecoration: 'none', flexShrink: 0 }}>
+              Build<span style={{ color: '#f97316' }}>Quote</span>
+            </a>
           </div>
         </div>
 

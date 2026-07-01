@@ -684,7 +684,7 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
       {/* Hero */}
       <div style={{
         position: 'relative',
-        height: '220px',
+        height: 'clamp(180px, 42vw, 240px)',
         background: system.hero_image_url?.trim()
           ? undefined
           : 'linear-gradient(135deg, #185D7A 0%, #0f3d52 100%)',
