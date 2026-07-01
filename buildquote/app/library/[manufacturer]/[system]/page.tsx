@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getSystemBySlug, getStockistsForSystem } from '@/lib/data/getSystems'
-import { SystemCardWrapper } from '@/app/library/[slug]/SystemCardWrapper'
+import { getSystemByManufacturerAndSlug, getStockistsForSystem } from '@/lib/data/getSystems'
+import { SystemCardWrapper } from '@/app/library/[manufacturer]/[system]/SystemCardWrapper'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,10 +10,10 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>
+  params: Promise<{ manufacturer: string; system: string }>
 }): Promise<Metadata> {
-  const { slug } = await params
-  const system = await getSystemBySlug(slug)
+  const { manufacturer, system: systemSlug } = await params
+  const system = await getSystemByManufacturerAndSlug(manufacturer, systemSlug)
   if (!system) return {}
 
   const title = `${system.name} | ${system.manufacturer?.name ?? 'BuildQuote'} | Building Product Library`
@@ -27,7 +27,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      url: `https://buildquote.com.au/library/${slug}`,
+      url: `https://buildquote.com.au/library/${manufacturer}/${systemSlug}`,
       siteName: 'BuildQuote',
       locale: 'en_AU',
       type: 'website',
@@ -43,10 +43,10 @@ export async function generateMetadata({
 export default async function SystemPage({
   params,
 }: {
-  params: Promise<{ slug: string }>
+  params: Promise<{ manufacturer: string; system: string }>
 }) {
-  const { slug } = await params
-  const system = await getSystemBySlug(slug)
+  const { manufacturer, system: systemSlug } = await params
+  const system = await getSystemByManufacturerAndSlug(manufacturer, systemSlug)
   if (!system) notFound()
 
   const stockists = await getStockistsForSystem(system.id)
@@ -60,7 +60,7 @@ export default async function SystemPage({
       ? { '@type': 'Brand', name: system.manufacturer.name }
       : undefined,
     category: system.category ?? undefined,
-    url: `https://buildquote.com.au/library/${slug}`,
+    url: `https://buildquote.com.au/library/${manufacturer}/${systemSlug}`,
     ...(system.hero_image_url && { image: system.hero_image_url }),
     ...(system.australian_made && { countryOfOrigin: 'AU' }),
     offers: {
@@ -79,10 +79,16 @@ export default async function SystemPage({
 
         {/* Breadcrumb */}
         <div style={{ background: '#ffffff', borderBottom: '1px solid #d1d9e0', padding: '12px 24px' }}>
-          <div style={{ maxWidth: '720px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+          <div style={{ maxWidth: '720px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', flexWrap: 'wrap' }}>
             <a href="/" style={{ color: '#185D7A', textDecoration: 'none', fontWeight: 600 }}>BuildQuote</a>
             <span style={{ color: '#d1d9e0' }}>›</span>
             <a href="/library" style={{ color: '#185D7A', textDecoration: 'none', fontWeight: 600 }}>Library</a>
+            {system.manufacturer && (
+              <>
+                <span style={{ color: '#d1d9e0' }}>›</span>
+                <a href={`/library/${manufacturer}`} style={{ color: '#185D7A', textDecoration: 'none', fontWeight: 600 }}>{system.manufacturer.name}</a>
+              </>
+            )}
             <span style={{ color: '#d1d9e0' }}>›</span>
             <span style={{ color: '#64748b' }}>{system.name}</span>
           </div>
@@ -94,14 +100,14 @@ export default async function SystemPage({
 
           {/* Back link */}
           <div style={{ marginTop: '24px', textAlign: 'center' }}>
-            <a href="/library" style={{
+            <a href={`/library/${manufacturer}`} style={{
               fontSize: '13px', fontWeight: 600, color: '#185D7A',
               textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px',
             }}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M9 12L4 7L9 2" stroke="#185D7A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              Back to library
+              Back to {system.manufacturer?.name ?? 'library'}
             </a>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getAllSystems } from '@/lib/data/getSystems'
+import { getAllSystems, getManufacturers } from '@/lib/data/getSystems'
 import { LibraryPageClient } from '@/components/library/LibraryPageClient'
 
 export const dynamic = 'force-dynamic'
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 }
 
 export default async function LibraryPage() {
-  const systems = await getAllSystems()
+  const [systems, manufacturers] = await Promise.all([getAllSystems(), getManufacturers()])
 
   const categories = Array.from(
     new Set(systems.map(s => s.category || 'Other'))
@@ -44,7 +44,7 @@ export default async function LibraryPage() {
             <p style={{ color: '#94a3b8', fontSize: '15px' }}>No products in the library yet.</p>
           </div>
         ) : (
-          <LibraryPageClient initialSystems={systems} categories={categories} />
+          <LibraryPageClient initialSystems={systems} categories={categories} manufacturerList={manufacturers} />
         )}
       </main>
     </>

@@ -243,40 +243,29 @@ export async function getStockistsForSystem(systemId: string): Promise<Stockist[
   return stockists.sort((a, b) => a.name.localeCompare(b.name))
 }
 
-export async function getSystemBySlug(slug: string): Promise<LibrarySystem | null> {
-  const supabase = await createSupabaseServerClient()
+// Shared select + mapper for the full system detail card. `manufacturers!inner`
+// lets us filter on the manufacturer slug (nested manufacturer/system routes).
+const SYSTEM_DETAIL_SELECT = `
+  id, name, product_code, slug, category, subcategory,
+  description, dimensions, length_m, double_sided,
+  hero_image_url, hero_image_position_x, hero_image_position_y,
+  australian_made, bal_rating, fire_rating, moisture_resistant,
+  acoustic_rating, structural_grade, notes, sort_order,
+  website_url, install_guide_urls, design_guide_url, tech_data_url,
+  manufacturers!inner ( name, slug, logo_url ),
+  system_colours ( colour_name, image_url, sort_order, is_stocked ),
+  system_profiles (
+    id, profile_name, name, product_code, dimensions,
+    length_mm, width_mm, height_mm, thickness_mm,
+    uom, supplier_pack_qty, supplier_pack_uom, sort_order
+  ),
+  system_components (
+    id, role, notes, sort_order,
+    components ( name, sku, description, category, uom, procurement_route )
+  )
+`
 
-  const { data, error } = await supabase
-    .from('systems')
-    .select(`
-      id, name, product_code, slug, category, subcategory,
-      description, dimensions, length_m, double_sided,
-      hero_image_url, hero_image_position_x, hero_image_position_y,
-      australian_made, bal_rating, fire_rating, moisture_resistant,
-      acoustic_rating, structural_grade, notes, sort_order,
-      website_url, install_guide_urls, design_guide_url, tech_data_url,
-      manufacturers ( name, slug, logo_url ),
-      system_colours ( colour_name, image_url, sort_order, is_stocked ),
-      system_profiles (
-        id, profile_name, name, product_code, dimensions,
-        length_mm, width_mm, height_mm, thickness_mm,
-        uom, supplier_pack_qty, supplier_pack_uom, sort_order
-      ),
-      system_components (
-        id, role, notes, sort_order,
-        components ( name, sku, description, category, uom, procurement_route )
-      )
-    `)
-    .eq('slug', slug)
-    .maybeSingle()
-
-  if (error || !data) {
-    console.error('[getSystemBySlug]', error)
-    return null
-  }
-
-  const sys = data as any
-
+function mapSystemDetail(sys: any): LibrarySystem {
   return {
     ...sys,
     double_sided: sys.double_sided ?? false,
@@ -288,4 +277,108 @@ export async function getSystemBySlug(slug: string): Promise<LibrarySystem | nul
     system_components: ((sys.system_components || []) as LibraryComponent[])
       .sort((a, b) => a.sort_order - b.sort_order),
   }
+}
+
+export async function getSystemBySlug(slug: string): Promise<LibrarySystem | null> {
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase
+    .from('systems').select(SYSTEM_DETAIL_SELECT).eq('slug', slug).maybeSingle()
+  if (error || !data) {
+    if (error) console.error('[getSystemBySlug]', error)
+    return null
+  }
+  return mapSystemDetail(data as any)
+}
+
+// Nested route lookup: a system slug is only unique *within* its manufacturer,
+// so both are required.
+export async function getSystemByManufacturerAndSlug(
+  mfrSlug: string,
+  systemSlug: string,
+): Promise<LibrarySystem | null> {
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase
+    .from('systems').select(SYSTEM_DETAIL_SELECT)
+    .eq('slug', systemSlug)
+    .eq('manufacturers.slug', mfrSlug)
+    .maybeSingle()
+  if (error || !data) {
+    if (error) console.error('[getSystemByManufacturerAndSlug]', error)
+    return null
+  }
+  return mapSystemDetail(data as any)
+}
+
+export type ManufacturerDetail = {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  logo_url: string | null
+  website_url: string | null
+  hero_image_url: string | null
+  hero_image_position_y: number | null
+  hero_wide_image_url: string | null
+  hero_wide_image_position_y: number | null
+  seo_title: string | null
+  seo_description: string | null
+}
+
+export async function getManufacturerBySlug(slug: string): Promise<ManufacturerDetail | null> {
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase
+    .from('manufacturers')
+    .select('id, name, slug, description, logo_url, website_url, hero_image_url, hero_image_position_y, hero_wide_image_url, hero_wide_image_position_y, seo_title, seo_description')
+    .eq('slug', slug)
+    .maybeSingle()
+  if (error || !data) {
+    if (error) console.error('[getManufacturerBySlug]', error)
+    return null
+  }
+  return data as ManufacturerDetail
+}
+
+// A manufacturer's systems for its landing-page grid — mirrors getAllSystems'
+// shape (tile counts) but scoped to one manufacturer.
+export async function getSystemsForManufacturer(mfrSlug: string): Promise<LibrarySystem[]> {
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase
+    .from('manufacturers')
+    .select(`
+      name, slug, logo_url, description,
+      systems (
+        id, name, product_code, slug, category, subcategory,
+        description, hero_image_url, hero_image_position_x, hero_image_position_y,
+        australian_made, bal_rating, fire_rating, moisture_resistant,
+        acoustic_rating, structural_grade, notes, sort_order,
+        system_colours ( colour_name, image_url, sort_order, is_stocked ),
+        system_profiles ( id, name, profile_name, product_code ),
+        system_components ( id, components ( id, name ) )
+      )
+    `)
+    .eq('slug', mfrSlug)
+    .maybeSingle()
+
+  if (error || !data) {
+    if (error) console.error('[getSystemsForManufacturer]', error)
+    return []
+  }
+
+  const mfr = data as any
+  const systems: LibrarySystem[] = (mfr.systems || []).map((sys: any) => ({
+    ...sys,
+    double_sided: sys.double_sided ?? false,
+    dimensions: null,
+    length_m: null,
+    website_url: null,
+    install_guide_urls: null,
+    design_guide_url: null,
+    tech_data_url: null,
+    manufacturer: { name: mfr.name, slug: mfr.slug, logo_url: mfr.logo_url, description: mfr.description ?? null },
+    system_colours: ((sys.system_colours || []) as LibraryColour[]).sort((a, b) => a.sort_order - b.sort_order),
+    system_profiles: sys.system_profiles || [],
+    system_components: sys.system_components || [],
+  }))
+
+  return systems.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
 }

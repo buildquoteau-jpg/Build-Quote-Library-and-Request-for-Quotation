@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
-import type { LibrarySystem } from '@/lib/data/getSystems'
+import type { LibrarySystem, ManufacturerListItem } from '@/lib/data/getSystems'
 import { SystemCardTileUI } from '@/components/library/SystemCardTileUI'
 import { useShoppingList } from '@/components/library/ShoppingListProvider'
 import { useDictation } from '@/lib/useDictation'
@@ -33,25 +33,28 @@ function slugifyCategory(cat: string) {
 
 type ManufacturerTile = {
   name: string
+  slug: string
   logo: string | null
   hero: string | null
   posY: number
   description: string | null
+  count: number
 }
 
 // Manufacturer tile — hero image with name overlay on top, then a white strip
-// with a short description and a "View products" link. Clicking drills into that
-// manufacturer's systems (sets the active facet pill), no navigation.
-function ManufacturerTileUI({ mfr, onClick }: { mfr: ManufacturerTile; onClick: () => void }) {
+// with a short description and a system count. Navigates to the manufacturer's
+// landing page (/library/{slug}).
+function ManufacturerTileUI({ mfr }: { mfr: ManufacturerTile }) {
   const [hovered, setHovered] = useState(false)
   return (
-    <button
-      onClick={onClick}
+    <a
+      href={`/library/${mfr.slug}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
         display: 'flex', flexDirection: 'column', width: '100%', padding: 0, textAlign: 'left',
         background: '#fff', borderRadius: '14px', overflow: 'hidden', cursor: 'pointer',
+        textDecoration: 'none',
         border: hovered ? '1.5px solid #185D7A' : '1px solid #d1d5db',
         boxShadow: hovered ? '0 8px 28px rgba(24,93,122,0.18)' : '0 2px 10px rgba(0,0,0,0.07)',
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
@@ -94,19 +97,20 @@ function ManufacturerTileUI({ mfr, onClick }: { mfr: ManufacturerTile; onClick: 
           </p>
         )}
         <span style={{ marginTop: 'auto', fontSize: '13px', fontWeight: 700, color: '#185D7A', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          View products
+          {mfr.count} product system{mfr.count !== 1 ? 's' : ''}
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M4.5 2.5L8 6L4.5 9.5" stroke="#185D7A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </span>
       </div>
-    </button>
+    </a>
   )
 }
 
-export function LibraryPageClient({ initialSystems, categories }: {
+export function LibraryPageClient({ initialSystems, categories, manufacturerList }: {
   initialSystems: LibrarySystem[]
   categories: string[]
+  manufacturerList: ManufacturerListItem[]
 }) {
   const { addItems } = useShoppingList()
 
@@ -147,29 +151,21 @@ export function LibraryPageClient({ initialSystems, categories }: {
   const facetOf = (s: LibrarySystem) =>
     facet === 'manufacturer' ? (s.manufacturer?.name || 'Other') : (s.category || 'Other')
 
-  // Compact manufacturer tiles for the default "Browse by Manufacturer · All" view —
-  // one tile per manufacturer (image + name + count) instead of every system card.
-  const manufacturerTiles = useMemo<ManufacturerTile[]>(() => {
-    const map = new Map<string, ManufacturerTile>()
-    for (const s of initialSystems) {
-      const name = s.manufacturer?.name || 'Other'
-      let entry = map.get(name)
-      if (!entry) {
-        entry = {
-          name,
-          logo: s.manufacturer?.logo_url ?? null,
-          hero: null, posY: 50,
-          description: s.manufacturer?.description?.trim() || null,
-        }
-        map.set(name, entry)
-      }
-      if (!entry.hero && s.hero_image_url?.trim()) {
-        entry.hero = s.hero_image_url.trim()
-        entry.posY = s.hero_image_position_y ?? 50
-      }
-    }
-    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
-  }, [initialSystems])
+  // Compact manufacturer tiles for the default "Browse by Manufacturer · All"
+  // view — one card per manufacturer, linking to its landing page.
+  const manufacturerTiles = useMemo<ManufacturerTile[]>(() =>
+    manufacturerList
+      .map(m => ({
+        name: m.name,
+        slug: m.slug,
+        logo: m.logo_url,
+        hero: m.hero_image_url?.trim() || null,
+        posY: m.hero_image_position_y ?? 50,
+        description: m.description?.trim() || null,
+        count: m.system_count,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  [manufacturerList])
 
   // Manufacturer-tile view has its own name filter (independent of product search).
   const visibleManufacturerTiles = mfrFilter.trim()
@@ -466,18 +462,20 @@ export function LibraryPageClient({ initialSystems, categories }: {
             </div>
           </div>
 
-          {/* Row 2 — facet value pills, full-width scrollable row */}
-          <div style={{ display: 'flex', gap: '7px', alignItems: 'center', overflowX: 'auto', whiteSpace: 'nowrap' as const, paddingBottom: '2px' }}>
-            {['All', ...facetValues].map(val => {
-              const active = activeFacet === val
-              return (
-                <button key={val} onClick={() => setActiveFacet(val)}
-                  style={{ flexShrink: 0, fontSize: '13px', fontWeight: active ? 700 : 500, padding: '6px 14px', borderRadius: '20px', cursor: 'pointer', border: `1.5px solid ${active ? '#185D7A' : '#d1d9e0'}`, background: active ? '#185D7A' : '#fff', color: active ? '#fff' : '#334155', transition: 'all 0.12s' }}>
-                  {val}
-                </button>
-              )
-            })}
-          </div>
+          {/* Row 2 — facet value pills (category only; manufacturers use cards) */}
+          {facet === 'category' && (
+            <div style={{ display: 'flex', gap: '7px', alignItems: 'center', overflowX: 'auto', whiteSpace: 'nowrap' as const, paddingBottom: '2px' }}>
+              {['All', ...facetValues].map(val => {
+                const active = activeFacet === val
+                return (
+                  <button key={val} onClick={() => setActiveFacet(val)}
+                    style={{ flexShrink: 0, fontSize: '13px', fontWeight: active ? 700 : 500, padding: '6px 14px', borderRadius: '20px', cursor: 'pointer', border: `1.5px solid ${active ? '#185D7A' : '#d1d9e0'}`, background: active ? '#185D7A' : '#fff', color: active ? '#fff' : '#334155', transition: 'all 0.12s' }}>
+                    {val}
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -602,7 +600,7 @@ export function LibraryPageClient({ initialSystems, categories }: {
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '14px' }}>
                 {visibleManufacturerTiles.map(mfr => (
-                  <ManufacturerTileUI key={mfr.name} mfr={mfr} onClick={() => setActiveFacet(mfr.name)} />
+                  <ManufacturerTileUI key={mfr.slug} mfr={mfr} />
                 ))}
               </div>
             )}

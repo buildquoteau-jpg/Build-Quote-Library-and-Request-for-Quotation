@@ -34,7 +34,7 @@ export function SystemCardTileUI({
 
   return (
     <a
-      href={`/library/${system.slug}`}
+      href={system.manufacturer ? `/library/${system.manufacturer.slug}/${system.slug}` : '/library'}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{

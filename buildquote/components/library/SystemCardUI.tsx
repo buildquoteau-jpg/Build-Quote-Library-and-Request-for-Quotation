@@ -626,7 +626,7 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
     if (items.length === 0) return
 
     if (isLoggedIn === false) {
-      const next = encodeURIComponent(`/library/${system.slug}`)
+      const next = encodeURIComponent(system.manufacturer ? `/library/${system.manufacturer.slug}/${system.slug}` : `/library`)
       window.location.href = `/login?next=${next}`
       return
     }
@@ -637,7 +637,7 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
       const { data: { session } } = await supabase.auth.getSession()
       const builderId = session?.user?.id ?? null
       if (!builderId) {
-        const next = encodeURIComponent(`/library/${system.slug}`)
+        const next = encodeURIComponent(system.manufacturer ? `/library/${system.manufacturer.slug}/${system.slug}` : `/library`)
         window.location.href = `/login?next=${next}`
         return
       }
