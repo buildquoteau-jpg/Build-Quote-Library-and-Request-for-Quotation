@@ -83,17 +83,13 @@ export default async function ManufacturerPage({
         <section style={{
           position: 'relative',
           backgroundImage: heroImg
-            ? `linear-gradient(155deg, rgba(13,51,71,0.82) 0%, rgba(24,93,122,0.78) 60%, rgba(30,115,153,0.72) 100%), url(${heroImg})`
+            ? `linear-gradient(100deg, rgba(11,44,60,0.92) 0%, rgba(14,55,74,0.66) 46%, rgba(20,86,110,0.24) 100%), url(${heroImg})`
             : 'linear-gradient(155deg, #0d3347 0%, #185D7A 55%, #1e7399 100%)',
           backgroundSize: 'cover',
           backgroundPosition: `center ${heroPosY}%`,
-          padding: '56px 24px',
+          padding: '60px 24px',
         }}>
           <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            {mfr.logo_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={mfr.logo_url} alt={`${mfr.name} logo`} style={{ height: '46px', width: 'auto', objectFit: 'contain', alignSelf: 'flex-start', background: 'rgba(255,255,255,0.92)', borderRadius: '8px', padding: '8px 12px' }} />
-            )}
             <h1 style={{
               margin: 0, fontSize: 'clamp(28px, 5vw, 46px)', fontWeight: 800, color: '#fff',
               letterSpacing: '-0.02em', lineHeight: 1.05, fontFamily: 'var(--font-barlow-condensed), sans-serif',
@@ -108,9 +104,10 @@ export default async function ManufacturerPage({
             {mfr.website_url && (
               <a href={mfr.website_url} target="_blank" rel="noopener noreferrer" style={{
                 alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: '8px',
-                background: '#f97316', color: '#fff', fontWeight: 700, fontSize: '15px',
+                background: 'rgba(255,255,255,0.14)', color: '#fff', fontWeight: 700, fontSize: '15px',
                 padding: '11px 24px', borderRadius: '10px', textDecoration: 'none',
-                boxShadow: '0 6px 18px rgba(249,115,22,0.32)', marginTop: '4px',
+                border: '1.5px solid rgba(255,255,255,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+                marginTop: '4px',
               }}>
                 Visit {mfr.name} website
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg>

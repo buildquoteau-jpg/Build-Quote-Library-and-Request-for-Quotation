@@ -57,6 +57,22 @@ function extractNums(s: string): number[] {
   return (s.match(/\d+(?:\.\d+)?/g) || []).map(Number)
 }
 
+// Shared section rhythm — every top-level card section uses the same top gap,
+// top padding and divider so the card reads as one even flow.
+const sectionBlock: React.CSSProperties = {
+  marginTop: '24px',
+  paddingTop: '20px',
+  borderTop: '1px solid #e2e8f0',
+}
+const sectionLabel: React.CSSProperties = {
+  fontSize: '12px',
+  fontWeight: 800,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  color: '#334155',
+  marginBottom: '12px',
+}
+
 // ── Checkbox ──────────────────────────────────────────────────────────────────
 
 function Checkbox({ checked }: { checked: boolean }) {
@@ -273,8 +289,8 @@ function ProfilesSection({ profiles, systemName, selected, onToggle }: {
   const useHeaders  = multiGroup || !defaultOpen
 
   return (
-    <div style={{ marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '1px solid #e2e8f0' }}>
-      <div style={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#334155', marginBottom: '0.75rem' }}>
+    <div style={sectionBlock}>
+      <div style={sectionLabel}>
         Profiles · {profiles.length} variant{profiles.length !== 1 ? 's' : ''}
       </div>
       {!multiGroup && (
@@ -422,7 +438,7 @@ function ComponentsSection({ components, selected, onToggle }: {
   )
 
   return (
-    <div style={{ marginTop: '18px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
+    <div style={sectionBlock}>
       <button type="button" onClick={() => setOpen(o => !o)} style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         width: '100%', cursor: 'pointer', textAlign: 'left',
@@ -465,7 +481,7 @@ function AttributePills({ system }: { system: LibrarySystem }) {
   if (badges.length === 0) return null
 
   return (
-    <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+    <div style={sectionBlock}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
         {badges.map((b, i) => (
           <span key={i} style={{
@@ -490,8 +506,8 @@ function ColoursSection({ colours, selected, onSelect }: {
 }) {
   if (colours.length === 0) return null
   return (
-    <div style={{ marginTop: '1.25rem' }}>
-      <div style={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#334155', marginBottom: '0.6rem' }}>
+    <div style={sectionBlock}>
+      <div style={sectionLabel}>
         Select Colour (optional)
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -543,6 +559,7 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
 
   const posX = system.hero_image_position_x ?? 50
   const posY = system.hero_image_position_y ?? 50
+  const mfrName = system.manufacturer?.name ?? 'manufacturer'
 
   // Auth gates the "Request a quote" action: only logged-in builders reach the
   // RFQ flow; logged-out visitors get the shopping list path instead.
@@ -766,7 +783,7 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
         <AttributePills system={system} />
 
         {/* Action buttons */}
-        <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ ...sectionBlock, display: 'flex', flexDirection: 'column', gap: '10px' }}>
 
           {/* Add to list */}
           {onAddToList && (
@@ -866,34 +883,22 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
           {/* Manufacturer website — only when the column holds a real URL
               (guard against NULL and whitespace-only/dirty values). */}
           {system.website_url?.trim() && (
-            <a href={system.website_url.trim()} target="_blank" rel="noopener noreferrer" style={ghostLinkStyle}>
-              See {stripSystem(system.name)} on {system.manufacturer?.name ?? 'manufacturer'} website
-              <ExternalIcon />
-            </a>
+            <GuideLink href={system.website_url.trim()} context={`View ${mfrName}`} label="Website" />
           )}
 
           {/* Install guides */}
           {(system.install_guide_urls ?? []).map((guide, i) => (
-            <a key={i} href={guide.url} target="_blank" rel="noopener noreferrer" style={ghostLinkStyle}>
-              See {stripSystem(system.name)} installation guide
-              <ExternalIcon />
-            </a>
+            <GuideLink key={i} href={guide.url} context={`View ${mfrName}`} label="Installation guide" />
           ))}
 
           {/* Design guide */}
           {system.design_guide_url && (
-            <a href={system.design_guide_url} target="_blank" rel="noopener noreferrer" style={ghostLinkStyle}>
-              See {stripSystem(system.name)} design guide
-              <ExternalIcon />
-            </a>
+            <GuideLink href={system.design_guide_url} context={`View ${mfrName}`} label="Design guide" />
           )}
 
           {/* Tech data */}
           {system.tech_data_url && (
-            <a href={system.tech_data_url} target="_blank" rel="noopener noreferrer" style={ghostLinkStyle}>
-              See {stripSystem(system.name)} technical guide
-              <ExternalIcon />
-            </a>
+            <GuideLink href={system.tech_data_url} context={`View ${mfrName}`} label="Technical guide" />
           )}
 
         </div>
@@ -910,6 +915,24 @@ const ghostLinkStyle: React.CSSProperties = {
   padding: '13px 16px', fontSize: '14px', fontWeight: 600,
   color: '#185D7A', background: '#eef6fa', border: '1.5px solid #b6dcea',
   borderRadius: '10px', textDecoration: 'none', boxSizing: 'border-box',
+}
+
+// Two-line resource button: small muted context line ("View BQ Compform") over
+// a normal-weight resource line ("Installation guide"). Keeps buttons scannable
+// and stops the long system name overflowing.
+function GuideLink({ href, context, label }: { href: string; context: string; label: string }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" style={{
+      ...ghostLinkStyle, flexDirection: 'column', gap: '1px',
+      paddingTop: '9px', paddingBottom: '9px', textAlign: 'center',
+    }}>
+      <span style={{ fontSize: '11px', fontWeight: 600, color: '#7d97a3' }}>{context}</span>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '14px', fontWeight: 700, color: '#185D7A' }}>
+        {label}
+        <ExternalIcon />
+      </span>
+    </a>
+  )
 }
 
 const contactChipStyle: React.CSSProperties = {

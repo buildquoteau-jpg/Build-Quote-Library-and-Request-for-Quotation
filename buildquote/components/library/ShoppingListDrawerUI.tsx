@@ -362,7 +362,7 @@ export function ShoppingListDrawerUI() {
                   Your materials list · {shoppingList.length} item{shoppingList.length !== 1 ? 's' : ''}
                 </p>
                 <p style={{ margin: 0, fontSize: '12px', color: '#6b7280', lineHeight: 1.4 }}>
-                  Edit quantities, change UOM or remove items — or keep browsing to add more, then Request a Quote.
+                  Edit your items, adjust quantities, keep browsing — when you&rsquo;re ready, share your list.
                 </p>
               </div>
               <button
