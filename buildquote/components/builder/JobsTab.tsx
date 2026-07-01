@@ -178,6 +178,11 @@ export default function JobsTab({ builderId, onViewQuotesForJob }: { builderId: 
               <p className="text-sm text-text-secondary">{job.project_address || job.project_address_manual || '—'}</p>
               {job.pm_name && <p className="text-sm text-text-muted mt-1">PM: {job.pm_name}{job.pm_mobile ? ` · ${job.pm_mobile}` : ''}</p>}
               {job.site_access_notes && <p className="text-xs text-text-muted mt-2 italic">{job.site_access_notes}</p>}
+              {job.project_reference?.includes('Demonstration Job Card') && (
+                <p className="text-xs bg-brand-subtle text-brand rounded-lg px-3 py-2 mt-3 leading-relaxed font-medium">
+                  <span className="font-bold">This is your demonstration Job Card.</span> Use Accoya House as your sandbox to explore how BuildQuote Request for Quotation can assist your builder workflow.
+                </p>
+              )}
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {rfqCounts[job.project_reference] > 0 && (
                   <button

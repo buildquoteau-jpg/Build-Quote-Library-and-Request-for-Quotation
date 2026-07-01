@@ -95,5 +95,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: GENERIC_ERROR }, { status: 500 })
   }
 
+  // Seed a demonstration job so every new builder has a sandbox to explore the
+  // RFQ flow. Non-fatal — registration still succeeds if this insert fails.
+  const { error: demoJobError } = await adminSupabase.from('builder_jobs').insert({
+    builder_id: authData.user.id,
+    project_reference: 'Accoya House (Demonstration Job Card)',
+    project_address: '',
+    project_address_place_id: '',
+    project_address_manual: 'Lot 20, Demo Way, Dunsborough',
+    pm_name: 'Stacey Smith',
+    pm_mobile: '0400 000 000',
+    site_access_notes: 'Demo Way not yet on google maps. Closest cross street is Bridge Street. Call Stacey for all delivery notifications.',
+    build_type: 'New Home',
+    image_url: 'https://oxvhmulxuvlfjyjzleki.supabase.co/storage/v1/object/public/job-images/82010f70-917e-4cb7-8b6b-b014725740d5/1780551045785.png',
+  })
+  if (demoJobError) console.error('[register] Demo job seed error:', demoJobError.message)
+
   return NextResponse.json({ userId: authData.user.id })
 }
