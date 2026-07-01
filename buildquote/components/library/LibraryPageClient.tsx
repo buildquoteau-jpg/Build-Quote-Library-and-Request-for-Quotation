@@ -119,6 +119,7 @@ export function LibraryPageClient({ initialSystems, categories }: {
   const [listParsing,    setListParsing]    = useState(false)
   const [extracting,     setExtracting]     = useState(false)
   const [listError,      setListError]      = useState('')
+  const [listSuccess,    setListSuccess]    = useState('')
   const [loadingMsgIdx,  setLoadingMsgIdx]  = useState(0)
   const [dragOver,       setDragOver]       = useState(false)
 
@@ -273,11 +274,13 @@ export function LibraryPageClient({ initialSystems, categories }: {
       uom: item.uom ?? 'EA', qty: Number(item.qty) || 1,
     })))
     setListInput('')
+    const n = raw.length
+    setListSuccess(`Added ${n} item${n === 1 ? '' : 's'} to your materials list — open it (bottom-right) to review, edit quantities or remove anything before requesting a quote.`)
   }
 
   async function handleReadList(text: string) {
     if (!text.trim()) return
-    setListParsing(true); setListError('')
+    setListParsing(true); setListError(''); setListSuccess('')
     try {
       const res = await fetch('/api/library/parse-list', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -292,7 +295,7 @@ export function LibraryPageClient({ initialSystems, categories }: {
 
   async function handleFileUpload(file: File) {
     if (file.size > 8 * 1024 * 1024) { setListError('Photo too large — max 8 MB.'); return }
-    setExtracting(true); setListError('')
+    setExtracting(true); setListError(''); setListSuccess('')
     try {
       const base64 = await new Promise<string>((res, rej) => {
         const r = new FileReader()
@@ -397,7 +400,7 @@ export function LibraryPageClient({ initialSystems, categories }: {
               <>
                 <textarea
                   value={listInput}
-                  onChange={e => { setListInput(e.target.value); setListError('') }}
+                  onChange={e => { setListInput(e.target.value); setListError(''); setListSuccess('') }}
                   onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleReadList(listInput) }}
                   onPaste={e => {
                     const imgFile = Array.from(e.clipboardData.items).find(i => i.type.startsWith('image/'))?.getAsFile()
@@ -409,6 +412,12 @@ export function LibraryPageClient({ initialSystems, categories }: {
                 />
                 {listError && (
                   <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#fca5a5', fontWeight: 600 }}>{listError}</p>
+                )}
+                {listSuccess && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', margin: '8px 0 0', padding: '9px 11px', background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.4)', borderRadius: '9px' }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '1px' }}><path d="M20 6L9 17l-5-5"/></svg>
+                    <p style={{ margin: 0, fontSize: '12.5px', color: '#dcfce7', fontWeight: 600, lineHeight: 1.4 }}>{listSuccess}</p>
+                  </div>
                 )}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px', gap: '8px', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', gap: '6px' }}>

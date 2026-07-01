@@ -467,7 +467,8 @@ export function ShoppingListDrawerUI() {
             <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
             <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
           </svg>
-          {shoppingList.length} item{shoppingList.length !== 1 ? 's' : ''}
+          <span>Your materials list</span>
+          <span style={{ fontWeight: 600, opacity: 0.75 }}>· {shoppingList.length} item{shoppingList.length !== 1 ? 's' : ''}</span>
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
             <path d={drawerOpen ? 'M2 8L6 4L10 8' : 'M2 4L6 8L10 4'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
