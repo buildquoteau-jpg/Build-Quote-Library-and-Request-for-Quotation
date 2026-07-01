@@ -313,6 +313,93 @@ function ProfilesSection({ profiles, systemName, selected, onToggle }: {
 
 // ── Components section ────────────────────────────────────────────────────────
 
+// A category collapses into a size-variant dropdown when it has several items
+// that all share the same leading word (e.g. "DPM 90mm…", "DPM 110mm…"). Returns
+// the per-item labels with that shared word stripped, or null if not a family.
+function variantLabels(names: string[]): string[] | null {
+  if (names.length <= 3) return null
+  const firsts = names.map(n => n.split(/\s+/)[0]?.toLowerCase() ?? '')
+  if (!firsts[0] || new Set(firsts).size !== 1) return null
+  return names.map(n => n.split(/\s+/).slice(1).join(' ').trim() || n)
+}
+
+function ComponentRow({ comp, idx, label, selected, onToggle }: {
+  comp: LibraryComponent
+  idx: number
+  label?: string
+  selected: Set<number>
+  onToggle: (idx: number) => void
+}) {
+  const c = comp.components
+  const isSel = selected.has(idx)
+  return (
+    <button type="button" onClick={() => onToggle(idx)} style={{
+      display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+      gap: '10px', width: '100%', textAlign: 'left', padding: '12px',
+      background: isSel ? '#eef6fa' : '#f9fafb',
+      border: `1.5px solid ${isSel ? '#185D7A' : '#e5e7eb'}`,
+      borderRadius: '10px', cursor: 'pointer', transition: 'all 0.12s',
+    }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: '13px', fontWeight: isSel ? 700 : 600, color: isSel ? '#0f2d3d' : '#111827', lineHeight: 1.3 }}>
+          {label ?? c?.name ?? comp.role}
+        </div>
+        <div style={{ marginTop: '3px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+          {c?.description && (
+            <span style={{ fontSize: '12px', color: '#4b5563' }}>{c.description}</span>
+          )}
+          {c?.sku && (
+            <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#4b5563', background: isSel ? '#d4ecf5' : '#f3f4f6', padding: '1px 5px', borderRadius: '4px' }}>
+              {c.sku}
+            </span>
+          )}
+        </div>
+      </div>
+      <Checkbox checked={isSel} />
+    </button>
+  )
+}
+
+function ComponentCategoryBlock({ category, items, selected, onToggle }: {
+  category: string
+  items: { comp: LibraryComponent; idx: number }[]
+  selected: Set<number>
+  onToggle: (idx: number) => void
+}) {
+  const names  = items.map(it => (it.comp.components?.name ?? '').trim())
+  const labels = variantLabels(names)
+  const family = labels !== null
+  // Size-variant families (e.g. DPM widths) start collapsed to save space;
+  // categories of distinct products start open.
+  const [open, setOpen] = useState(!family)
+
+  return (
+    <div>
+      <button type="button" onClick={() => setOpen(o => !o)} style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        width: '100%', cursor: 'pointer', textAlign: 'left', background: 'none',
+        border: 'none', padding: '10px 2px 8px', minHeight: '40px',
+      }}>
+        <span style={{ fontSize: '12px', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#334155', paddingLeft: '10px', borderLeft: '3px solid #185D7A' }}>
+          {category}
+        </span>
+        <span style={{ fontSize: '12px', fontWeight: 700, color: '#185D7A', flexShrink: 0, marginLeft: '8px' }}>
+          {open ? '▲' : `▼ ${items.length}`}
+        </span>
+      </button>
+      {open && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingBottom: '6px' }}>
+          {items.map((it, i) => (
+            <ComponentRow key={it.idx} comp={it.comp} idx={it.idx}
+              label={labels ? labels[i] : undefined}
+              selected={selected} onToggle={onToggle} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function ComponentsSection({ components, selected, onToggle }: {
   components: LibraryComponent[]
   selected: Set<number>
@@ -320,6 +407,19 @@ function ComponentsSection({ components, selected, onToggle }: {
 }) {
   const [open, setOpen] = useState(false)
   if (components.length === 0) return null
+
+  // Group by category, keeping each component's original index (selection is
+  // index-based against the flat system_components array).
+  const byCat = new Map<string, { comp: LibraryComponent; idx: number }[]>()
+  components.forEach((comp, idx) => {
+    const cat = comp.components?.category?.trim() || 'Other'
+    if (!byCat.has(cat)) byCat.set(cat, [])
+    byCat.get(cat)!.push({ comp, idx })
+  })
+  // First-appearance order, but push any Service/delivery category to the end.
+  const cats = Array.from(byCat.entries()).sort(
+    (a, b) => (/service|delivery/i.test(a[0]) ? 1 : 0) - (/service|delivery/i.test(b[0]) ? 1 : 0)
+  )
 
   return (
     <div style={{ marginTop: '18px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
@@ -338,40 +438,10 @@ function ComponentsSection({ components, selected, onToggle }: {
       </button>
 
       {open && (
-        <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {components.map((comp, i) => {
-            const c = comp.components
-            const isSel = selected.has(i)
-            return (
-              <button key={i} type="button" onClick={() => onToggle(i)} style={{
-                display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
-                gap: '10px', width: '100%', textAlign: 'left', padding: '12px',
-                background: isSel ? '#eef6fa' : '#f9fafb',
-                border: `1.5px solid ${isSel ? '#185D7A' : '#e5e7eb'}`,
-                borderRadius: '10px', cursor: 'pointer', transition: 'all 0.12s',
-              }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '13px', fontWeight: isSel ? 700 : 600, color: isSel ? '#0f2d3d' : '#111827', lineHeight: 1.3 }}>
-                    {c?.name ?? comp.role}
-                  </div>
-                  <div style={{ marginTop: '3px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-                    {comp.role && c?.name && (
-                      <span style={{ fontSize: '11px', color: '#6b7280' }}>{comp.role}</span>
-                    )}
-                    {c?.description && (
-                      <span style={{ fontSize: '12px', color: '#4b5563' }}>{c.description}</span>
-                    )}
-                    {c?.sku && (
-                      <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#4b5563', background: isSel ? '#d4ecf5' : '#f3f4f6', padding: '1px 5px', borderRadius: '4px' }}>
-                        {c.sku}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <Checkbox checked={isSel} />
-              </button>
-            )
-          })}
+        <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          {cats.map(([cat, items]) => (
+            <ComponentCategoryBlock key={cat} category={cat} items={items} selected={selected} onToggle={onToggle} />
+          ))}
         </div>
       )}
     </div>
