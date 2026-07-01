@@ -53,23 +53,23 @@ export default async function Home() {
           Build<span style={{ color: '#f97316' }}>Quote</span>
         </div>
 
-        <p style={{ color: '#f97316', fontSize: 'clamp(10px, 1.4vw, 13px)', fontWeight: 700, letterSpacing: '0.18em', margin: 'clamp(22px, 4vh, 34px) 0 14px' }}>
-          FREE · NO LOGIN
-        </p>
-
         <h1 style={{
           fontFamily: 'var(--font-barlow-condensed), sans-serif',
           fontWeight: 800,
           fontSize: 'clamp(30px, 7vw, 76px)',
           lineHeight: 1.0,
           letterSpacing: '-0.01em',
-          margin: 0,
+          margin: 'clamp(22px, 4vh, 34px) 0 0',
         }}>
           The Australian Building<br />Materials Library
         </h1>
 
         <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 'clamp(14px, 2.2vw, 20px)', lineHeight: 1.5, maxWidth: 'min(520px, 90%)', margin: 'clamp(14px, 2.5vh, 22px) auto 0' }}>
           Build a list, link to local stockists — in seconds.
+        </p>
+
+        <p style={{ color: '#f97316', fontSize: 'clamp(10px, 1.4vw, 13px)', fontWeight: 700, letterSpacing: '0.18em', margin: 'clamp(22px, 4vh, 30px) 0 12px' }}>
+          FREE · NO LOGIN
         </p>
 
         <a
@@ -83,20 +83,15 @@ export default async function Home() {
             padding: 'clamp(13px, 1.6vh, 18px) clamp(30px, 5vw, 48px)',
             borderRadius: '12px',
             textDecoration: 'none',
-            marginTop: 'clamp(22px, 4vh, 30px)',
             boxShadow: '0 10px 26px rgba(0,0,0,0.22)',
           }}
         >
           Browse the Library →
         </a>
 
-        {user ? (
+        {user && (
           <a href="/dashboard" style={{ display: 'block', color: 'rgba(255,255,255,0.82)', fontSize: '13px', fontWeight: 600, marginTop: '16px', textDecoration: 'none' }}>
             {builderName ? `Welcome back, ${builderName} — Builder Portal →` : 'Go to your Builder Portal →'}
-          </a>
-        ) : (
-          <a href="/login" style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: 600, marginTop: '16px', textDecoration: 'none' }}>
-            Already a builder? Sign in →
           </a>
         )}
       </div>

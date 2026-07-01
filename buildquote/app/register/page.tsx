@@ -110,15 +110,17 @@ export default function RegisterPage() {
       return
     }
 
-    // Sign in immediately after account creation
+    // Sign in immediately after account creation, then return to `next` if the
+    // user arrived from a gated flow (e.g. the RFQ "Request a Quote" round-trip).
+    const next = new URLSearchParams(window.location.search).get('next')
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
     if (signInError) {
       setError('Account created — please sign in.')
-      router.push('/login')
+      router.push(next ? `/login?next=${encodeURIComponent(next)}` : '/login')
       return
     }
 
-    router.push('/dashboard')
+    router.push(next || '/dashboard')
     router.refresh()
   }
 

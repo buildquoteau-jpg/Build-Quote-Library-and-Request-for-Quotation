@@ -317,11 +317,11 @@ export function LibraryPageClient({ initialSystems, categories, manufacturerList
       <section style={{ background: 'linear-gradient(155deg, #0d3347 0%, #185D7A 55%, #1e7399 100%)', padding: '20px 20px 16px' }}>
         <div style={{ maxWidth: '820px', margin: '0 auto', textAlign: 'center' }}>
 
-          <h1 style={{ margin: '0 0 5px', fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.1, fontFamily: 'var(--font-barlow-condensed), sans-serif' }}>
-            Building Product Library
+          <h1 style={{ margin: '0 0 5px', fontSize: 'clamp(24px, 3.2vw, 34px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.1, fontFamily: 'var(--font-barlow-condensed), sans-serif' }}>
+            Build<span style={{ color: '#f97316' }}>Quote</span> Library
           </h1>
           <p style={{ margin: '0 0 12px', fontSize: '14.5px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.45 }}>
-            Browse product systems and find local WA suppliers — in seconds.
+            Explore Australian building products and create project-ready materials lists.
           </p>
 
           {/* Search bar */}

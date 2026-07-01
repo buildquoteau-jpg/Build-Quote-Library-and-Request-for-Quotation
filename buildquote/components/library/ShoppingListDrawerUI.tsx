@@ -356,13 +356,18 @@ export function ShoppingListDrawerUI() {
           <div style={{ maxWidth: '720px', margin: '0 auto', padding: '16px 20px 20px' }}>
 
             {/* Header row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', gap: '10px' }}>
-              <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                {shoppingList.length} item{shoppingList.length !== 1 ? 's' : ''}
-              </p>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '12px', gap: '10px' }}>
+              <div>
+                <p style={{ margin: '0 0 3px', fontSize: '15px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' }}>
+                  Your materials list · {shoppingList.length} item{shoppingList.length !== 1 ? 's' : ''}
+                </p>
+                <p style={{ margin: 0, fontSize: '12px', color: '#6b7280', lineHeight: 1.4 }}>
+                  Edit quantities, change UOM or remove items — or keep browsing to add more, then Request a Quote.
+                </p>
+              </div>
               <button
                 onClick={clearList}
-                style={{ fontSize: '12px', fontWeight: 600, color: '#991b1b', background: '#fff1f2', border: '1.5px solid #fecdd3', borderRadius: '7px', padding: '5px 12px', cursor: 'pointer' }}
+                style={{ flexShrink: 0, fontSize: '12px', fontWeight: 600, color: '#991b1b', background: '#fff1f2', border: '1.5px solid #fecdd3', borderRadius: '7px', padding: '5px 12px', cursor: 'pointer' }}
               >
                 Clear all
               </button>
@@ -488,7 +493,8 @@ export function ShoppingListDrawerUI() {
         {/* Item count toggle */}
         <button
           onClick={() => setDrawerOpen(o => !o)}
-          style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', fontWeight: 700, fontSize: '14px', padding: 0, flexShrink: 0 }}
+          aria-label={drawerOpen ? 'Hide your materials list' : 'View and edit your materials list'}
+          style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: '10px', color: '#ffffff', cursor: 'pointer', fontWeight: 700, fontSize: '14px', padding: '7px 11px', flexShrink: 1, minWidth: 0 }}
         >
           {/* Floating "+N" that rises out of the cart when items are added */}
           {floatAdd > 0 && (
@@ -500,14 +506,17 @@ export function ShoppingListDrawerUI() {
             <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
             <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
           </svg>
-          <span>Your materials list</span>
-          <span style={{ fontWeight: 600, opacity: 0.75 }}>·&nbsp;
+          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Your materials list</span>
+          <span style={{ fontWeight: 600, opacity: 0.75, whiteSpace: 'nowrap' }}>·&nbsp;
             <span className="bq-count-pop" style={{ display: 'inline-block', animation: pulsing ? 'bq-countpop 0.6s ease-out' : 'none' }}>{shoppingList.length}</span>
             &nbsp;item{shoppingList.length !== 1 ? 's' : ''}
           </span>
-          <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-            <path d={drawerOpen ? 'M2 8L6 4L10 8' : 'M2 4L6 8L10 4'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginLeft: '2px', flexShrink: 0, background: 'rgba(255,255,255,0.2)', borderRadius: '6px', padding: '3px 8px', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap' }}>
+            {drawerOpen ? 'Hide' : 'View & edit'}
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+              <path d={drawerOpen ? 'M2 8L6 4L10 8' : 'M2 4L6 8L10 4'} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </span>
         </button>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
