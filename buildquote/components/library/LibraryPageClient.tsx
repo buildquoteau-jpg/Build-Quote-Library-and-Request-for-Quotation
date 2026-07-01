@@ -320,7 +320,7 @@ export function LibraryPageClient({ initialSystems, categories, manufacturerList
           <h1 style={{ margin: '0 0 5px', fontSize: 'clamp(24px, 3.2vw, 34px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.1, fontFamily: 'var(--font-barlow-condensed), sans-serif' }}>
             Build<span style={{ color: '#f97316' }}>Quote</span> Library
           </h1>
-          <p style={{ margin: '0 0 12px', fontSize: '14.5px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.45 }}>
+          <p style={{ margin: '0 0 20px', fontSize: '14.5px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.45 }}>
             Explore Australian building products and create project-ready materials lists.
           </p>
 
@@ -353,7 +353,7 @@ export function LibraryPageClient({ initialSystems, categories, manufacturerList
 
           {/* Example chips */}
           {!query && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center', alignItems: 'center', marginBottom: '18px' }}>
               <span style={{ fontSize: '12.5px', color: 'rgba(255,255,255,0.55)' }}>Try:</span>
               {EXAMPLES.map(ex => (
                 <button key={ex} onClick={() => setQuery(ex)}
