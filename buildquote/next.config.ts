@@ -33,8 +33,10 @@ const securityHeaders = [
       "object-src 'none'",
       // Restrict framing to same origin (belt-and-suspenders with X-Frame-Options)
       "frame-ancestors 'self'",
-      // Upgrade insecure requests in production
-      "upgrade-insecure-requests",
+      // Upgrade insecure requests in production only — on http://localhost it
+      // rewrites same-origin subresources to https://localhost, which breaks
+      // local images/scripts (nothing listens on https in dev)
+      ...(process.env.NODE_ENV === 'production' ? ['upgrade-insecure-requests'] : []),
     ].join('; '),
   },
 ]
@@ -56,6 +58,16 @@ const nextConfig: NextConfig = {
         // Apply to all routes
         source: '/(.*)',
         headers: securityHeaders,
+      },
+    ]
+  },
+
+  async rewrites() {
+    return [
+      {
+        // Clean URL for the static explainer video page (public/explainer/index.html)
+        source: '/explainer',
+        destination: '/explainer/index.html',
       },
     ]
   },
