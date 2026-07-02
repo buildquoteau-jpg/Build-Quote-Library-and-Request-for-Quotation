@@ -553,6 +553,9 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
   const [selectedColour,     setSelectedColour]     = useState<string | null>(null)
   const [stockistsOpen,      setStockistsOpen]      = useState(false)
   const [isLoggedIn,         setIsLoggedIn]         = useState<boolean | null>(null)
+  const [builderId,          setBuilderId]          = useState<string | null>(null)
+  const [favourited,         setFavourited]         = useState(false)
+  const [favBusy,            setFavBusy]            = useState(false)
   const [rfqStockistId,      setRfqStockistId]      = useState<string | null>(null)
   const [postcode,           setPostcode]           = useState('')
   const [justAdded,          setJustAdded]          = useState(0)
@@ -562,14 +565,56 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
   const mfrName = system.manufacturer?.name ?? 'manufacturer'
 
   // Auth gates the "Request a quote" action: only logged-in builders reach the
-  // RFQ flow; logged-out visitors get the shopping list path instead.
+  // RFQ flow; logged-out visitors get the shopping list path instead. Also loads
+  // whether this system is already one of the builder's favourites.
   useEffect(() => {
     let active = true
-    createSupabaseBrowserClient().auth.getSession().then(({ data: { session } }) => {
-      if (active) setIsLoggedIn(!!session?.user?.id)
+    const supabase = createSupabaseBrowserClient()
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const uid = session?.user?.id ?? null
+      if (!active) return
+      setIsLoggedIn(!!uid)
+      setBuilderId(uid)
+      if (uid) {
+        const { data } = await supabase
+          .from('builder_favourite_products')
+          .select('id').eq('builder_id', uid).eq('product_id', system.id).maybeSingle()
+        if (active) setFavourited(!!data)
+      }
     })
     return () => { active = false }
-  }, [])
+  }, [system.id])
+
+  // Toggle this system in the builder's Favourite Products (stored as a product
+  // row keyed by the system id).
+  async function toggleFavourite() {
+    if (!builderId || favBusy) return
+    setFavBusy(true)
+    const supabase = createSupabaseBrowserClient()
+    try {
+      if (favourited) {
+        await supabase.from('builder_favourite_products')
+          .delete().eq('builder_id', builderId).eq('product_id', system.id)
+        setFavourited(false)
+      } else {
+        await supabase.from('builder_favourite_products').insert({
+          builder_id: builderId,
+          product_id: system.id,
+          product_name: system.name,
+          manufacturer: system.manufacturer?.name ?? null,
+          sku: '',
+          description: system.description ?? '',
+          uom: '',
+          notes: 'Saved from Product Library',
+        })
+        setFavourited(true)
+      }
+    } catch (e) {
+      console.error('[favourite]', e)
+    } finally {
+      setFavBusy(false)
+    }
+  }
 
   function toggleProfile(idx: number) {
     setSelectedProfiles(prev => { const n = new Set(prev); n.has(idx) ? n.delete(idx) : n.add(idx); return n })
@@ -718,6 +763,32 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
           />
         )}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,30,45,0.88) 0%, rgba(15,30,45,0.2) 60%, transparent 100%)' }} />
+
+        {/* Favourite heart — logged-in builders only */}
+        {isLoggedIn && (
+          <button
+            type="button"
+            onClick={toggleFavourite}
+            disabled={favBusy}
+            aria-label={favourited ? 'Remove from favourites' : 'Save to favourites'}
+            title={favourited ? 'Remove from favourites' : 'Save to favourites'}
+            style={{
+              position: 'absolute', top: '12px', right: '12px', zIndex: 2,
+              width: '40px', height: '40px', borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(15,30,45,0.4)', border: '1.5px solid rgba(255,255,255,0.75)',
+              cursor: favBusy ? 'wait' : 'pointer', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)',
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24"
+              fill={favourited ? '#f97316' : 'none'}
+              stroke={favourited ? '#f97316' : '#ffffff'}
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21l7.78-7.55 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </button>
+        )}
+
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px 18px' }}>
           {system.manufacturer && (
             <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', marginBottom: '4px' }}>
