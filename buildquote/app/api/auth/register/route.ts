@@ -127,8 +127,8 @@ export async function POST(request: NextRequest) {
     supplier_name: 'Demo Supplier (Sandbox)',
     supplier_email: email.trim(),
     account_number: 'DEMO-0001',
-    phone: '0400 000 000',
-    website: 'https://buildquote.com.au',
+    supplier_phone: '0400 000 000',
+    supplier_website: 'https://buildquote.com.au',
     rep_name: 'Demo Rep',
     rep_mobile: '0400 000 000',
   })
