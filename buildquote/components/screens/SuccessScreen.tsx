@@ -13,18 +13,30 @@ interface SuccessScreenProps {
 
 export default function SuccessScreen({ rfqId, payload, onReset }: SuccessScreenProps) {
   const download = async (type: 'pdf' | 'csv') => {
-    const res = await fetch(`/api/${type}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    const blob = await res.blob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${rfqId}.${type}`
-    a.click()
-    URL.revokeObjectURL(url)
+    try {
+      const res = await fetch(`/api/${type}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) throw new Error('Download failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${rfqId}.${type}`
+      // iOS Safari ignores the download attribute — opening in a new tab lets the
+      // file be viewed and saved/shared via the iOS share sheet.
+      a.target = '_blank'
+      a.rel = 'noopener'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      // Delay revoke — revoking synchronously can cancel the download on Safari.
+      setTimeout(() => URL.revokeObjectURL(url), 15000)
+    } catch {
+      alert('Sorry — the download could not be generated. Please try again.')
+    }
   }
 
   const [joined, setJoined] = useState(false)
@@ -97,9 +109,9 @@ export default function SuccessScreen({ rfqId, payload, onReset }: SuccessScreen
         </Button>
 
         <div className="flex w-full gap-2 rounded-xl border border-border bg-ui-darker p-3 text-left">
-          <span className="mt-0.5 shrink-0 text-sm text-warning">⚠</span>
+          <span className="mt-0.5 shrink-0 text-sm">📩</span>
           <p className="text-sm font-medium leading-relaxed text-text-secondary">
-            BuildQuote does not track builder to supplier requests for quotation. Please contact your preferred supplier to confirm receipt and product availability.
+            Your RFQ has been emailed straight to your supplier. To keep things moving, follow up with them directly to confirm receipt, pricing and product availability.
           </p>
         </div>
 

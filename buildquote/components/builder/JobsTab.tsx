@@ -30,6 +30,7 @@ export default function JobsTab({ builderId, onViewQuotesForJob }: { builderId: 
   const supabase = createSupabaseBrowserClient()
   const router = useRouter()
   const [jobs, setJobs] = useState<Job[]>([])
+  const [loaded, setLoaded] = useState(false)
   const [rfqCounts, setRfqCounts] = useState<Record<string, number>>({})
   const [draftsByJob, setDraftsByJob] = useState<Record<string, string[]>>({})
   const [showForm, setShowForm] = useState(false)
@@ -63,6 +64,7 @@ export default function JobsTab({ builderId, onViewQuotesForJob }: { builderId: 
       drafts[row.job_id].push(row.id)
     }
     setDraftsByJob(drafts)
+    setLoaded(true)
   }
 
   useEffect(() => {
@@ -152,7 +154,11 @@ export default function JobsTab({ builderId, onViewQuotesForJob }: { builderId: 
         </button>
       </div>
 
-      {jobs.length === 0 && !showForm && (
+      {!loaded && !showForm && (
+        <div className="text-center py-16 text-text-muted text-sm">Loading your jobs…</div>
+      )}
+
+      {loaded && jobs.length === 0 && !showForm && (
         <div className="bg-surface-subtle border border-border-subtle rounded-2xl p-10 text-center">
           <p className="text-text-muted font-medium">No jobs yet. Add your first project.</p>
         </div>

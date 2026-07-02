@@ -30,11 +30,14 @@ export default function FavouriteProductsTab({ builderId }: { builderId: string 
   const [importMsg, setImportMsg] = useState('')
   const importFileRef = useRef<HTMLInputElement>(null)
 
+  const [loaded, setLoaded] = useState(false)
+
   useEffect(() => { loadProducts() }, [])
 
   async function loadProducts() {
     const { data } = await supabase.from('builder_favourite_products').select('*').eq('builder_id', builderId).order('product_name')
     setProducts((data || []) as FavProduct[])
+    setLoaded(true)
   }
 
   function openNew() { setForm(emptyProduct); setEditing(null); setShowForm(true) }
@@ -142,7 +145,11 @@ export default function FavouriteProductsTab({ builderId }: { builderId: string 
           className="w-full border border-border rounded-xl px-4 py-3 text-sm mb-5 focus:outline-none focus:border-navy focus:ring-2 focus:ring-navy/10 transition" />
       )}
 
-      {products.length === 0 && !showForm && (
+      {!loaded && !showForm && (
+        <div className="text-center py-16 text-text-muted text-sm">Loading your favourites…</div>
+      )}
+
+      {loaded && products.length === 0 && !showForm && (
         <div className="bg-surface-subtle border border-border-subtle rounded-2xl p-10 text-center">
           <p className="text-text-muted font-medium mb-2">No favourite products yet.</p>
           <p className="text-text-faint text-sm">Browse the product library and add products you use often.</p>

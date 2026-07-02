@@ -31,6 +31,7 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
   const supabase = createSupabaseBrowserClient()
   const router = useRouter()
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [loaded, setLoaded] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [showMap, setShowMap] = useState(false)
   const [editing, setEditing] = useState<Supplier | null>(null)
@@ -46,6 +47,7 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
   async function loadSuppliers() {
     const { data } = await supabase.from('builder_suppliers').select('*').eq('builder_id', builderId).order('supplier_name')
     setSuppliers((data || []) as Supplier[])
+    setLoaded(true)
   }
 
   const initMap = useCallback(() => {
@@ -203,7 +205,11 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
         </div>
       </div>
 
-      {suppliers.length === 0 && !showForm && !showMap && (
+      {!loaded && !showForm && !showMap && (
+        <div className="text-center py-16 text-text-muted text-sm">Loading your suppliers…</div>
+      )}
+
+      {loaded && suppliers.length === 0 && !showForm && !showMap && (
         <div className="bg-surface-subtle border border-border-subtle rounded-2xl p-10 text-center">
           <p className="text-text-muted font-medium">No preferred suppliers yet. Find one on the map or add manually.</p>
         </div>
