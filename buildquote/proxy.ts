@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { verifyAccessCookie } from '@/app/api/access/route'
 
 // Routes that are always public — no demo password required
-const PUBLIC_PATHS = ['/', '/coming-soon', '/privacy', '/terms', '/access', '/flyer']
+const PUBLIC_PATHS = ['/', '/coming-soon', '/privacy', '/terms', '/access', '/flyer', '/explainer']
 
 function isPublicPath(pathname: string) {
   return (
