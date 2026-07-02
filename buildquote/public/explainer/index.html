@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuildQuote — The whole system. One card.</title>
+<meta name="description" content="Watch how BuildQuote distils a building product system into one System Card — profiles, specs, part numbers, components, guides and local stockists.">
+<link rel="icon" href="/favicon-32.png">
+<link rel="canonical" href="https://buildquote.com.au/explainer">
+<meta property="og:title" content="BuildQuote — The whole system. One card.">
+<meta property="og:description" content="A 90-second look at the BuildQuote System Card — everything a builder needs to order, in one place.">
+<meta property="og:url" content="https://buildquote.com.au/explainer">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://buildquote.com.au/explainer/home-screen.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:   #185D7A;
+    --deep:   #091524;
+    --teal:   #4FCBB0;
+    --orange: #f97316;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: #04090f;
+    overflow: hidden;
+    font-family: 'Barlow', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  /* ── STAGE: fixed 1600x900, scaled to fit the window ── */
+  #stagewrap {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #stage {
+    width: 1600px; height: 900px;
+    position: relative;
+    overflow: hidden;
+    background: var(--deep);
+    background-image: radial-gradient(ellipse 90% 70% at 50% 38%, #0f2745 0%, #091524 100%);
+    transform-origin: center center;
+    color: #fff;
+  }
+
+  .scene { position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: opacity .55s ease; }
+  .scene.on { opacity: 1; pointer-events: auto; }
+
+  /* ══ SCENE 1 — THE SEARCH ══ */
+  #pile { position: absolute; inset: 0; transform-origin: 50% 46%; }
+  #pile.collapse {
+    transition: transform 1.15s cubic-bezier(.55,-0.15,.85,.4), opacity 1.05s ease;
+    transform: scale(0.04) rotate(9deg);
+    opacity: 0;
+  }
+  .paper {
+    position: absolute;
+    opacity: 0;
+    border-radius: 6px;
+    box-shadow: 0 22px 55px rgba(0,0,0,.55);
+    border: 1px solid rgba(255,255,255,.12);
+    background: #fff;
+  }
+  .paper.in { animation: slam .5s cubic-bezier(.2,1.1,.4,1) forwards; }
+  @keyframes slam {
+    0%   { opacity: 0; transform: scale(1.28) rotate(var(--r)); }
+    100% { opacity: 1; transform: scale(1)    rotate(var(--r)); }
+  }
+  #hook {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 0 200px;
+    pointer-events: none;
+    opacity: 1;
+    background: radial-gradient(ellipse 75% 55% at 50% 50%, rgba(4,9,15,.82) 0%, rgba(4,9,15,.55) 55%, rgba(4,9,15,0) 100%);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  #hook.off { opacity: 0; transform: translateY(-26px); }
+  .hookline {
+    font-size: 52px; font-weight: 800; letter-spacing: -1px; line-height: 1.22;
+    max-width: 1150px;
+    text-shadow: 0 3px 10px rgba(4,9,15,.95), 0 10px 45px rgba(4,9,15,.95), 0 0 80px rgba(4,9,15,.8);
+    opacity: 0; transform: translateY(18px);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  .hookline.on { opacity: 1; transform: translateY(0); }
+  .hookline em { font-style: normal; color: var(--orange); }
+  #hookb { margin-top: 18px; }
+  .ask {
+    position: absolute;
+    opacity: 0;
+    background: rgba(9,21,36,.93);
+    border: 2px solid var(--teal);
+    color: #fff;
+    font-weight: 800; font-size: 40px; letter-spacing: -0.5px;
+    padding: 14px 32px; border-radius: 14px;
+    box-shadow: 0 14px 40px rgba(0,0,0,.5);
+  }
+  .ask.last { background: var(--orange); border-color: var(--orange); }
+  .ask.in { animation: pop .38s cubic-bezier(.2,1.4,.4,1) forwards; }
+  @keyframes pop {
+    0%   { opacity: 0; transform: scale(.5) rotate(var(--r)); }
+    100% { opacity: 1; transform: scale(1)  rotate(var(--r)); }
+  }
+
+  /* ══ SCENE 2 — SYSTEM CARD REVEAL ══ */
+  #cardframe {
+    position: absolute; left: 130px; top: 50px;
+    width: 720px; height: 800px;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 40px 110px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.16);
+    opacity: 0; transform: scale(.18);
+    transition: opacity .9s ease, transform .95s cubic-bezier(.2,.85,.3,1);
+  }
+  #cardframe.in { opacity: 1; transform: scale(1); }
+  #cardimg {
+    position: absolute; left: -80px; top: 0;
+    width: 880px; display: block;
+  }
+  #cardimg.scroll {
+    transition: transform 28000ms linear;
+    transform: translateY(-1467px);
+  }
+  #h2card {
+    position: absolute; left: 950px; top: 66px; width: 560px;
+    font-size: 46px; font-weight: 800; line-height: 1.14; letter-spacing: -1px;
+    opacity: 0; transform: translateX(34px);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  #h2card em { font-style: normal; color: var(--teal); }
+  #h2card.on { opacity: 1; transform: translateX(0); }
+  #h2sub {
+    position: absolute; left: 950px; top: 195px; width: 540px;
+    font-size: 26px; font-weight: 600; color: #8fb0c4; line-height: 1.35;
+    opacity: 0; transform: translateX(30px);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  #h2sub.on  { opacity: 1; transform: translateX(0); }
+  #h2sub.off { opacity: 0; transform: translateX(-18px); }
+  #checklist { position: absolute; left: 950px; top: 300px; width: 580px; }
+  .ck {
+    display: flex; align-items: center; gap: 20px;
+    font-size: 31px; font-weight: 700; letter-spacing: -0.3px;
+    height: 50px;
+    opacity: 0; transform: translateX(26px);
+    transition: opacity .45s ease, transform .45s ease;
+  }
+  .ck::before {
+    content: '\2713';
+    flex: 0 0 auto;
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(79,203,176,.16);
+    border: 2px solid var(--teal);
+    color: var(--teal);
+    font-size: 21px; font-weight: 800;
+  }
+  .ck.on { opacity: 1; transform: translateX(0); }
+  #card10 {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(9,21,36,.88);
+    opacity: 0; transition: opacity .7s ease;
+  }
+  #card10.on { opacity: 1; }
+  #card10 .big {
+    font-size: 110px; font-weight: 800; letter-spacing: -3px; text-align: center; line-height: 1.05;
+  }
+  #card10 .big em { font-style: normal; color: var(--orange); }
+
+  /* ══ SCENE 3 — THREE BEATS ══ */
+  .beat {
+    position: absolute; inset: 0;
+    display: flex; align-items: center;
+    padding: 0 90px;
+    opacity: 0; transform: translateY(26px);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  .beat.on  { opacity: 1; transform: translateY(0); }
+  .beat.off { opacity: 0; transform: translateY(-26px); }
+  .beat .txt { width: 620px; flex: 0 0 auto; padding-right: 50px; }
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 84px; height: 84px; border-radius: 50%;
+    background: var(--orange); color: #fff;
+    font-size: 46px; font-weight: 800;
+    margin-bottom: 30px;
+    box-shadow: 0 12px 34px rgba(249,115,22,.4);
+  }
+  .beat h3 { font-size: 62px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.08; }
+  .beat p  { font-size: 28px; font-weight: 600; color: #8fb0c4; margin-top: 22px; line-height: 1.35; }
+  .beat .shot {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .beat .shot img {
+    border-radius: 16px;
+    box-shadow: 0 34px 90px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.14);
+    background: #fff;
+  }
+  .beat .shot img.swap {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity .8s ease;
+  }
+  .beat .shot img.swap.on { opacity: 1; }
+
+  /* ══ SCENE 4 — END CARD ══ */
+  #scene4 {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+  }
+  .endbit {
+    opacity: 0; transform: translateY(22px);
+    transition: opacity .7s ease, transform .7s ease;
+  }
+  .endbit.on { opacity: 1; transform: translateY(0); }
+  #logo { font-size: 108px; font-weight: 800; letter-spacing: -3px; line-height: 1; }
+  #logo .b { color: #fff; }
+  #logo .q { color: var(--orange); }
+  #logosub {
+    font-size: 20px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    color: #4a6a80; margin-top: 14px;
+  }
+  #tagline {
+    font-size: 58px; font-weight: 800; letter-spacing: -1px; color: var(--teal);
+    margin-top: 56px;
+  }
+  #freeline { font-size: 27px; font-weight: 600; color: #8fb0c4; margin-top: 26px; }
+  #url { font-size: 40px; font-weight: 800; margin-top: 44px; letter-spacing: -0.5px; }
+  #url a {
+    color: #fff; text-decoration: none;
+    border-bottom: 3px solid var(--orange);
+    padding-bottom: 3px;
+    transition: color .2s ease;
+  }
+  #url a:hover { color: var(--orange); }
+
+  /* ── PLAY / REPLAY ── */
+  #playov {
+    position: absolute; inset: 0; z-index: 50;
+    background: var(--deep);
+    background-image: radial-gradient(ellipse 90% 70% at 50% 38%, #0f2745 0%, #091524 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  #playov .plogo { font-size: 64px; font-weight: 800; letter-spacing: -2px; margin-bottom: 10px; }
+  #playov .plogo .q { color: var(--orange); }
+  #playov .psub { font-size: 22px; color: #6d8fa5; font-weight: 600; margin-bottom: 60px; }
+  #playbtn {
+    width: 130px; height: 130px; border-radius: 50%;
+    background: var(--orange);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 18px 60px rgba(249,115,22,.45);
+    transition: transform .2s ease;
+  }
+  #playov:hover #playbtn { transform: scale(1.08); }
+  #playbtn::after {
+    content: '';
+    border-left: 42px solid #fff;
+    border-top: 26px solid transparent;
+    border-bottom: 26px solid transparent;
+    margin-left: 10px;
+  }
+  #playov .phint { font-size: 18px; color: #4a6a80; font-weight: 600; margin-top: 46px; }
+  #replay {
+    position: absolute; bottom: 46px; right: 56px; z-index: 40;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.28);
+    color: #fff; font-family: inherit; font-weight: 700; font-size: 20px;
+    padding: 13px 30px; border-radius: 999px; cursor: pointer;
+    opacity: 0; pointer-events: none;
+    transition: opacity .6s ease, background .2s ease;
+  }
+  #replay.on { opacity: 1; pointer-events: auto; }
+  #replay:hover { background: rgba(255,255,255,.2); }
+</style>
+</head>
+<body>
+
+<div id="stagewrap">
+  <div id="stage">
+
+    <!-- ══ SCENE 1 — THE SEARCH ══ -->
+    <div class="scene on" id="scene1">
+      <div id="pile">
+        <img class="paper" id="p1" src="/explainer/install-diagram.jpg" style="--r:-8deg; width:430px; left:290px; top:130px;  transform:rotate(-8deg);">
+        <img class="paper" id="p2" src="/explainer/datasheet-1.png"    style="--r:6deg;  width:420px; left:880px; top:90px;   transform:rotate(6deg);">
+        <img class="paper" id="p3" src="/explainer/spec-detail.jpg"      style="--r:-4deg; width:520px; left:250px; top:430px;  transform:rotate(-4deg);">
+        <img class="paper" id="p4" src="/explainer/datasheet-2.png"  style="--r:10deg; width:410px; left:930px; top:420px;  transform:rotate(10deg);">
+        <img class="paper" id="p5" src="/explainer/install-detail.jpg"   style="--r:-2deg; width:560px; left:540px; top:250px;  transform:rotate(-2deg);">
+        <div class="ask" id="q1" style="--r:-3deg; left:300px; top:230px; transform:rotate(-3deg);">What sizes does it come in?</div>
+        <div class="ask" id="q2" style="--r:2deg;  left:790px; top:340px; transform:rotate(2deg);">Which fixing do I need?</div>
+        <div class="ask" id="q3" style="--r:-2deg; left:360px; top:500px; transform:rotate(-2deg);">What fire rating was it?</div>
+        <div class="ask last" id="q4" style="--r:3deg; left:700px; top:620px; transform:rotate(3deg);">and&hellip; Where do I buy it?</div>
+      </div>
+      <div id="hook">
+        <div class="hookline" id="hooka">Have you ever found yourself searching websites, guides, brochures&hellip;</div>
+        <div class="hookline" id="hookb">&hellip;gathering information for just <em>ONE</em> building product?</div>
+      </div>
+    </div>
+
+    <!-- ══ SCENE 2 — THE REVEAL ══ -->
+    <div class="scene" id="scene2">
+      <div id="cardframe">
+        <img id="cardimg" src="/explainer/system-card-full.png" alt="">
+      </div>
+      <div id="h2card">Introducing the <em>BuildQuote System&nbsp;Card</em></div>
+      <div id="h2sub">System Cards store everything you need in one place.</div>
+      <div id="checklist">
+        <div class="ck" id="ck1">Profiles</div>
+        <div class="ck" id="ck2">Colours &amp; finishes</div>
+        <div class="ck" id="ck3">Specs &amp; ratings</div>
+        <div class="ck" id="ck4">Part numbers</div>
+        <div class="ck" id="ck5">Components</div>
+        <div class="ck" id="ck6">Accessories</div>
+        <div class="ck" id="ck7">Install guides</div>
+        <div class="ck" id="ck8">Design guides</div>
+        <div class="ck" id="ck9">Tech guides</div>
+        <div class="ck" id="ck10">Local stockists</div>
+      </div>
+      <div id="card10"><div class="big">The whole system.<br><em>One card.</em></div></div>
+    </div>
+
+    <!-- ══ SCENE 3 — WHAT YOU CAN DO ══ -->
+    <div class="scene" id="scene3">
+      <div class="beat" id="beat1">
+        <div class="txt">
+          <div class="chip">1</div>
+          <h3>Take a shopping list to the stockist</h3>
+          <p>Tick what you need on the card — share the list straight from your phone.</p>
+        </div>
+        <div class="shot"><img src="/explainer/shopping-list.jpg" style="height:700px;"></div>
+      </div>
+      <div class="beat" id="beat2">
+        <div class="txt">
+          <div class="chip">2</div>
+          <h3>Save your favourites</h3>
+          <p>Jobs, suppliers &amp; products — kept in your Builder Portal.</p>
+        </div>
+        <div class="shot"><img src="/explainer/builder-portal.png" style="width:800px;"></div>
+      </div>
+      <div class="beat" id="beat3">
+        <div class="txt">
+          <div class="chip">3</div>
+          <h3>Send a professional RFQ</h3>
+          <p>Emailed straight to your supplier — with PDF &amp; CSV attached.</p>
+        </div>
+        <div class="shot">
+          <img src="/explainer/rfq-sent.png" style="height:660px;">
+          <img src="/explainer/rfq-supplier.png" style="height:620px;" class="swap" id="rfqswap">
+        </div>
+      </div>
+      <div class="beat" id="beat4">
+        <div class="txt">
+          <h3>Start at <span style="color:var(--orange);">BuildQuote</span></h3>
+          <p>For simple materials lists — or a professional Request for Quotation.</p>
+        </div>
+        <div class="shot"><img src="/explainer/home-screen.png" style="height:700px;"></div>
+      </div>
+    </div>
+
+    <!-- ══ SCENE 4 — END CARD ══ -->
+    <div class="scene" id="scene4">
+      <div class="endbit" id="end1">
+        <div id="logo"><span class="b">Build</span><span class="q">Quote</span></div>
+        <div id="logosub">System Cards for Builders</div>
+      </div>
+      <div class="endbit" id="end2"><div id="tagline">The whole system. One card.</div></div>
+      <div class="endbit" id="end3"><div id="freeline">Free &middot; Built for Southwest WA builders</div></div>
+      <div class="endbit" id="end4"><div id="url"><a href="https://buildquote.com.au" target="_blank" rel="noopener">buildquote.com.au</a></div></div>
+    </div>
+
+    <button id="replay" onclick="location.reload()">&#8635; &nbsp;Replay</button>
+
+    <!-- ── PLAY OVERLAY ── -->
+    <div id="playov">
+      <div class="plogo"><span>Build</span><span class="q">Quote</span></div>
+      <div class="psub">System Card explainer</div>
+      <div id="playbtn"></div>
+      <div class="phint">Click anywhere to play &middot; press R to replay</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Scale the fixed 1600x900 stage to fit any window
+  function fit() {
+    const s = Math.min(innerWidth / 1600, innerHeight / 900);
+    document.getElementById('stage').style.transform = 'scale(' + s + ')';
+  }
+  addEventListener('resize', fit); fit();
+
+  const $ = id => document.getElementById(id);
+  const on  = id => { $(id).classList.remove('off'); $(id).classList.add('on'); };
+  const off = id => { $(id).classList.remove('on'); $(id).classList.add('off'); };
+
+  // ── THE TIMELINE (ms from play) ──
+  const cues = [
+    // Scene 1 — the search
+    [   300, () => on('hooka') ],
+    [  2000, () => on('hookb') ],
+    [  2900, () => $('p1').classList.add('in') ],
+    [  3400, () => $('p2').classList.add('in') ],
+    [  3900, () => $('p3').classList.add('in') ],
+    [  4400, () => $('p4').classList.add('in') ],
+    [  4900, () => $('p5').classList.add('in') ],
+    [  6000, () => off('hook') ],
+    [  6400, () => $('q1').classList.add('in') ],
+    [  7900, () => $('q2').classList.add('in') ],
+    [  9400, () => $('q3').classList.add('in') ],
+    [ 10900, () => $('q4').classList.add('in') ],
+    // Collapse into the card
+    [ 13400, () => $('pile').classList.add('collapse') ],
+    [ 14500, () => { $('scene1').classList.remove('on'); on('scene2'); $('cardframe').classList.add('in'); } ],
+    [ 15100, () => { on('h2card'); on('h2sub'); } ],
+    // The hero scroll (28s, linear)
+    [ 16400, () => $('cardimg').classList.add('scroll') ],
+    [ 19000, () => off('h2sub') ],
+    // The checklist builds while the card scrolls
+    [ 17600, () => on('ck1') ],
+    [ 20100, () => on('ck2') ],
+    [ 22600, () => on('ck3') ],
+    [ 25100, () => on('ck4') ],
+    [ 27600, () => on('ck5') ],
+    [ 30100, () => on('ck6') ],
+    [ 32600, () => on('ck7') ],
+    [ 35100, () => on('ck8') ],
+    [ 37600, () => on('ck9') ],
+    [ 40100, () => on('ck10') ],
+    // The line that anchors everything
+    [ 45000, () => on('card10') ],
+    // Scene 3 — what you can do
+    [ 49400, () => { $('scene2').classList.remove('on'); on('scene3'); } ],
+    [ 49900, () => on('beat1') ],
+    [ 56200, () => off('beat1') ],
+    [ 56800, () => on('beat2') ],
+    [ 62800, () => off('beat2') ],
+    [ 63400, () => on('beat3') ],
+    [ 67400, () => on('rfqswap') ],
+    [ 71000, () => off('beat3') ],
+    [ 71600, () => on('beat4') ],
+    // Scene 4 — end card
+    [ 77800, () => { $('scene3').classList.remove('on'); on('scene4'); } ],
+    [ 78300, () => on('end1') ],
+    [ 79100, () => on('end2') ],
+    [ 79900, () => on('end3') ],
+    [ 80700, () => on('end4') ],
+    [ 86000, () => on('replay') ],
+  ];
+
+  let started = false;
+  function play() {
+    if (started) return;
+    started = true;
+    $('playov').style.display = 'none';
+    cues.forEach(([t, fn]) => setTimeout(fn, t));
+  }
+  $('playov').addEventListener('click', play);
+  addEventListener('keydown', e => {
+    if (e.key === ' ' && !started) { e.preventDefault(); play(); }
+    if (e.key.toLowerCase() === 'r' && started) location.reload();
+  });
+  if (new URLSearchParams(location.search).has('autoplay')) play();
+</script>
+</body>
+</html>
