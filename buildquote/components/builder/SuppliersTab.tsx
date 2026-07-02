@@ -253,6 +253,11 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
             {s.account_number && <p className="text-sm text-text-muted mt-1">Account: {s.account_number}</p>}
             {s.rep_name && <p className="text-sm text-text-muted">Rep: {s.rep_name}{s.rep_mobile ? ` · ${s.rep_mobile}` : ''}</p>}
             {s.notes && <p className="text-xs text-text-muted mt-2 italic">{s.notes}</p>}
+            {s.supplier_name?.includes('Sandbox') && (
+              <p className="text-xs bg-brand-subtle text-brand rounded-lg px-3 py-2 mt-3 leading-relaxed font-medium">
+                <span className="font-bold">This is your demonstration supplier.</span> RFQs sent here arrive in your own inbox — use it to see exactly what your suppliers receive.
+              </p>
+            )}
             <button
               onClick={() => router.push(`/rfq?supplier=${s.id}`)}
               className="mt-3 w-full text-center text-xs font-semibold text-brand border border-brand/30 rounded-lg py-1.5 hover:bg-brand hover:text-white transition-colors"

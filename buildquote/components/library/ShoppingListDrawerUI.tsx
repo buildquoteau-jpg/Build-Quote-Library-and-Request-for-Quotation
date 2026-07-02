@@ -137,6 +137,36 @@ export function ShoppingListDrawerUI() {
         return lines
       }
 
+      // SKUs/part numbers have no spaces (only hyphens), so wrap breaks them at
+      // hyphens — keeping the hyphen at the end of each line — then hard-breaks
+      // any remaining segment that's still too wide.
+      function wrapSku(text: string, font: string, maxW: number): string[] {
+        if (!text) return []
+        mctx.font = font
+        const parts = text.split('-')
+        const lines: string[] = []
+        let line = ''
+        for (let i = 0; i < parts.length; i++) {
+          const seg = parts[i] + (i < parts.length - 1 ? '-' : '')
+          const test = line + seg
+          if (mctx.measureText(test).width > maxW && line) {
+            lines.push(line)
+            line = seg
+          } else {
+            line = test
+          }
+          // Hard-break a single segment that still overflows.
+          while (mctx.measureText(line).width > maxW && line.length > 1) {
+            let cut = line.length
+            while (cut > 1 && mctx.measureText(line.slice(0, cut)).width > maxW) cut--
+            lines.push(line.slice(0, cut))
+            line = line.slice(cut)
+          }
+        }
+        if (line) lines.push(line)
+        return lines
+      }
+
       const NAME_FONT = '600 14px Arial, Helvetica, sans-serif'
       const DESC_FONT = '12px Arial, Helvetica, sans-serif'
       const SKU_FONT  = '11px "Courier New", monospace'
@@ -144,7 +174,7 @@ export function ShoppingListDrawerUI() {
       const rows = shoppingList.map(item => {
         const nameLines = wrap(item.name, NAME_FONT, nameMaxW)
         const descLines = item.desc ? wrap(item.desc, DESC_FONT, nameMaxW) : []
-        const skuLines  = item.sku ? wrap(item.sku, SKU_FONT, skuMaxW) : []
+        const skuLines  = item.sku ? wrapSku(item.sku, SKU_FONT, skuMaxW) : []
         const leftH = nameLines.length * NAME_LH + descLines.length * DESC_LH
         const skuH  = skuLines.length * SKU_LH
         const contentH = Math.max(leftH, skuH, NAME_LH)

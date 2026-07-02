@@ -120,5 +120,19 @@ export async function POST(request: NextRequest) {
   })
   if (demoJobError) console.error('[register] Demo job seed error:', demoJobError.message)
 
+  // Seed a demonstration supplier addressed to the builder's own email, so they
+  // can send a sandbox RFQ and receive it themselves. Non-fatal.
+  const { error: demoSupplierError } = await adminSupabase.from('builder_suppliers').insert({
+    builder_id: authData.user.id,
+    supplier_name: 'Demo Supplier (Sandbox)',
+    supplier_email: email.trim(),
+    account_number: 'DEMO-0001',
+    phone: '0400 000 000',
+    website: 'https://buildquote.com.au',
+    rep_name: 'Demo Rep',
+    rep_mobile: '0400 000 000',
+  })
+  if (demoSupplierError) console.error('[register] Demo supplier seed error:', demoSupplierError.message)
+
   return NextResponse.json({ userId: authData.user.id })
 }
