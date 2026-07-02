@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from 'react'
 
-type Field = { name: string; label: string; type?: string; placeholder?: string; required?: boolean }
+type Field = {
+  name: string
+  label: string
+  type?: 'text' | 'tel' | 'email' | 'textarea' | 'select'
+  placeholder?: string
+  required?: boolean
+  options?: string[]
+}
 
 export function DemoNoticeBox({
   storageKey,
@@ -15,6 +22,7 @@ export function DemoNoticeBox({
   successMessage,
   maxWidth = '1100px',
   defaults = {},
+  footnote,
 }: {
   storageKey: string
   badge?: string
@@ -26,6 +34,7 @@ export function DemoNoticeBox({
   successMessage: string
   maxWidth?: string
   defaults?: Record<string, string>
+  footnote?: string
 }) {
   const [hidden, setHidden] = useState(true)   // start hidden until we've checked localStorage (avoids flash)
   const [open, setOpen] = useState(false)
@@ -113,15 +122,38 @@ export function DemoNoticeBox({
             {fields.map(f => (
               <div key={f.name}>
                 <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>{f.label}</label>
-                <input
-                  type={f.type ?? 'text'} required={f.required}
-                  placeholder={f.placeholder}
-                  value={values[f.name] ?? ''}
-                  onChange={e => setValues(v => ({ ...v, [f.name]: e.target.value }))}
-                  style={inputStyle}
-                  onFocus={e => { e.currentTarget.style.borderColor = '#185D7A' }}
-                  onBlur={e => { e.currentTarget.style.borderColor = '#d1d9e0' }}
-                />
+                {f.type === 'textarea' ? (
+                  <textarea
+                    required={f.required} placeholder={f.placeholder} rows={3}
+                    value={values[f.name] ?? ''}
+                    onChange={e => setValues(v => ({ ...v, [f.name]: e.target.value }))}
+                    style={{ ...inputStyle, resize: 'vertical', minHeight: '72px', lineHeight: 1.5 }}
+                    onFocus={e => { e.currentTarget.style.borderColor = '#185D7A' }}
+                    onBlur={e => { e.currentTarget.style.borderColor = '#d1d9e0' }}
+                  />
+                ) : f.type === 'select' ? (
+                  <select
+                    required={f.required}
+                    value={values[f.name] ?? ''}
+                    onChange={e => setValues(v => ({ ...v, [f.name]: e.target.value }))}
+                    style={{ ...inputStyle, appearance: 'auto' }}
+                    onFocus={e => { e.currentTarget.style.borderColor = '#185D7A' }}
+                    onBlur={e => { e.currentTarget.style.borderColor = '#d1d9e0' }}
+                  >
+                    <option value="" disabled>{f.placeholder ?? 'Select…'}</option>
+                    {(f.options ?? []).map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type={f.type ?? 'text'} required={f.required}
+                    placeholder={f.placeholder}
+                    value={values[f.name] ?? ''}
+                    onChange={e => setValues(v => ({ ...v, [f.name]: e.target.value }))}
+                    style={inputStyle}
+                    onFocus={e => { e.currentTarget.style.borderColor = '#185D7A' }}
+                    onBlur={e => { e.currentTarget.style.borderColor = '#d1d9e0' }}
+                  />
+                )}
               </div>
             ))}
             {error && <p style={{ margin: 0, fontSize: '12.5px', color: '#dc2626', fontWeight: 600 }}>{error}</p>}
@@ -139,6 +171,12 @@ export function DemoNoticeBox({
               </button>
             </div>
           </form>
+        )}
+
+        {footnote && (
+          <p style={{ margin: '14px 0 0', paddingTop: '12px', borderTop: '1px solid #eef2f5', fontSize: '12px', color: '#64748b', lineHeight: 1.5 }}>
+            {footnote}
+          </p>
         )}
       </div>
     </div>

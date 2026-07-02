@@ -78,8 +78,17 @@ export async function POST(request: NextRequest) {
   })
 
   if (authError || !authData.user) {
-    // Log the real error server-side; return generic message to avoid email enumeration
     console.error('[register] Auth error:', authError?.message)
+    // Surface the common "email already registered" case so the user can sign in
+    // instead of hitting a dead-end generic error (pre-launch UX > enumeration).
+    const msg = (authError?.message || '').toLowerCase()
+    const code = (authError as { code?: string } | null)?.code
+    if (code === 'email_exists' || msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
+      return NextResponse.json(
+        { error: 'This email address is already registered.', code: 'email_exists' },
+        { status: 409 },
+      )
+    }
     return NextResponse.json({ error: GENERIC_ERROR }, { status: 400 })
   }
 

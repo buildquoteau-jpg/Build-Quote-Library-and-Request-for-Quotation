@@ -443,18 +443,21 @@ export function LibraryPageClient({ initialSystems, categories, manufacturerList
         </div>
       </section>
 
-      {/* Pre-launch demo notice + manufacturer interest capture */}
+      {/* Pre-launch demo notice + feedback capture */}
       <DemoNoticeBox
         storageKey="library-demo"
         title="You&rsquo;ve landed on the BuildQuote Demonstration Platform"
-        body="The BuildQuote Product Library is pre-launch and is populated with demonstration brands and products. Manufacturers of Australian building products can get more information here."
-        ctaLabel="Get more information"
-        submitType="Manufacturer interest (Library)"
-        successMessage="Thanks — more info is on its way to your inbox."
+        body="The BuildQuote Product Library is pre-launch and is populated with demonstration brands and products. Please explore the BuildQuote Library and Builder Portal using our demonstration data — then share your feedback with us."
+        ctaLabel="Share your feedback"
+        submitType="Library feedback"
+        successMessage="Thanks — your feedback has been received."
+        footnote="BuildQuote is a Western Australian Government funded project — your feedback is valuable."
         fields={[
           { name: 'name', label: 'Your name', required: true, placeholder: 'Jane Smith' },
-          { name: 'phone', label: 'Phone', type: 'tel', placeholder: '0400 000 000' },
           { name: 'email', label: 'Email', type: 'email', required: true, placeholder: 'you@company.com.au' },
+          { name: 'role', label: 'I am a…', type: 'select', required: true, placeholder: 'Select one…',
+            options: ['Builder', 'Trade', 'Industry professional', 'Manufacturer', 'Supplier', 'Other'] },
+          { name: 'feedback', label: 'Your feedback', type: 'textarea', required: true, placeholder: 'What did you think? What would you like to see?' },
         ]}
       />
 

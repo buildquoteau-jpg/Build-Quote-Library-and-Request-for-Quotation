@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [step, setStep] = useState<'account' | 'profile'>('account')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [emailExists, setEmailExists] = useState(false)
 
   // Account fields
   const [email, setEmail] = useState('')
@@ -105,7 +106,8 @@ export default function RegisterPage() {
 
     if (!res.ok) {
       const d = await res.json()
-      setError(d.error || 'Registration failed')
+      setError(d.error || 'Registration failed. Please check your details and try again.')
+      setEmailExists(d.code === 'email_exists')
       setLoading(false)
       return
     }
@@ -157,6 +159,12 @@ export default function RegisterPage() {
           {error && (
             <div className="bg-error-bg border border-error-border text-error text-sm rounded-xl px-4 py-3 mb-5">
               {error}
+              {emailExists && (
+                <>
+                  {' '}
+                  <a href="/login" className="font-bold underline hover:no-underline">Sign in instead →</a>
+                </>
+              )}
             </div>
           )}
 
@@ -211,7 +219,7 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-text-secondary mb-1.5">ABN / ACN</label>
+                <label className="block text-sm font-semibold text-text-secondary mb-1.5">ABN / ACN <span className="font-normal text-text-muted">(optional)</span></label>
                 <input type="text" value={abn} onChange={e => setAbn(e.target.value)}
                   placeholder="12 345 678 901"
                   className="w-full border border-border rounded-xl px-4 py-3 text-sm text-text-primary bg-surface focus:outline-none focus:border-navy focus:ring-2 focus:ring-navy/10 transition" />
@@ -227,7 +235,7 @@ export default function RegisterPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-semibold text-text-secondary mb-1.5">Office phone</label>
+                  <label className="block text-sm font-semibold text-text-secondary mb-1.5">Office phone <span className="font-normal text-text-muted">(optional)</span></label>
                   <input type="tel" value={officePhone} onChange={e => setOfficePhone(e.target.value)}
                     placeholder="08 9999 0000"
                     className="w-full border border-border rounded-xl px-4 py-3 text-sm text-text-primary bg-surface focus:outline-none focus:border-navy focus:ring-2 focus:ring-navy/10 transition" />

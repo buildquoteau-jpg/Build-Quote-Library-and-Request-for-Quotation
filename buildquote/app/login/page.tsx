@@ -97,7 +97,7 @@ function LoginForm() {
     }}>
 
       {/* Back to Library — obvious nav */}
-      <div style={{ width: '100%', maxWidth: '560px' }}>
+      <div style={{ width: '100%', maxWidth: '660px' }}>
         <a href="/library" style={{
           display: 'inline-flex', alignItems: 'center', gap: '7px',
           color: '#fff', fontSize: '14px', fontWeight: 700, textDecoration: 'none',
@@ -110,10 +110,10 @@ function LoginForm() {
       </div>
 
       {/* Header info */}
-      <div style={{ width: '100%', maxWidth: '560px', textAlign: 'center', color: '#fff', marginTop: '26px' }}>
+      <div style={{ width: '100%', maxWidth: '660px', textAlign: 'center', color: '#fff', marginTop: '26px' }}>
         <h1 style={{
           margin: '0 0 16px', fontFamily: 'var(--font-barlow-condensed), sans-serif',
-          fontWeight: 800, fontSize: 'clamp(24px, 4.2vw, 40px)', lineHeight: 1.12, letterSpacing: '-0.01em',
+          fontWeight: 800, fontSize: 'clamp(20px, 3.1vw, 32px)', lineHeight: 1.14, letterSpacing: '-0.01em',
         }}>
           Build<span style={{ color: '#f97316' }}>Quote</span> —<br />
           Request for building materials quotation —<br />
@@ -127,7 +127,7 @@ function LoginForm() {
 
         <ul style={{ listStyle: 'none', margin: '0 auto 20px', padding: 0, maxWidth: '430px', display: 'flex', flexDirection: 'column', gap: '11px', textAlign: 'left' }}>
           {BENEFITS.map(b => (
-            <li key={b} style={{ display: 'flex', gap: '11px', alignItems: 'flex-start', fontSize: '14.5px', lineHeight: 1.45, color: 'rgba(255,255,255,0.92)' }}>
+            <li key={b} style={{ display: 'flex', gap: '11px', alignItems: 'flex-start', fontSize: '16px', lineHeight: 1.5, color: 'rgba(255,255,255,0.94)' }}>
               <Check />
               {b}
             </li>
