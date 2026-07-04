@@ -92,7 +92,11 @@ export default async function SystemPage({
 
         {/* Card */}
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '32px 24px 80px' }}>
-          <SystemCardWrapper system={system} stockists={stockists} />
+          <SystemCardWrapper
+            system={system}
+            stockists={stockists}
+            cardUrl={`https://buildquote.com.au/library/${manufacturer}/${systemSlug}`}
+          />
 
           {/* Back link */}
           <div style={{ marginTop: '24px', textAlign: 'center' }}>

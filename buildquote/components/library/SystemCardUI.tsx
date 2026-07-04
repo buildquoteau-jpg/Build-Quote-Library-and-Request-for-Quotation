@@ -27,6 +27,9 @@ type Props = {
   system: LibrarySystem
   stockists?: Stockist[]
   onAddToList?: (items: ShoppingListItem[]) => void
+  // Absolute URL used by "Share System Card"; falls back to the current page
+  // URL when not provided.
+  cardUrl?: string
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -246,8 +249,11 @@ function ProfileGroupBlock({ groupKey, systemName, showSystemName, items, defaul
 
   const fmtKey     = formatGroupKey(groupKey)
   const keyAlreadyIn = systemName.toLowerCase().includes(fmtKey.toLowerCase().replace('mm', ''))
+  // Some datasets embed the full system name in each profile name, so the
+  // group key already reads "System Name 133mm Smooth" — don't prepend again.
+  const keyHasSystemName = fmtKey.toLowerCase().startsWith(systemName.toLowerCase())
   const displayKey = showSystemName
-    ? (keyAlreadyIn ? systemName : `${systemName} ${fmtKey}`)
+    ? (keyAlreadyIn ? systemName : keyHasSystemName ? fmtKey : `${systemName} ${fmtKey}`)
     : fmtKey
 
   return (
@@ -547,7 +553,7 @@ function ColoursSection({ colours, selected, onSelect }: {
 
 // ── Main card ─────────────────────────────────────────────────────────────────
 
-export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
+export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: Props) {
   const [selectedProfiles,   setSelectedProfiles]   = useState<Set<number>>(new Set())
   const [selectedComponents, setSelectedComponents] = useState<Set<number>>(new Set())
   const [selectedColour,     setSelectedColour]     = useState<string | null>(null)
@@ -559,6 +565,7 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
   const [rfqStockistId,      setRfqStockistId]      = useState<string | null>(null)
   const [postcode,           setPostcode]           = useState('')
   const [justAdded,          setJustAdded]          = useState(0)
+  const [cardLinkCopied,     setCardLinkCopied]     = useState(false)
 
   const posX = system.hero_image_position_x ?? 50
   const posY = system.hero_image_position_y ?? 50
@@ -731,6 +738,38 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
     }
   }
 
+  // Share the whole System Card (distinct from the shopping-list PNG share):
+  // native share sheet where available, otherwise copy the share text + link.
+  async function shareSystemCard() {
+    const url   = (cardUrl ?? window.location.href).trim()
+    const title = stripSystem(system.name)
+    const byLine = system.manufacturer ? `${title} — ${system.manufacturer.name}` : title
+    const full  = system.description?.trim() ?? ''
+    // Keep the share text short — cut long descriptions at a word boundary.
+    const desc  = full.length > 160
+      ? `${full.slice(0, 160).replace(/\s+\S*$/, '')}…`
+      : full
+    const text  = [byLine, desc].filter(Boolean).join('\n')
+
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title: byLine, text, url })
+        return
+      } catch (e) {
+        if ((e as Error)?.name === 'AbortError') return // user closed the sheet
+        // Share sheet unavailable/failed — fall through to clipboard.
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(`${text}\n${url}`)
+      setCardLinkCopied(true)
+      window.setTimeout(() => setCardLinkCopied(false), 2000)
+    } catch {
+      // Last resort — let the user copy manually.
+      window.prompt('Copy this link to share the System Card:', url)
+    }
+  }
+
   const hasSelections = selectedProfiles.size > 0 || selectedComponents.size > 0
   const totalSelected = selectedProfiles.size + selectedComponents.size
 
@@ -882,6 +921,34 @@ export function SystemCardUI({ system, stockists = [], onAddToList }: Props) {
                 : 'Select items above to add to your shopping list'}
             </button>
           )}
+
+          {/* Share System Card — share this whole card with a builder,
+              architect, supplier, partner or client (not the shopping list) */}
+          <button
+            type="button"
+            onClick={shareSystemCard}
+            style={{
+              ...ghostLinkStyle, width: '100%', cursor: 'pointer',
+              ...(cardLinkCopied
+                ? { color: '#166534', background: '#f0fdf4', border: '1.5px solid #86efac' }
+                : {}),
+            }}
+          >
+            {cardLinkCopied ? (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                Link copied — ready to paste
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#185D7A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+                Share System Card
+              </>
+            )}
+          </button>
 
           {/* See local stockists */}
           {stockists.length === 0 ? (
