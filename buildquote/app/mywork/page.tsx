@@ -129,6 +129,24 @@ export default function MyWorkPage() {
             About Melia Grace
           </h2>
 
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/melia-grace.png"
+            alt="Melia Grace"
+            width={128}
+            height={128}
+            style={{
+              width: 'clamp(96px, 15vw, 128px)',
+              height: 'clamp(96px, 15vw, 128px)',
+              objectFit: 'cover',
+              borderRadius: '50%',
+              border: '3px solid #fff',
+              boxShadow: '0 4px 16px rgba(15, 30, 45, 0.15)',
+              float: 'right',
+              margin: '4px 0 12px 18px',
+            }}
+          />
+
           <p style={bodyText}>
             Melia Grace is an independent product investigator and prototype builder based in
             South West Western Australia.
