@@ -740,20 +740,18 @@ export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: P
 
   // Share the whole System Card (distinct from the shopping-list PNG share):
   // native share sheet where available, otherwise copy the share text + link.
+  // Share just the title + canonical URL — no prefilled message, no promotional
+  // copy. The rich preview (image, description, counts) comes from the page's
+  // Open Graph / Twitter Card metadata (generateMetadata in page.tsx), which is
+  // what WhatsApp/iMessage/Slack/LinkedIn actually render when they unfurl the
+  // link — the share sheet text itself is not where that content lives.
   async function shareSystemCard() {
     const url   = (cardUrl ?? window.location.href).trim()
-    const title = stripSystem(system.name)
-    const byLine = system.manufacturer ? `${title} — ${system.manufacturer.name}` : title
-    const full  = system.description?.trim() ?? ''
-    // Keep the share text short — cut long descriptions at a word boundary.
-    const desc  = full.length > 160
-      ? `${full.slice(0, 160).replace(/\s+\S*$/, '')}…`
-      : full
-    const text  = [byLine, desc].filter(Boolean).join('\n')
+    const title = `${stripSystem(system.name)} — System Card`
 
     if (typeof navigator.share === 'function') {
       try {
-        await navigator.share({ title: byLine, text, url })
+        await navigator.share({ title, url })
         return
       } catch (e) {
         if ((e as Error)?.name === 'AbortError') return // user closed the sheet
@@ -761,12 +759,20 @@ export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: P
       }
     }
     try {
-      await navigator.clipboard.writeText(`${text}\n${url}`)
+      await navigator.clipboard.writeText(url)
       setCardLinkCopied(true)
       window.setTimeout(() => setCardLinkCopied(false), 2000)
+      return
     } catch {
-      // Last resort — let the user copy manually.
+      // Clipboard unavailable — fall through to the manual-copy prompt.
+    }
+    try {
+      // Last resort — let the user copy manually. Guarded separately: some
+      // contexts (embeds, certain browser settings) block window.prompt too,
+      // and there's nothing further to fall back to at that point.
       window.prompt('Copy this link to share the System Card:', url)
+    } catch {
+      /* nothing more we can do */
     }
   }
 
@@ -937,7 +943,7 @@ export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: P
             {cardLinkCopied ? (
               <>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                Link copied — ready to paste
+                System Card link copied
               </>
             ) : (
               <>
@@ -983,6 +989,10 @@ export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: P
                       Number(b.service_postcodes.includes(postcode)) -
                       Number(a.service_postcodes.includes(postcode)))
                   : stockists
+                // A valid postcode with no matching stockist previously gave
+                // no feedback at all — the list just sat there unchanged, which
+                // reads as broken. Surface it explicitly instead.
+                const hasAreaMatch = validPostcode && stockists.some(s => s.service_postcodes.includes(postcode))
                 return (
                   <div style={{ marginTop: '12px' }}>
                     <input
@@ -999,6 +1009,17 @@ export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: P
                       onFocus={e => { e.currentTarget.style.borderColor = '#185D7A' }}
                       onBlur={e => { e.currentTarget.style.borderColor = '#d1d9e0' }}
                     />
+                    {validPostcode && !hasAreaMatch && (
+                      <div style={{
+                        marginBottom: '12px', padding: '10px 12px', borderRadius: '8px',
+                        background: '#eef6fa', border: '1px solid #b6dcea',
+                        fontSize: '12.5px', color: '#185D7A', lineHeight: 1.5,
+                      }}>
+                        No stockist currently lists <strong>{postcode}</strong> as a service area.
+                        Showing all {stockists.length} South West WA stockist{stockists.length !== 1 ? 's' : ''} below
+                        {' '}— it&rsquo;s worth calling ahead to check delivery, or request a quote and we&rsquo;ll help source it.
+                      </div>
+                    )}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                       {ordered.map(s => (
                         <StockistRow

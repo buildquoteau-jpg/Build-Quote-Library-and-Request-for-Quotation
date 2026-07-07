@@ -16,24 +16,60 @@ export async function generateMetadata({
   const system = await getSystemByManufacturerAndSlug(manufacturer, systemSlug)
   if (!system) return {}
 
-  const title = `${system.name} | ${system.manufacturer?.name ?? 'BuildQuote'} | Building Product Library`
-  const description =
-    system.description?.slice(0, 155) ??
-    `${system.name} by ${system.manufacturer?.name ?? 'BuildQuote'}. Browse profiles, components and colours. Request a quote from local South West WA suppliers.`
+  const canonicalUrl = `https://buildquote.com.au/library/${manufacturer}/${systemSlug}`
+  const mfrName = system.manufacturer?.name ?? null
+  const profileCount = system.system_profiles?.length ?? 0
+  const componentCount = system.system_components?.length ?? 0
+
+  // Rich share title for chat-app link unfurls (WhatsApp/iMessage/Slack/
+  // LinkedIn): "{name} · {manufacturer} · N profiles · M components". Each
+  // segment is omitted cleanly when missing/zero — never "0 profiles".
+  const ogTitle = [
+    system.name,
+    mfrName,
+    profileCount > 0 ? `${profileCount} profile${profileCount === 1 ? '' : 's'}` : null,
+    componentCount > 0 ? `${componentCount} component${componentCount === 1 ? '' : 's'}` : null,
+  ].filter(Boolean).join(' · ')
+
+  // Description: manufacturer-authored copy when present, else a category-based
+  // default. Cut at a word boundary for a clean social-preview length.
+  const category = system.category?.trim()
+  const rawDescription = system.description?.trim() || (
+    category
+      ? `${category} System Card with product specifications, compatible components and installation resources.`
+      : 'System Card with product specifications, compatible components and installation resources.'
+  )
+  const description = rawDescription.length > 160
+    ? `${rawDescription.slice(0, 160).replace(/\s+\S*$/, '')}…`
+    : rawDescription
+
+  // Absolute, valid image — the published hero image when present, else a
+  // generated BuildQuote-branded fallback (guaranteed correct 1200×630, never
+  // a broken/relative URL).
+  const heroUrl = system.hero_image_url?.trim()
+  const hasValidHero = !!heroUrl && /^https?:\/\//i.test(heroUrl)
+  const imageUrl = hasValidHero
+    ? heroUrl!
+    : `https://buildquote.com.au/api/og-fallback?title=${encodeURIComponent(system.name)}${mfrName ? `&manufacturer=${encodeURIComponent(mfrName)}` : ''}`
 
   return {
-    title,
+    title: `${system.name} — System Card`,
     description,
+    alternates: { canonical: canonicalUrl },
     openGraph: {
-      title,
-      description,
-      url: `https://buildquote.com.au/library/${manufacturer}/${systemSlug}`,
+      type: 'website',
       siteName: 'BuildQuote',
       locale: 'en_AU',
-      type: 'website',
-      ...(system.hero_image_url && {
-        images: [{ url: system.hero_image_url, alt: system.name }],
-      }),
+      url: canonicalUrl,
+      title: ogTitle,
+      description,
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: system.name }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: ogTitle,
+      description,
+      images: [imageUrl],
     },
   }
 }
