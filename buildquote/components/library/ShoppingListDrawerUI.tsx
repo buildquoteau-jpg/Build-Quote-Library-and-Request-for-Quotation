@@ -512,7 +512,7 @@ export function ShoppingListDrawerUI() {
         position: 'relative',
         background: '#185D7A', color: '#ffffff',
         padding: '12px 20px',
-        display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'space-between',
+        display: 'flex', alignItems: 'center', flexWrap: 'wrap', rowGap: '10px', gap: '10px', justifyContent: 'space-between',
         boxShadow: pulsing
           ? '0 -2px 12px rgba(0,0,0,0.2), 0 0 0 3px rgba(249,115,22,0.9), 0 -6px 30px rgba(249,115,22,0.5)'
           : '0 -2px 12px rgba(0,0,0,0.2)',
