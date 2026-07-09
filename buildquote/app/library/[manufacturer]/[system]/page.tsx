@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getSystemByManufacturerAndSlug, getStockistsForSystem } from '@/lib/data/getSystems'
+import { getStaticSystemByManufacturerAndSlug, getStaticStockists } from '@/lib/data/staticSystemCards'
 import { SystemCardWrapper } from '@/app/library/[manufacturer]/[system]/SystemCardWrapper'
 
 export const dynamic = 'force-dynamic'
@@ -13,7 +14,8 @@ export async function generateMetadata({
   params: Promise<{ manufacturer: string; system: string }>
 }): Promise<Metadata> {
   const { manufacturer, system: systemSlug } = await params
-  const system = await getSystemByManufacturerAndSlug(manufacturer, systemSlug)
+  const system = (await getSystemByManufacturerAndSlug(manufacturer, systemSlug))
+    ?? getStaticSystemByManufacturerAndSlug(manufacturer, systemSlug)
   if (!system) return {}
 
   const canonicalUrl = `https://buildquote.com.au/library/${manufacturer}/${systemSlug}`
@@ -82,10 +84,16 @@ export default async function SystemPage({
   params: Promise<{ manufacturer: string; system: string }>
 }) {
   const { manufacturer, system: systemSlug } = await params
-  const system = await getSystemByManufacturerAndSlug(manufacturer, systemSlug)
+  const liveSystem = await getSystemByManufacturerAndSlug(manufacturer, systemSlug)
+  const system = liveSystem ?? getStaticSystemByManufacturerAndSlug(manufacturer, systemSlug)
   if (!system) notFound()
 
-  const stockists = await getStockistsForSystem(system.id)
+  // Static package cards aren't in the `systems` table, so the Supabase
+  // stockist join can't find them — the package's own bundled stockist list
+  // (card.json → local_stockists) is loaded separately instead.
+  const stockists = liveSystem
+    ? await getStockistsForSystem(liveSystem.id)
+    : getStaticStockists(manufacturer, systemSlug)
 
   const jsonLd = {
     '@context': 'https://schema.org',

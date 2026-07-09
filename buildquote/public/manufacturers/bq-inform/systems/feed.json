@@ -1,0 +1,28 @@
+{
+  "format": "buildquote-system-card-feed",
+  "version": 1,
+  "generated_at": "2026-07-08T09:05:14.931Z",
+  "package_version": 1,
+  "install_path": "/system-cards/",
+  "site_url": "https://buildquote.com.au/manufacturers/bq-inform",
+  "manufacturer": {
+    "name": "BQ InForm",
+    "slug": "bq-inform",
+    "description": "BQ InForm Building Products manufactures interior lining and ceiling systems for the Australian residential construction market. The InForm range is proudly Australian made and includes VJ lining sheets, matching cornice profiles, window and door trims, and the associated fixings and adhesives required for a complete interior lining installation.",
+    "website_url": "https://buildquote.com.au/manufacturers/bq-inform/",
+    "logo": "assets/logo.webp"
+  },
+  "cards": [
+    {
+      "slug": "vj-lining",
+      "name": "BQ InForm VJ Lining",
+      "category": "Interior Linings",
+      "subcategory": "Tongue-and-groove VJ interior lining sheet",
+      "description": "BQ InForm VJ Lining is an Australian-made tongue-and-groove MDF lining sheet with a routed V-joint profile. Designed for interior wall and ceiling lining in residential construction. Available primed or in factory-applied colours. Suitable for nail, screw or adhesive fixing to timber or steel framing. Complete the installation with matching InForm cornice, window trim, door trim and joining strips.",
+      "path": "cards/vj-lining/",
+      "json": "cards/vj-lining/card.json",
+      "content": "cards/vj-lining/content.md",
+      "url": "https://buildquote.com.au/manufacturers/bq-inform/system-cards/cards/vj-lining/"
+    }
+  ]
+}
