@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getManufacturerBySlug, getSystemsForManufacturer } from '@/lib/data/getSystems'
+import { getStaticSystemsForManufacturer } from '@/lib/data/staticSystemCards'
 import { SystemCardTileUI } from '@/components/library/SystemCardTileUI'
 
 export const dynamic = 'force-dynamic'
@@ -48,7 +49,12 @@ export default async function ManufacturerPage({
   const mfr = await getManufacturerBySlug(manufacturer)
   if (!mfr) notFound()
 
-  const systems = await getSystemsForManufacturer(manufacturer)
+  // Experimental: static Data Studio package cards run alongside the live
+  // Supabase-backed systems for this manufacturer (see staticSystemCards.ts).
+  const systems = [
+    ...(await getSystemsForManufacturer(manufacturer)),
+    ...getStaticSystemsForManufacturer(manufacturer),
+  ]
 
   const heroImg = mfr.hero_wide_image_url ?? mfr.hero_image_url
   const heroPosY = (mfr.hero_wide_image_url ? mfr.hero_wide_image_position_y : mfr.hero_image_position_y) ?? 50

@@ -1,0 +1,34 @@
+{
+  "format": "buildquote-system-card-package",
+  "version": 1,
+  "package_version": 1,
+  "generated_at": "2026-07-08T09:05:14.931Z",
+  "manufacturer": "bq-inform",
+  "install_path": "/system-cards/",
+  "site_url": "https://buildquote.com.au/manufacturers/bq-inform",
+  "card_count": 1,
+  "cards": [
+    {
+      "slug": "vj-lining",
+      "name": "BQ InForm VJ Lining",
+      "path": "cards/vj-lining/index.html"
+    }
+  ],
+  "files": [
+    "system-cards/README.md",
+    "system-cards/assets/brand-hero.webp",
+    "system-cards/assets/logo.webp",
+    "system-cards/assets/site.css",
+    "system-cards/assets/system-card.js",
+    "system-cards/card-link-list.csv",
+    "system-cards/cards/vj-lining/assets/hero.webp",
+    "system-cards/cards/vj-lining/card.json",
+    "system-cards/cards/vj-lining/content.md",
+    "system-cards/cards/vj-lining/index.html",
+    "system-cards/cards/vj-lining/qr-code.png",
+    "system-cards/embed-snippets.html",
+    "system-cards/feed.json",
+    "system-cards/index.html",
+    "system-cards/install-guide.html"
+  ]
+}
