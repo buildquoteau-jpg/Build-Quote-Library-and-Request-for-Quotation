@@ -25,8 +25,10 @@ const securityHeaders = [
       // manufacturer imagery from many external CDNs (Supabase, Wix, etc.);
       // images can't execute code, so a broad img-src is low risk.
       "img-src 'self' data: https:",
-      // Connections: self + Supabase + Vercel analytics + Google Maps + Places API
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in https://va.vercel-scripts.com https://maps.googleapis.com https://maps.gstatic.com https://places.googleapis.com",
+      // Connections: self + Supabase + Vercel analytics + Google Maps + Places API +
+      // Data Studio (installed static System Card packages call back to
+      // studio.buildquote.com.au for live stockist data and share analytics)
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in https://va.vercel-scripts.com https://maps.googleapis.com https://maps.gstatic.com https://places.googleapis.com https://studio.buildquote.com.au",
       // Frames: self + Google Maps embed (stockist location maps on /library)
       "frame-src 'self' https://www.google.com",
       // No plugins, no object embeds
