@@ -77,10 +77,23 @@ function loadCardJson(cardPath: string): PackageCardJson | null {
 // URL the installed package is actually served from. Absolute (not
 // site-relative) matters here: og:image / twitter:image in generateMetadata
 // require a full https:// URL or link-preview crawlers won't render it.
+//
+// Also prefers a sibling .jpg over .webp when one exists: on-page display
+// (next/image, browsers) handles webp fine, but some link-preview crawlers
+// (notably WhatsApp's own client, as opposed to Meta's Sharing Debugger)
+// have shown inconsistent support for webp og:image — jpg is universally
+// safe. Falls back to the original path if no .jpg sibling was generated.
 function resolveAssetUrl(cardPath: string, relativeUrl: string | null): string | null {
   if (!relativeUrl) return null
   if (/^https?:\/\//i.test(relativeUrl)) return relativeUrl
-  const cleaned = relativeUrl.replace(/^\.\//, '')
+  let cleaned = relativeUrl.replace(/^\.\//, '')
+
+  if (/\.webp$/i.test(cleaned)) {
+    const jpgCleaned = cleaned.replace(/\.webp$/i, '.jpg')
+    const jpgFile = path.join(process.cwd(), 'public', cardPath, jpgCleaned)
+    if (fs.existsSync(jpgFile)) cleaned = jpgCleaned
+  }
+
   return `https://buildquote.com.au/${cardPath}/${cleaned}`
 }
 
