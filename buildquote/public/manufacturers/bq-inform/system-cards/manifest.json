@@ -1,8 +1,8 @@
 {
   "format": "buildquote-system-card-package",
   "version": 1,
-  "package_version": 1,
-  "generated_at": "2026-07-08T09:05:14.931Z",
+  "package_version": 2,
+  "generated_at": "2026-07-09T01:57:44.114Z",
   "manufacturer": "bq-inform",
   "install_path": "/system-cards/",
   "site_url": "https://buildquote.com.au/manufacturers/bq-inform",

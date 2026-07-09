@@ -3,7 +3,7 @@ import path from 'path'
 import type { LibrarySystem, Stockist } from '@/lib/data/getSystems'
 
 // Experimental: renders a BuildQuote Data Studio static "System Card" package
-// (installed under public/manufacturers/<slug>/systems/cards/<card-slug>/)
+// (installed under public/manufacturers/<slug>/system-cards/cards/<card-slug>/)
 // as a LibrarySystem, so it can sit next to the live Supabase-backed cards on
 // /library using the exact same SystemCardUI + ShoppingListProvider. Each
 // entry's `slug` is suffixed "-static" so it can never collide with a live
@@ -14,7 +14,7 @@ import type { LibrarySystem, Stockist } from '@/lib/data/getSystems'
 const STATIC_CARDS: { manufacturerSlug: string; cardPath: string; slugSuffix: string }[] = [
   {
     manufacturerSlug: 'bq-inform',
-    cardPath: 'manufacturers/bq-inform/systems/cards/vj-lining',
+    cardPath: 'manufacturers/bq-inform/system-cards/cards/vj-lining',
     slugSuffix: '-static',
   },
 ]
