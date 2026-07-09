@@ -11,6 +11,14 @@ function isPublicPath(pathname: string) {
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/favicon') ||
+    // /library and /manufacturers are meant to be shared publicly (System
+    // Card pages, shopping list, rich link previews) — gating them defeats
+    // the point of sharing them. A user-agent-based crawler bypass isn't
+    // reliable here: e.g. iOS WhatsApp generates its link preview
+    // client-side on the sender's phone with an ordinary browser UA, not a
+    // recognizable bot UA, so it would still hit the gate.
+    pathname.startsWith('/library') ||
+    pathname.startsWith('/manufacturers') ||
     // Includes the file types used by static assets under /public (e.g. the
     // manufacturer static System Card packages under /manufacturers/*/systems/):
     // stylesheets, scripts, data files and downloadable guides all need to be
@@ -19,41 +27,13 @@ function isPublicPath(pathname: string) {
   )
 }
 
-// Link-preview crawlers (carry no login/demo cookie) that need to reach real
-// /library/* content to generate rich WhatsApp/iMessage/Slack/LinkedIn/etc.
-// previews. Scoped to /library only — every other gated route (dashboard,
-// rfq, ...) is unaffected, and a human clicking the same link still hits
-// /access as normal. Not spoof-proof (User-Agent is client-supplied), but the
-// demo gate's threat model is "keep the pre-launch site out of search/casual
-// discovery," not access control on sensitive data, so that trade-off is fine.
-const CRAWLER_USER_AGENT_PATTERNS = [
-  /whatsapp/i,
-  /facebookexternalhit/i,
-  /facebot/i,
-  /slackbot/i,
-  /linkedinbot/i,
-  /twitterbot/i,
-  /discordbot/i,
-  /telegrambot/i,
-  /pinterest/i,
-  /skypeuripreview/i,
-  /vkshare/i,
-]
-
-function isLinkPreviewCrawler(userAgent: string | null): boolean {
-  if (!userAgent) return false
-  return CRAWLER_USER_AGENT_PATTERNS.some((re) => re.test(userAgent))
-}
-
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // ── Demo password gate ────────────────────────────────────────────────────
   // When DEMO_PASSWORD is set in env, all non-public routes require the cookie.
   const demoPassword = process.env.DEMO_PASSWORD
-  const bypassForCrawler =
-    pathname.startsWith('/library') && isLinkPreviewCrawler(request.headers.get('user-agent'))
-  if (demoPassword && !isPublicPath(pathname) && !bypassForCrawler) {
+  if (demoPassword && !isPublicPath(pathname)) {
     const accessCookie = request.cookies.get('bq_access')?.value
     if (!verifyAccessCookie(accessCookie, demoPassword)) {
       const accessUrl = request.nextUrl.clone()
