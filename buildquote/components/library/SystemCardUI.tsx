@@ -1046,7 +1046,7 @@ export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: P
           )}
 
           {/* Install guides */}
-          {(system.install_guide_urls ?? []).map((guide, i) => (
+          {(Array.isArray(system.install_guide_urls) ? system.install_guide_urls : []).map((guide, i) => (
             <GuideLink key={i} href={guide.url} context={`View ${mfrName}`} label="Installation guide" />
           ))}
 
