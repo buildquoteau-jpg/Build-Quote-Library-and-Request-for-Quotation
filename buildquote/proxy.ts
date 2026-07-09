@@ -11,7 +11,11 @@ function isPublicPath(pathname: string) {
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/favicon') ||
-    /\.(png|ico|svg|jpg|jpeg|webp|woff2?)$/.test(pathname)
+    // Includes the file types used by static assets under /public (e.g. the
+    // manufacturer static System Card packages under /manufacturers/*/systems/):
+    // stylesheets, scripts, data files and downloadable guides all need to be
+    // reachable without the demo cookie, same as images already are below.
+    /\.(png|ico|svg|jpg|jpeg|webp|woff2?|css|js|json|pdf|md|csv)$/.test(pathname)
   )
 }
 
