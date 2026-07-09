@@ -73,13 +73,15 @@ function loadCardJson(cardPath: string): PackageCardJson | null {
 }
 
 // card.json stores hero_image_url as a path relative to its own folder
-// (e.g. "./assets/hero.webp") — resolve it to the absolute public URL the
-// installed package is actually served from.
+// (e.g. "./assets/hero.webp") — resolve it to the absolute buildquote.com.au
+// URL the installed package is actually served from. Absolute (not
+// site-relative) matters here: og:image / twitter:image in generateMetadata
+// require a full https:// URL or link-preview crawlers won't render it.
 function resolveAssetUrl(cardPath: string, relativeUrl: string | null): string | null {
   if (!relativeUrl) return null
   if (/^https?:\/\//i.test(relativeUrl)) return relativeUrl
   const cleaned = relativeUrl.replace(/^\.\//, '')
-  return `/${cardPath}/${cleaned}`
+  return `https://buildquote.com.au/${cardPath}/${cleaned}`
 }
 
 function toLibrarySystem(card: PackageCardJson, cardPath: string, slugSuffix: string): LibrarySystem {
