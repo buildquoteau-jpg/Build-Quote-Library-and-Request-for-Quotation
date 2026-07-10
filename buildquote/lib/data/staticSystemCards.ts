@@ -57,6 +57,11 @@ const STATIC_CARDS: { manufacturerSlug: string; cardPath: string; slugSuffix: st
     cardPath: 'manufacturers/bq-timberlock/system-cards/cards/glulam-hardwood-pergola',
     slugSuffix: '-static',
   },
+  {
+    manufacturerSlug: 'build-stage',
+    cardPath: 'manufacturers/build-stage/system-cards/cards/timber-stud-wall-framing',
+    slugSuffix: '-static',
+  },
 ]
 
 type PackageCardJson = {

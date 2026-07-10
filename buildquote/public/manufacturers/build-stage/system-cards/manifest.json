@@ -1,0 +1,35 @@
+{
+  "format": "buildquote-system-card-package",
+  "version": 1,
+  "package_version": 1,
+  "generated_at": "2026-07-10T01:22:47.894Z",
+  "manufacturer": "build-stage",
+  "install_path": "/system-cards/",
+  "site_url": "https://buildquote.com.au/manufacturers/build-stage",
+  "card_count": 1,
+  "cards": [
+    {
+      "slug": "timber-stud-wall-framing",
+      "name": "Timber Stud Wall Framing",
+      "path": "cards/timber-stud-wall-framing/index.html"
+    }
+  ],
+  "files": [
+    "system-cards/README.md",
+    "system-cards/assets/brand-hero.jpg",
+    "system-cards/assets/brand-hero.png",
+    "system-cards/assets/site.css",
+    "system-cards/assets/system-card.js",
+    "system-cards/card-link-list.csv",
+    "system-cards/cards/timber-stud-wall-framing/assets/hero.jpg",
+    "system-cards/cards/timber-stud-wall-framing/assets/hero.webp",
+    "system-cards/cards/timber-stud-wall-framing/card.json",
+    "system-cards/cards/timber-stud-wall-framing/content.md",
+    "system-cards/cards/timber-stud-wall-framing/index.html",
+    "system-cards/cards/timber-stud-wall-framing/qr-code.png",
+    "system-cards/embed-snippets.html",
+    "system-cards/feed.json",
+    "system-cards/index.html",
+    "system-cards/install-guide.html"
+  ]
+}

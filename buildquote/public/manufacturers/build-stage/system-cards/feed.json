@@ -1,0 +1,28 @@
+{
+  "format": "buildquote-system-card-feed",
+  "version": 1,
+  "generated_at": "2026-07-10T01:22:47.894Z",
+  "package_version": 1,
+  "install_path": "/system-cards/",
+  "site_url": "https://buildquote.com.au/manufacturers/build-stage",
+  "manufacturer": {
+    "name": "Build Stage Systems by BuildQuote",
+    "slug": "build-stage",
+    "description": "Build Stage Systems by BuildQuote provides generic build-stage RFQ templates for common construction packages such as timber wall framing, concrete pads, hardwood decks, treated pine decks, insulation, fencing, retaining walls and trim packages. These are not manufacturer-certified product systems. They are generic quote-building templates to help builders prepare clearer RFQs for suppliers. Final product selection, compliance, engineering, quantities and suitability must be confirmed by the builder, supplier, manufacturer or relevant professional before ordering.",
+    "website_url": "https://buildquote.com.au/manufacturers/build-stage/",
+    "logo": null
+  },
+  "cards": [
+    {
+      "slug": "timber-stud-wall-framing",
+      "name": "Timber Stud Wall Framing",
+      "category": "Framing",
+      "subcategory": "Generic timber wall framing RFQ template",
+      "description": "Generic build-stage RFQ template for timber stud wall framing material supply. Use this system to request pricing for studs, top plates, bottom plates, noggings, lintels or headers as specified, bracing items, connectors, fixings, DPC and related wall framing materials. This is not a manufacturer-certified product system. Final timber size, grade, treatment, spacing, bracing, tie-down, engineering, quantities and compliance requirements must be confirmed from plans, engineering, supplier advice and relevant building requirements before ordering.",
+      "path": "cards/timber-stud-wall-framing/",
+      "json": "cards/timber-stud-wall-framing/card.json",
+      "content": "cards/timber-stud-wall-framing/content.md",
+      "url": "https://buildquote.com.au/manufacturers/build-stage/system-cards/cards/timber-stud-wall-framing/"
+    }
+  ]
+}
