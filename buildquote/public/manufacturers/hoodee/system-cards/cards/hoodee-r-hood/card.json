@@ -1,0 +1,203 @@
+{
+  "id": "604c0073-68fa-4e75-aba2-dfcb6af23aed",
+  "name": "Hoodee R Hood",
+  "product_code": "R-HOOD",
+  "slug": "hoodee-r-hood",
+  "category": "Window Hood",
+  "subcategory": "Aluminium Hood",
+  "description": "Hoodee ONE Range. R-profile aluminium window hood with a return or reveal detail, providing a refined architectural appearance alongside weather protection. Elevate your residential and commercial projects with sleek, artisanal durability. Constructed from 3mm custom folded interlocking aluminium with stainless steel fixings. Bolt-together design for easy nationwide transport and on-site assembly. Projection depth 200–400mm from building face. WA made.",
+  "hero_image_url": "./assets/hero.webp",
+  "hero_image_position_x": 50,
+  "hero_image_position_y": 40,
+  "australian_made": true,
+  "bal_rating": null,
+  "fire_rating": null,
+  "moisture_resistant": true,
+  "acoustic_rating": null,
+  "structural_grade": null,
+  "notes": "3mm custom folded interlocking aluminium with stainless steel fixings. Bolt-together design for ease of transport. Projection 200–400mm from building. Australian-made in Perth WA.",
+  "website_url": "https://www.hoodee.com.au",
+  "install_guide_urls": null,
+  "design_guide_url": null,
+  "tech_data_url": null,
+  "manufacturer": {
+    "name": "Hoodee",
+    "slug": "hoodee",
+    "logo_url": "../../assets/logo.webp"
+  },
+  "system_colours": [
+    {
+      "colour_name": "Corten rust-effect",
+      "image_url": null,
+      "sort_order": 0,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Powder-coated dual colour",
+      "image_url": null,
+      "sort_order": 1,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Powder-coated single colour",
+      "image_url": null,
+      "sort_order": 2,
+      "is_stocked": true
+    }
+  ],
+  "system_profiles": [
+    {
+      "id": "20baf642-b3d2-4f1f-8ca6-f6656f2b2b7a",
+      "profile_name": "1200 × 600",
+      "name": null,
+      "product_code": null,
+      "dimensions": "1200mm wide x 600mm face height - Projection 200-400mm (specified at order)",
+      "length_mm": 600,
+      "width_mm": 1200,
+      "height_mm": null,
+      "thickness_mm": 3,
+      "uom": "unit",
+      "supplier_pack_qty": 1,
+      "supplier_pack_uom": null,
+      "sort_order": 0
+    },
+    {
+      "id": "0fae7a3b-b4c9-4b63-b31d-a758b294e524",
+      "profile_name": "1200 × 1200",
+      "name": null,
+      "product_code": null,
+      "dimensions": "1200mm wide x 1200mm face height - Projection 200-400mm (specified at order)",
+      "length_mm": 1200,
+      "width_mm": 1200,
+      "height_mm": null,
+      "thickness_mm": 3,
+      "uom": "unit",
+      "supplier_pack_qty": 1,
+      "supplier_pack_uom": null,
+      "sort_order": 1
+    },
+    {
+      "id": "75852d31-2e69-45f1-bb49-1bec3e432b3d",
+      "profile_name": "1500 × 600",
+      "name": null,
+      "product_code": null,
+      "dimensions": "1500mm wide x 600mm face height - Projection 200-400mm (specified at order)",
+      "length_mm": 600,
+      "width_mm": 1500,
+      "height_mm": null,
+      "thickness_mm": 3,
+      "uom": "unit",
+      "supplier_pack_qty": 1,
+      "supplier_pack_uom": null,
+      "sort_order": 2
+    },
+    {
+      "id": "703c35fe-86c9-4c56-8896-b87cdc929951",
+      "profile_name": "1500 × 1200",
+      "name": null,
+      "product_code": null,
+      "dimensions": "1500mm wide x 1200mm face height - Projection 200-400mm (specified at order)",
+      "length_mm": 1200,
+      "width_mm": 1500,
+      "height_mm": null,
+      "thickness_mm": 3,
+      "uom": "unit",
+      "supplier_pack_qty": 1,
+      "supplier_pack_uom": null,
+      "sort_order": 3
+    },
+    {
+      "id": "413a9940-fb82-4a4e-9de0-b1544b49137a",
+      "profile_name": "1800 × 1200",
+      "name": null,
+      "product_code": null,
+      "dimensions": "1800mm wide x 1200mm face height - Projection 200-400mm (specified at order)",
+      "length_mm": 1200,
+      "width_mm": 1800,
+      "height_mm": null,
+      "thickness_mm": 3,
+      "uom": "unit",
+      "supplier_pack_qty": 1,
+      "supplier_pack_uom": null,
+      "sort_order": 4
+    },
+    {
+      "id": "749384ff-064e-4ada-bd87-7e41cb8180f2",
+      "profile_name": "2100 × 1800",
+      "name": null,
+      "product_code": null,
+      "dimensions": "2100mm wide x 1800mm face height - Projection 200-400mm (specified at order)",
+      "length_mm": 1800,
+      "width_mm": 2100,
+      "height_mm": null,
+      "thickness_mm": 3,
+      "uom": "unit",
+      "supplier_pack_qty": 1,
+      "supplier_pack_uom": null,
+      "sort_order": 5
+    },
+    {
+      "id": "f1063a1a-8a73-4317-8cec-ceccc4fc5791",
+      "profile_name": "Custom Size — Made to Order",
+      "name": null,
+      "product_code": null,
+      "dimensions": "Custom width x face height, Projection 200-400mm - all dimensions custom (contact manufacturer for quote)",
+      "length_mm": null,
+      "width_mm": null,
+      "height_mm": null,
+      "thickness_mm": 3,
+      "uom": "unit",
+      "supplier_pack_qty": 1,
+      "supplier_pack_uom": null,
+      "sort_order": 6
+    },
+    {
+      "id": "aca4b761-d3f2-49df-bfd9-7884bb404f56",
+      "profile_name": "Installation Service",
+      "name": null,
+      "product_code": null,
+      "dimensions": "Supply + professional installation service (contact manufacturer for quote)",
+      "length_mm": null,
+      "width_mm": null,
+      "height_mm": null,
+      "thickness_mm": null,
+      "uom": "service",
+      "supplier_pack_qty": 1,
+      "supplier_pack_uom": null,
+      "sort_order": 7
+    }
+  ],
+  "system_components": [
+    {
+      "id": "cf0aa796-304c-473f-9efa-8366a3a10e55",
+      "role": "Fastener",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "Stainless Steel Bolts",
+        "sku": null,
+        "description": "Stainless steel bolts for fixing and assembling Hoodee aluminium window hoods to wall substrate. Corrosion-resistant grade suitable for Australian coastal and general outdoor conditions.",
+        "category": "Fastener",
+        "uom": "pack",
+        "procurement_route": null
+      }
+    }
+  ],
+  "local_stockists": [
+    {
+      "id": "e8f598d2-2955-4221-8c9f-e6bc5a109834",
+      "name": "Hoodee",
+      "suburb": "Perth",
+      "state": "WA",
+      "region": null,
+      "phone": "0493 717 553",
+      "website_url": "https://www.hoodee.com.au/",
+      "google_maps_url": null,
+      "opening_hours": null,
+      "delivery_info": null,
+      "service_postcodes": [],
+      "trade_desk_email": "perthmetalindustries@gmail.com",
+      "confirmed_at": null
+    }
+  ]
+}

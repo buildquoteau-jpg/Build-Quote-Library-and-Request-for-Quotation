@@ -82,6 +82,36 @@ const STATIC_CARDS: { manufacturerSlug: string; cardPath: string; slugSuffix: st
     cardPath: 'manufacturers/bq-fibreline/system-cards/cards/weatherboard-plank',
     slugSuffix: '-static',
   },
+  {
+    manufacturerSlug: 'hoodee',
+    cardPath: 'manufacturers/hoodee/system-cards/cards/custom-hoodee',
+    slugSuffix: '-static',
+  },
+  {
+    manufacturerSlug: 'hoodee',
+    cardPath: 'manufacturers/hoodee/system-cards/cards/hoodee-b-hood',
+    slugSuffix: '-static',
+  },
+  {
+    manufacturerSlug: 'hoodee',
+    cardPath: 'manufacturers/hoodee/system-cards/cards/hoodee-j-hood',
+    slugSuffix: '-static',
+  },
+  {
+    manufacturerSlug: 'hoodee',
+    cardPath: 'manufacturers/hoodee/system-cards/cards/hoodee-l-hood',
+    slugSuffix: '-static',
+  },
+  {
+    manufacturerSlug: 'hoodee',
+    cardPath: 'manufacturers/hoodee/system-cards/cards/hoodee-r-hood',
+    slugSuffix: '-static',
+  },
+  {
+    manufacturerSlug: 'hoodee',
+    cardPath: 'manufacturers/hoodee/system-cards/cards/hoodee-u-hood',
+    slugSuffix: '-static',
+  },
 ]
 
 type PackageCardJson = {

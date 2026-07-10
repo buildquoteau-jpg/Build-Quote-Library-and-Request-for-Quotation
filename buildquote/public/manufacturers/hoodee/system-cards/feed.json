@@ -1,0 +1,83 @@
+{
+  "format": "buildquote-system-card-feed",
+  "version": 1,
+  "generated_at": "2026-07-10T02:19:58.328Z",
+  "package_version": 1,
+  "install_path": "/system-cards/",
+  "site_url": "https://www.hoodee.com.au",
+  "manufacturer": {
+    "name": "Hoodee",
+    "slug": "hoodee",
+    "description": "Sophisticated aluminium window hoods designed for modern Australian living. Our residential profiles offer sleek protection and artisanal craftsmanship to elevate any home exterior.\nArchitectural excellence in every profile. Bolt together design for ease of transport around Australia. \nCrafted in Australia",
+    "website_url": "https://www.hoodee.com.au/",
+    "logo": "assets/logo.webp"
+  },
+  "cards": [
+    {
+      "slug": "custom-hoodee",
+      "name": "Custom Hoodee",
+      "category": "Window Hood",
+      "subcategory": null,
+      "description": "Sophisticated aluminium window hoods designed for modern Australian living. Our residential profiles offer sleek protection and artisanal craftsmanship to elevate any home exterior.. Bolt together design for ease of transport around Australia. FullBim service available for bespoke install;ations.Custom Hoodee crafted to your specification.",
+      "path": "cards/custom-hoodee/",
+      "json": "cards/custom-hoodee/card.json",
+      "content": "cards/custom-hoodee/content.md",
+      "url": "https://www.hoodee.com.au/system-cards/cards/custom-hoodee/"
+    },
+    {
+      "slug": "hoodee-j-hood",
+      "name": "Hoodee J Hood",
+      "category": "Window Hood",
+      "subcategory": "Aluminium Hood",
+      "description": "Hoodee ONE Range. J-profile aluminium window hood with a curved or angled return at the base, combining overhead protection with a decorative lower return detail. Elevate your residential and commercial projects with sleek, artisanal durability.Constructed from 3mm custom folded interlocking aluminium with stainless steel fixings. Bolt-together design for easy nationwide transport and on-site assembly. Projection depth 200–400mm from building face. Australian-made.",
+      "path": "cards/hoodee-j-hood/",
+      "json": "cards/hoodee-j-hood/card.json",
+      "content": "cards/hoodee-j-hood/content.md",
+      "url": "https://www.hoodee.com.au/system-cards/cards/hoodee-j-hood/"
+    },
+    {
+      "slug": "hoodee-u-hood",
+      "name": "Hoodee U Hood",
+      "category": "Window Hood",
+      "subcategory": "Aluminium Hood",
+      "description": "Hoodee ONE Range. U-profile aluminium window hood wrapping over the top and both sides of the window opening, providing three-sided protection from sun and rain. A structural statement for both residential and commercial spaces, blending artisanal detail with industrial-grade durability.Constructed from 3mm custom folded interlocking aluminium with stainless steel fixings. Bolt-together design for easy nationwide transport and on-site assembly. Projection depth 200–400mm from building face. Australian made in WA.",
+      "path": "cards/hoodee-u-hood/",
+      "json": "cards/hoodee-u-hood/card.json",
+      "content": "cards/hoodee-u-hood/content.md",
+      "url": "https://www.hoodee.com.au/system-cards/cards/hoodee-u-hood/"
+    },
+    {
+      "slug": "hoodee-r-hood",
+      "name": "Hoodee R Hood",
+      "category": "Window Hood",
+      "subcategory": "Aluminium Hood",
+      "description": "Hoodee ONE Range. R-profile aluminium window hood with a return or reveal detail, providing a refined architectural appearance alongside weather protection. Elevate your residential and commercial projects with sleek, artisanal durability. Constructed from 3mm custom folded interlocking aluminium with stainless steel fixings. Bolt-together design for easy nationwide transport and on-site assembly. Projection depth 200–400mm from building face. WA made.",
+      "path": "cards/hoodee-r-hood/",
+      "json": "cards/hoodee-r-hood/card.json",
+      "content": "cards/hoodee-r-hood/content.md",
+      "url": "https://www.hoodee.com.au/system-cards/cards/hoodee-r-hood/"
+    },
+    {
+      "slug": "hoodee-l-hood",
+      "name": "Hoodee L Hood",
+      "category": "Window Hood",
+      "subcategory": "Aluminium Hood",
+      "description": "Hoodee ONE Range. L-profile aluminium window hood providing a top canopy and front face, suited to applications requiring a lean-to style projection over the window. Architectural excellence in every profile. Constructed from 3mm custom folded interlocking aluminium with stainless steel fixings. Bolt-together design for easy nationwide transport and on-site assembly. Projection depth 200–400mm from building face. Australian-made in WA.",
+      "path": "cards/hoodee-l-hood/",
+      "json": "cards/hoodee-l-hood/card.json",
+      "content": "cards/hoodee-l-hood/content.md",
+      "url": "https://www.hoodee.com.au/system-cards/cards/hoodee-l-hood/"
+    },
+    {
+      "slug": "hoodee-b-hood",
+      "name": "Hoodee B Hood",
+      "category": "Window Hood",
+      "subcategory": "Aluminium Hood",
+      "description": "Hoodee ONE Range. B-profile aluminium window hood featuring a box-style enclosure that fully encloses the top and sides for a clean architectural finish. A statement of artisanal craftsmanship to elevate any home exterior. Constructed from 3mm custom folded interlocking aluminium with stainless steel fixings. Bolt-together design for easy nationwide transport and on-site assembly. Projection depth 200–400mm from building face. Australian-made in WA.",
+      "path": "cards/hoodee-b-hood/",
+      "json": "cards/hoodee-b-hood/card.json",
+      "content": "cards/hoodee-b-hood/content.md",
+      "url": "https://www.hoodee.com.au/system-cards/cards/hoodee-b-hood/"
+    }
+  ]
+}

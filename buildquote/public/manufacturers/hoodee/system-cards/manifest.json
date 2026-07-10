@@ -1,0 +1,91 @@
+{
+  "format": "buildquote-system-card-package",
+  "version": 1,
+  "package_version": 1,
+  "generated_at": "2026-07-10T02:19:58.328Z",
+  "manufacturer": "hoodee",
+  "install_path": "/system-cards/",
+  "site_url": "https://www.hoodee.com.au",
+  "card_count": 6,
+  "cards": [
+    {
+      "slug": "custom-hoodee",
+      "name": "Custom Hoodee",
+      "path": "cards/custom-hoodee/index.html"
+    },
+    {
+      "slug": "hoodee-j-hood",
+      "name": "Hoodee J Hood",
+      "path": "cards/hoodee-j-hood/index.html"
+    },
+    {
+      "slug": "hoodee-u-hood",
+      "name": "Hoodee U Hood",
+      "path": "cards/hoodee-u-hood/index.html"
+    },
+    {
+      "slug": "hoodee-r-hood",
+      "name": "Hoodee R Hood",
+      "path": "cards/hoodee-r-hood/index.html"
+    },
+    {
+      "slug": "hoodee-l-hood",
+      "name": "Hoodee L Hood",
+      "path": "cards/hoodee-l-hood/index.html"
+    },
+    {
+      "slug": "hoodee-b-hood",
+      "name": "Hoodee B Hood",
+      "path": "cards/hoodee-b-hood/index.html"
+    }
+  ],
+  "files": [
+    "system-cards/README.md",
+    "system-cards/assets/brand-hero.jpg",
+    "system-cards/assets/brand-hero.webp",
+    "system-cards/assets/logo.webp",
+    "system-cards/assets/site.css",
+    "system-cards/assets/system-card.js",
+    "system-cards/card-link-list.csv",
+    "system-cards/cards/custom-hoodee/assets/hero.jpg",
+    "system-cards/cards/custom-hoodee/assets/hero.webp",
+    "system-cards/cards/custom-hoodee/card.json",
+    "system-cards/cards/custom-hoodee/content.md",
+    "system-cards/cards/custom-hoodee/index.html",
+    "system-cards/cards/custom-hoodee/qr-code.png",
+    "system-cards/cards/hoodee-b-hood/assets/hero.jpg",
+    "system-cards/cards/hoodee-b-hood/assets/hero.webp",
+    "system-cards/cards/hoodee-b-hood/card.json",
+    "system-cards/cards/hoodee-b-hood/content.md",
+    "system-cards/cards/hoodee-b-hood/index.html",
+    "system-cards/cards/hoodee-b-hood/qr-code.png",
+    "system-cards/cards/hoodee-j-hood/assets/hero.jpg",
+    "system-cards/cards/hoodee-j-hood/assets/hero.webp",
+    "system-cards/cards/hoodee-j-hood/card.json",
+    "system-cards/cards/hoodee-j-hood/content.md",
+    "system-cards/cards/hoodee-j-hood/index.html",
+    "system-cards/cards/hoodee-j-hood/qr-code.png",
+    "system-cards/cards/hoodee-l-hood/assets/hero.jpg",
+    "system-cards/cards/hoodee-l-hood/assets/hero.webp",
+    "system-cards/cards/hoodee-l-hood/card.json",
+    "system-cards/cards/hoodee-l-hood/content.md",
+    "system-cards/cards/hoodee-l-hood/index.html",
+    "system-cards/cards/hoodee-l-hood/qr-code.png",
+    "system-cards/cards/hoodee-r-hood/assets/hero.jpg",
+    "system-cards/cards/hoodee-r-hood/assets/hero.webp",
+    "system-cards/cards/hoodee-r-hood/card.json",
+    "system-cards/cards/hoodee-r-hood/content.md",
+    "system-cards/cards/hoodee-r-hood/index.html",
+    "system-cards/cards/hoodee-r-hood/qr-code.png",
+    "system-cards/cards/hoodee-u-hood/assets/hero.jpg",
+    "system-cards/cards/hoodee-u-hood/assets/hero.webp",
+    "system-cards/cards/hoodee-u-hood/card.json",
+    "system-cards/cards/hoodee-u-hood/content.md",
+    "system-cards/cards/hoodee-u-hood/index.html",
+    "system-cards/cards/hoodee-u-hood/qr-code.png",
+    "system-cards/embed-snippets.html",
+    "system-cards/feed.json",
+    "system-cards/index.html",
+    "system-cards/install-guide.html"
+  ]
+}

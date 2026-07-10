@@ -1,0 +1,101 @@
+{
+  "id": "5f267674-ee4b-4fca-b9e7-fd441eee8f81",
+  "name": "Custom Hoodee",
+  "product_code": null,
+  "slug": "custom-hoodee",
+  "category": "Window Hood",
+  "subcategory": null,
+  "description": "Sophisticated aluminium window hoods designed for modern Australian living. Our residential profiles offer sleek protection and artisanal craftsmanship to elevate any home exterior.. Bolt together design for ease of transport around Australia. FullBim service available for bespoke install;ations.Custom Hoodee crafted to your specification.",
+  "hero_image_url": "./assets/hero.webp",
+  "hero_image_position_x": 50,
+  "hero_image_position_y": 100,
+  "australian_made": true,
+  "bal_rating": null,
+  "fire_rating": null,
+  "moisture_resistant": true,
+  "acoustic_rating": null,
+  "structural_grade": null,
+  "notes": null,
+  "website_url": null,
+  "install_guide_urls": null,
+  "design_guide_url": null,
+  "tech_data_url": null,
+  "manufacturer": {
+    "name": "Hoodee",
+    "slug": "hoodee",
+    "logo_url": "../../assets/logo.webp"
+  },
+  "system_colours": [
+    {
+      "colour_name": "Custom colour",
+      "image_url": null,
+      "sort_order": 0,
+      "is_stocked": true
+    }
+  ],
+  "system_profiles": [
+    {
+      "id": "14c8546a-057f-4273-937c-cd039013615d",
+      "profile_name": "Installation service",
+      "name": null,
+      "product_code": null,
+      "dimensions": null,
+      "length_mm": null,
+      "width_mm": null,
+      "height_mm": null,
+      "thickness_mm": null,
+      "uom": null,
+      "supplier_pack_qty": null,
+      "supplier_pack_uom": null,
+      "sort_order": 0
+    },
+    {
+      "id": "e9572bd4-e2f2-4d3d-88ca-ef5fdb6796b2",
+      "profile_name": "Custom profile. Custom specifications. Please advise in you request for quotation.",
+      "name": null,
+      "product_code": null,
+      "dimensions": null,
+      "length_mm": null,
+      "width_mm": null,
+      "height_mm": null,
+      "thickness_mm": 3,
+      "uom": null,
+      "supplier_pack_qty": null,
+      "supplier_pack_uom": null,
+      "sort_order": 0
+    }
+  ],
+  "system_components": [
+    {
+      "id": "cf0aa796-304c-473f-9efa-8366a3a10e55",
+      "role": "Fastener",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "Stainless Steel Bolts",
+        "sku": null,
+        "description": "Stainless steel bolts for fixing and assembling Hoodee aluminium window hoods to wall substrate. Corrosion-resistant grade suitable for Australian coastal and general outdoor conditions.",
+        "category": "Fastener",
+        "uom": "pack",
+        "procurement_route": null
+      }
+    }
+  ],
+  "local_stockists": [
+    {
+      "id": "e8f598d2-2955-4221-8c9f-e6bc5a109834",
+      "name": "Hoodee",
+      "suburb": "Perth",
+      "state": "WA",
+      "region": null,
+      "phone": "0493 717 553",
+      "website_url": "https://www.hoodee.com.au/",
+      "google_maps_url": null,
+      "opening_hours": null,
+      "delivery_info": null,
+      "service_postcodes": [],
+      "trade_desk_email": "perthmetalindustries@gmail.com",
+      "confirmed_at": null
+    }
+  ]
+}
