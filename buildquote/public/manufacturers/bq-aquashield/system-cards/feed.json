@@ -1,0 +1,39 @@
+{
+  "format": "buildquote-system-card-feed",
+  "version": 1,
+  "generated_at": "2026-07-10T00:23:53.433Z",
+  "package_version": 1,
+  "install_path": "/system-cards/",
+  "site_url": "https://buildquote.com.au/manufacturers/bq-aquashield",
+  "manufacturer": {
+    "name": "BQ AquaShield Waterproofing",
+    "slug": "bq-aquashield",
+    "description": "BQ AquaShield Waterproofing manufactures a comprehensive range of waterproofing and moisture management systems for residential and light commercial construction. The AquaShield range covers liquid-applied membranes, sheet membranes, primers and drainage composites for wet areas, balconies, podiums and below-slab applications.",
+    "website_url": "https://buildquote.com.au/manufacturers/bq-aquashield/",
+    "logo": "assets/logo.webp"
+  },
+  "cards": [
+    {
+      "slug": "wet-area-membrane",
+      "name": "BQ AquaShield Wet Area Membrane",
+      "category": "Waterproofing",
+      "subcategory": "Liquid-applied wet area waterproofing membrane",
+      "description": "BQ AquaShield Wet Area Membrane is a single-component, liquid-applied polyurethane waterproofing membrane for internal wet areas including bathrooms, ensuites, laundries and shower recesses. Compliant with AS 3740 for internal wet area waterproofing. Applied in two coats over AquaShield Primer with fabric reinforcement at junctions.",
+      "path": "cards/wet-area-membrane/",
+      "json": "cards/wet-area-membrane/card.json",
+      "content": "cards/wet-area-membrane/content.md",
+      "url": "https://buildquote.com.au/manufacturers/bq-aquashield/system-cards/cards/wet-area-membrane/"
+    },
+    {
+      "slug": "external-membrane",
+      "name": "BQ AquaShield External Membrane",
+      "category": "Waterproofing",
+      "subcategory": "Sheet membrane external waterproofing system",
+      "description": "BQ AquaShield External Membrane is a torched-on SBS modified bitumen sheet membrane system for external waterproofing of balconies, podiums, planter boxes and below-slab applications. Compliant with AS 4654.2 for external waterproofing. Installed with AquaShield Primer and detail tape at laps and penetrations.",
+      "path": "cards/external-membrane/",
+      "json": "cards/external-membrane/card.json",
+      "content": "cards/external-membrane/content.md",
+      "url": "https://buildquote.com.au/manufacturers/bq-aquashield/system-cards/cards/external-membrane/"
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "id": "6fd99b10-f2a3-49a8-abed-fb9ab23186d5",
+  "name": "BQ AquaShield Wet Area Membrane",
+  "product_code": "BQ-AQ-WAM",
+  "slug": "wet-area-membrane",
+  "category": "Waterproofing",
+  "subcategory": "Liquid-applied wet area waterproofing membrane",
+  "description": "BQ AquaShield Wet Area Membrane is a single-component, liquid-applied polyurethane waterproofing membrane for internal wet areas including bathrooms, ensuites, laundries and shower recesses. Compliant with AS 3740 for internal wet area waterproofing. Applied in two coats over AquaShield Primer with fabric reinforcement at junctions.",
+  "hero_image_url": "./assets/hero.webp",
+  "hero_image_position_x": 50,
+  "hero_image_position_y": 50,
+  "australian_made": true,
+  "bal_rating": null,
+  "fire_rating": null,
+  "moisture_resistant": true,
+  "acoustic_rating": null,
+  "structural_grade": null,
+  "notes": null,
+  "website_url": "https://buildquote.com.au/manufacturers/bq-aquashield",
+  "install_guide_urls": [
+    {
+      "url": "https://buildquote.com.au/manufacturers/bq-aquashield/bq-aquashield-external-membrane-installation-guide.pdf",
+      "label": "Install guide"
+    }
+  ],
+  "design_guide_url": null,
+  "tech_data_url": "https://buildquote.com.au/manufacturers/bq-aquashield/bq-aquashield-external-membrane-technical-data-sheet.pdf",
+  "manufacturer": {
+    "name": "BQ AquaShield Waterproofing",
+    "slug": "bq-aquashield",
+    "logo_url": "../../assets/logo.webp"
+  },
+  "system_colours": [],
+  "system_profiles": [
+    {
+      "id": "2da47395-a3f2-443c-a0c5-68d8f401d6af",
+      "profile_name": "4L Pail",
+      "name": null,
+      "product_code": "BQ-AQ-WAM-4L",
+      "dimensions": "4 litre pail",
+      "length_mm": null,
+      "width_mm": null,
+      "height_mm": null,
+      "thickness_mm": null,
+      "uom": "pail",
+      "supplier_pack_qty": 4,
+      "supplier_pack_uom": "pails",
+      "sort_order": 10
+    },
+    {
+      "id": "9eb70b10-7075-435f-82a0-01518d4de95f",
+      "profile_name": "15L Pail",
+      "name": null,
+      "product_code": "BQ-AQ-WAM-15L",
+      "dimensions": "15 litre pail",
+      "length_mm": null,
+      "width_mm": null,
+      "height_mm": null,
+      "thickness_mm": null,
+      "uom": "pail",
+      "supplier_pack_qty": 1,
+      "supplier_pack_uom": "pail",
+      "sort_order": 20
+    }
+  ],
+  "system_components": [
+    {
+      "id": "bdc2866d-fbcc-4900-903b-2e0b3b224396",
+      "role": "Primers",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ AquaShield Waterproofing Primer 4L",
+        "sku": "BQ-AQ-PRIMER-4L",
+        "description": "Water-based penetrating primer for BQ AquaShield wet area and external membrane systems. Consolidates and seals porous substrates including concrete, fibre cement and masonry. Required coat prior to all AquaShield membrane applications.",
+        "category": "Primers",
+        "uom": "pail",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "9c6f4dd8-8c43-47dc-87c8-68b951c35362",
+      "role": "Accessories",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ AquaShield Fibreglass Reinforcement Mesh 100mm x 50m",
+        "sku": "BQ-AQ-MESH-50M",
+        "description": "100mm wide fibreglass reinforcement mesh for embedding at coves, floor-to-wall junctions and pipe penetrations in BQ AquaShield wet area membrane applications. Bedded into first coat while wet.",
+        "category": "Accessories",
+        "uom": "roll",
+        "procurement_route": null
+      }
+    }
+  ],
+  "local_stockists": []
+}

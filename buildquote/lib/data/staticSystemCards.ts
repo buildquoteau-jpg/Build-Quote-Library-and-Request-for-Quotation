@@ -17,6 +17,16 @@ const STATIC_CARDS: { manufacturerSlug: string; cardPath: string; slugSuffix: st
     cardPath: 'manufacturers/bq-inform/system-cards/cards/vj-lining',
     slugSuffix: '-static',
   },
+  {
+    manufacturerSlug: 'bq-aquashield',
+    cardPath: 'manufacturers/bq-aquashield/system-cards/cards/external-membrane',
+    slugSuffix: '-static',
+  },
+  {
+    manufacturerSlug: 'bq-aquashield',
+    cardPath: 'manufacturers/bq-aquashield/system-cards/cards/wet-area-membrane',
+    slugSuffix: '-static',
+  },
 ]
 
 type PackageCardJson = {
@@ -149,15 +159,20 @@ export function getStaticSystemByManufacturerAndSlug(manufacturerSlug: string, s
 // supplier_systems join table either — its stockist list is instead read
 // straight out of card.json's own local_stockists.
 export function getStaticStockists(manufacturerSlug: string, systemSlug: string): Stockist[] {
-  const match = STATIC_CARDS.find(c => c.manufacturerSlug === manufacturerSlug)
-  if (!match) return []
+  const candidates = STATIC_CARDS.filter(c => c.manufacturerSlug === manufacturerSlug)
 
-  const card = loadCardJson(match.cardPath)
-  if (!card) return []
+  for (const match of candidates) {
+    const card = loadCardJson(match.cardPath)
+    if (!card) continue
+    const cardSlugWithSuffix = `${card.slug}${match.slugSuffix}`
+    if (cardSlugWithSuffix === systemSlug) {
+      return buildStockists(card)
+    }
+  }
+  return []
+}
 
-  const cardSlugWithSuffix = `${card.slug}${match.slugSuffix}`
-  if (cardSlugWithSuffix !== systemSlug) return []
-
+function buildStockists(card: PackageCardJson): Stockist[] {
   return (card.local_stockists ?? []).map(s => ({
     id: s.id,
     name: s.name,

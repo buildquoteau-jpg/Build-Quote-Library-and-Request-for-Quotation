@@ -1,0 +1,82 @@
+{
+  "id": "3fdd5262-265b-4fe3-bc7b-e5af8b5b27b1",
+  "name": "BQ AquaShield External Membrane",
+  "product_code": "BQ-AQ-EXT",
+  "slug": "external-membrane",
+  "category": "Waterproofing",
+  "subcategory": "Sheet membrane external waterproofing system",
+  "description": "BQ AquaShield External Membrane is a torched-on SBS modified bitumen sheet membrane system for external waterproofing of balconies, podiums, planter boxes and below-slab applications. Compliant with AS 4654.2 for external waterproofing. Installed with AquaShield Primer and detail tape at laps and penetrations.",
+  "hero_image_url": "./assets/hero.webp",
+  "hero_image_position_x": 50,
+  "hero_image_position_y": 50,
+  "australian_made": true,
+  "bal_rating": null,
+  "fire_rating": null,
+  "moisture_resistant": true,
+  "acoustic_rating": null,
+  "structural_grade": null,
+  "notes": null,
+  "website_url": "https://buildquote.com.au/manufacturers/bq-aquashield",
+  "install_guide_urls": [
+    {
+      "url": "https://buildquote.com.au/manufacturers/bq-aquashield/bq-aquashield-external-membrane-installation-guide.pdf",
+      "label": "Installation guide"
+    }
+  ],
+  "design_guide_url": null,
+  "tech_data_url": "https://buildquote.com.au/manufacturers/bq-aquashield/bq-aquashield-external-membrane-technical-data-sheet.pdf",
+  "manufacturer": {
+    "name": "BQ AquaShield Waterproofing",
+    "slug": "bq-aquashield",
+    "logo_url": "../../assets/logo.webp"
+  },
+  "system_colours": [],
+  "system_profiles": [
+    {
+      "id": "83fec007-9a14-4c70-956b-4eb33f082a5c",
+      "profile_name": "4mm Sheet 1x10m Roll",
+      "name": null,
+      "product_code": "BQ-AQ-EXT-4MM-10M",
+      "dimensions": "1,000mm x 10,000mm x 4mm roll",
+      "length_mm": null,
+      "width_mm": 1000,
+      "height_mm": null,
+      "thickness_mm": 4,
+      "uom": "roll",
+      "supplier_pack_qty": 4,
+      "supplier_pack_uom": "rolls",
+      "sort_order": 30
+    }
+  ],
+  "system_components": [
+    {
+      "id": "bdc2866d-fbcc-4900-903b-2e0b3b224396",
+      "role": "Primers",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ AquaShield Waterproofing Primer 4L",
+        "sku": "BQ-AQ-PRIMER-4L",
+        "description": "Water-based penetrating primer for BQ AquaShield wet area and external membrane systems. Consolidates and seals porous substrates including concrete, fibre cement and masonry. Required coat prior to all AquaShield membrane applications.",
+        "category": "Primers",
+        "uom": "pail",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "4245eb20-4f1f-435d-a93e-a73fb418246b",
+      "role": "Accessories",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ AquaShield Self-Adhesive Detail Tape 150mm x 50m",
+        "sku": "BQ-AQ-TAPE-50M",
+        "description": "Self-adhesive bituminous detail tape for sealing laps, penetrations and terminations in BQ AquaShield External Membrane System. 150mm wide, 1.5mm thick. No primer required on membrane surface.",
+        "category": "Accessories",
+        "uom": "roll",
+        "procurement_route": null
+      }
+    }
+  ],
+  "local_stockists": []
+}
