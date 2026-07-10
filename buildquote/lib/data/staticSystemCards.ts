@@ -62,6 +62,26 @@ const STATIC_CARDS: { manufacturerSlug: string; cardPath: string; slugSuffix: st
     cardPath: 'manufacturers/build-stage/system-cards/cards/timber-stud-wall-framing',
     slugSuffix: '-static',
   },
+  {
+    manufacturerSlug: 'bq-fibreline',
+    cardPath: 'manufacturers/bq-fibreline/system-cards/cards/flat-sheet-panel',
+    slugSuffix: '-static',
+  },
+  {
+    manufacturerSlug: 'bq-fibreline',
+    cardPath: 'manufacturers/bq-fibreline/system-cards/cards/soffit-sheet',
+    slugSuffix: '-static',
+  },
+  {
+    manufacturerSlug: 'bq-fibreline',
+    cardPath: 'manufacturers/bq-fibreline/system-cards/cards/vgroove-panel',
+    slugSuffix: '-static',
+  },
+  {
+    manufacturerSlug: 'bq-fibreline',
+    cardPath: 'manufacturers/bq-fibreline/system-cards/cards/weatherboard-plank',
+    slugSuffix: '-static',
+  },
 ]
 
 type PackageCardJson = {

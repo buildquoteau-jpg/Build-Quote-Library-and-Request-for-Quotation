@@ -1,0 +1,148 @@
+{
+  "id": "2b540709-24f0-468d-8071-7455aa26e69b",
+  "name": "BQ FibreLine Flat Sheet Panel",
+  "product_code": "BQ-FL-FSP",
+  "slug": "flat-sheet-panel",
+  "category": "Cladding",
+  "subcategory": "Large format fibre cement flat sheet cladding",
+  "description": "BQ FibreLine Flat Sheet Panel is a large-format pre-primed fibre cement sheet for contemporary flush facade applications. Square-edge profile for open-jointed or closed-jointed installation with aluminium jointer beads. Suitable for residential and light commercial facades requiring a modern monolithic appearance.",
+  "hero_image_url": "./assets/hero.webp",
+  "hero_image_position_x": 50,
+  "hero_image_position_y": 50,
+  "australian_made": true,
+  "bal_rating": "All levels",
+  "fire_rating": null,
+  "moisture_resistant": true,
+  "acoustic_rating": null,
+  "structural_grade": null,
+  "notes": "Pre-primed and ready for site painting.",
+  "website_url": "https://buildquote.com.au/manufacturers/bq-fibreline",
+  "install_guide_urls": [
+    {
+      "url": "https://buildquote.com.au/manufacturers/bq-fibreline/bq-fibreline-flat-sheet-installation-guide.pdf",
+      "label": "Installation guide"
+    }
+  ],
+  "design_guide_url": "https://buildquote.com.au/manufacturers/bq-fibreline/bq-fibreline-flat-sheet-design-guide.pdf",
+  "tech_data_url": null,
+  "manufacturer": {
+    "name": "BQ FibreLine",
+    "slug": "bq-fibreline",
+    "logo_url": "../../assets/logo.webp"
+  },
+  "system_colours": [
+    {
+      "colour_name": "Pre-primed",
+      "image_url": null,
+      "sort_order": 0,
+      "is_stocked": true
+    }
+  ],
+  "system_profiles": [
+    {
+      "id": "a0805ba7-9548-4d5c-b88b-46f75053ff2e",
+      "profile_name": "1200 x 2400 x 9mm",
+      "name": null,
+      "product_code": "BQ-FL-FSP-1200-2400",
+      "dimensions": "2,400 x 1,200 x 9mm",
+      "length_mm": 2400,
+      "width_mm": 1200,
+      "height_mm": null,
+      "thickness_mm": 9,
+      "uom": "sheet",
+      "supplier_pack_qty": 10,
+      "supplier_pack_uom": "sheets",
+      "sort_order": 30
+    },
+    {
+      "id": "d8b671fa-9f7a-4de3-8cab-d805e0edefce",
+      "profile_name": "1200 x 3000 x 9mm",
+      "name": null,
+      "product_code": "BQ-FL-FSP-1200-3000",
+      "dimensions": "3,000 x 1,200 x 9mm",
+      "length_mm": 3000,
+      "width_mm": 1200,
+      "height_mm": null,
+      "thickness_mm": 9,
+      "uom": "sheet",
+      "supplier_pack_qty": 8,
+      "supplier_pack_uom": "sheets",
+      "sort_order": 40
+    }
+  ],
+  "system_components": [
+    {
+      "id": "8ada9d85-6ef3-47e5-a6ee-e4134b146f8b",
+      "role": "Fasteners",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ FibreLine FC Nail 30mm x 2.8mm 1kg",
+        "sku": "BQ-FL-NAIL-30MM-1KG",
+        "description": "Hot-dipped galvanised clout nail for face-fixing BQ FibreLine fibre cement products to timber framing. 30mm length, 2.8mm shank, flat head. Also suitable for pneumatic nail gun installation.",
+        "category": "Fasteners",
+        "uom": "bag",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "a3d9bc46-fe27-462e-9016-72e2b5df53ea",
+      "role": "Sealants",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ FibreLine FC Joint Sealant 300mL",
+        "sku": "BQ-FL-SEALANT-300ML",
+        "description": "Paintable, flexible polyurethane joint sealant for sealing butt joints, cut ends and penetrations in BQ FibreLine fibre cement products. Adheres to primed FC surfaces without primer. Overpaintable after 24 hrs.",
+        "category": "Sealants",
+        "uom": "box",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "01d6aa13-1b3b-46e9-9400-5b12866b62af",
+      "role": "Primers",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ FibreLine Cut End Sealer 250mL",
+        "sku": "BQ-FL-ENDSEAL-250ML",
+        "description": "Penetrating acrylic end-grain sealer for treating all cut edges of BQ FibreLine fibre cement products. Prevents moisture ingress at cut ends. Brush apply two coats. Required at all cut ends prior to installation.",
+        "category": "Primers",
+        "uom": "tin",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "81fe9e69-c701-4996-b399-16b93e24ab39",
+      "role": "Trims & Flashings",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ FibreLine Aluminium Jointer Bead 3000mm",
+        "sku": "BQ-FL-JOINTER-AL-3000",
+        "description": "Extruded aluminium H-section jointer bead for open-joint installation of BQ FibreLine Flat Sheet and VGroove panels. Accepts 9mm sheet thickness each side. Mill finish - field-paintable. Includes factory-applied foam backing strip.",
+        "category": "Trims & Flashings",
+        "uom": "length",
+        "procurement_route": null
+      }
+    }
+  ],
+  "local_stockists": [
+    {
+      "id": "845346fe-4e02-403c-8264-8a67a0056ac1",
+      "name": "BuildQuote Trade Centre",
+      "suburb": "Quedjinup",
+      "state": "WA",
+      "region": null,
+      "phone": "0406913522",
+      "website_url": "https://search.buildquote.com.au/supplierdirectory/buildquote.com.au",
+      "google_maps_url": null,
+      "opening_hours": null,
+      "delivery_info": null,
+      "service_postcodes": [],
+      "trade_desk_email": "hello@buildquote.com.au",
+      "confirmed_at": null
+    }
+  ]
+}

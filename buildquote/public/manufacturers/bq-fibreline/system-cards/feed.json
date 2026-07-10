@@ -1,0 +1,61 @@
+{
+  "format": "buildquote-system-card-feed",
+  "version": 1,
+  "generated_at": "2026-07-10T01:32:43.379Z",
+  "package_version": 1,
+  "install_path": "/system-cards/",
+  "site_url": "https://buildquote.com.au/manufacturers/bq-fibreline",
+  "manufacturer": {
+    "name": "BQ FibreLine",
+    "slug": "bq-fibreline",
+    "description": "BQ FibreLine Building Products manufactures a comprehensive range of fibre cement cladding systems for the Australian residential and light commercial construction market. The FibreLine range includes weatherboard planks, flat sheet panels, VGroove panels and soffit lining sheets — all pre-primed and ready for site painting. Australian made.",
+    "website_url": "https://buildquote.com.au/manufacturers/bq-fibreline/",
+    "logo": "assets/logo.webp"
+  },
+  "cards": [
+    {
+      "slug": "weatherboard-plank",
+      "name": "BQ FibreLine Weatherboard Plank",
+      "category": "Cladding",
+      "subcategory": "Fibre cement horizontal lap weatherboard",
+      "description": "BQ FibreLine Weatherboard Plank is a pre-primed fibre cement horizontal lap cladding plank for exterior wall applications. Features a smooth face with a fine texture for a contemporary painted finish. Ships in a range of face widths and lengths. Fix with BQ FibreLine FC Nails and approved construction adhesive at all framing members.",
+      "path": "cards/weatherboard-plank/",
+      "json": "cards/weatherboard-plank/card.json",
+      "content": "cards/weatherboard-plank/content.md",
+      "url": "https://buildquote.com.au/manufacturers/bq-fibreline/system-cards/cards/weatherboard-plank/"
+    },
+    {
+      "slug": "flat-sheet-panel",
+      "name": "BQ FibreLine Flat Sheet Panel",
+      "category": "Cladding",
+      "subcategory": "Large format fibre cement flat sheet cladding",
+      "description": "BQ FibreLine Flat Sheet Panel is a large-format pre-primed fibre cement sheet for contemporary flush facade applications. Square-edge profile for open-jointed or closed-jointed installation with aluminium jointer beads. Suitable for residential and light commercial facades requiring a modern monolithic appearance.",
+      "path": "cards/flat-sheet-panel/",
+      "json": "cards/flat-sheet-panel/card.json",
+      "content": "cards/flat-sheet-panel/content.md",
+      "url": "https://buildquote.com.au/manufacturers/bq-fibreline/system-cards/cards/flat-sheet-panel/"
+    },
+    {
+      "slug": "vgroove-panel",
+      "name": "BQ FibreLine VGroove Panel",
+      "category": "Cladding",
+      "subcategory": "Fibre cement vertically grooved cladding panel",
+      "description": "BQ FibreLine VGroove Panel is a pre-primed fibre cement cladding sheet with machined vertical V-grooves at regular intervals. Produces a modern linear vertical appearance when installed. Available in 133mm and 200mm groove spacings. Fix vertically to horizontal batten framing.",
+      "path": "cards/vgroove-panel/",
+      "json": "cards/vgroove-panel/card.json",
+      "content": "cards/vgroove-panel/content.md",
+      "url": "https://buildquote.com.au/manufacturers/bq-fibreline/system-cards/cards/vgroove-panel/"
+    },
+    {
+      "slug": "soffit-sheet",
+      "name": "BQ FibreLine Soffit Sheet",
+      "category": "Soffit & Eaves",
+      "subcategory": "Fibre cement soffit and eave lining sheet",
+      "description": "BQ FibreLine Soffit Sheet is a pre-primed fibre cement sheet designed for lining the underside of eaves, soffits, carport ceilings and covered outdoor areas. Available in smooth and micro-perforated finishes for passive ventilation. Lightweight and resistant to moisture, insects and rot.",
+      "path": "cards/soffit-sheet/",
+      "json": "cards/soffit-sheet/card.json",
+      "content": "cards/soffit-sheet/content.md",
+      "url": "https://buildquote.com.au/manufacturers/bq-fibreline/system-cards/cards/soffit-sheet/"
+    }
+  ]
+}

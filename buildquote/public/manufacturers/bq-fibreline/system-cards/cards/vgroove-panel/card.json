@@ -1,0 +1,148 @@
+{
+  "id": "345d6220-4677-4f41-bbe2-7499ba3027f8",
+  "name": "BQ FibreLine VGroove Panel",
+  "product_code": "BQ-FL-VGP",
+  "slug": "vgroove-panel",
+  "category": "Cladding",
+  "subcategory": "Fibre cement vertically grooved cladding panel",
+  "description": "BQ FibreLine VGroove Panel is a pre-primed fibre cement cladding sheet with machined vertical V-grooves at regular intervals. Produces a modern linear vertical appearance when installed. Available in 133mm and 200mm groove spacings. Fix vertically to horizontal batten framing.",
+  "hero_image_url": "./assets/hero.webp",
+  "hero_image_position_x": 50,
+  "hero_image_position_y": 50,
+  "australian_made": true,
+  "bal_rating": "All levels",
+  "fire_rating": null,
+  "moisture_resistant": true,
+  "acoustic_rating": null,
+  "structural_grade": null,
+  "notes": "Pre-primed and ready for site painting.",
+  "website_url": "https://buildquote.com.au/manufacturers/bq-fibreline",
+  "install_guide_urls": [
+    {
+      "url": "https://buildquote.com.au/manufacturers/bq-fibreline/bq-fibreline-vgroove-installation-guide.pdf",
+      "label": "Installation guide"
+    }
+  ],
+  "design_guide_url": "https://buildquote.com.au/manufacturers/bq-fibreline/bq-fibreline-vgroove-design-guide.pdf",
+  "tech_data_url": null,
+  "manufacturer": {
+    "name": "BQ FibreLine",
+    "slug": "bq-fibreline",
+    "logo_url": "../../assets/logo.webp"
+  },
+  "system_colours": [
+    {
+      "colour_name": "Pre-primed",
+      "image_url": null,
+      "sort_order": 0,
+      "is_stocked": true
+    }
+  ],
+  "system_profiles": [
+    {
+      "id": "33f3cee2-67e3-4630-a1b0-81e2789ab258",
+      "profile_name": "133mm VGroove",
+      "name": null,
+      "product_code": "BQ-FL-VGP-133-2400",
+      "dimensions": "2,400 x 900 x 9mm (133mm groove spacing)",
+      "length_mm": 2400,
+      "width_mm": 900,
+      "height_mm": null,
+      "thickness_mm": 9,
+      "uom": "sheet",
+      "supplier_pack_qty": 16,
+      "supplier_pack_uom": "sheets",
+      "sort_order": 50
+    },
+    {
+      "id": "72054070-0015-4fb7-8337-95e28eaac6fd",
+      "profile_name": "200mm VGroove",
+      "name": null,
+      "product_code": "BQ-FL-VGP-200-2400",
+      "dimensions": "2,400 x 900 x 9mm (200mm groove spacing)",
+      "length_mm": 2400,
+      "width_mm": 900,
+      "height_mm": null,
+      "thickness_mm": 9,
+      "uom": "sheet",
+      "supplier_pack_qty": 16,
+      "supplier_pack_uom": "sheets",
+      "sort_order": 60
+    }
+  ],
+  "system_components": [
+    {
+      "id": "8ada9d85-6ef3-47e5-a6ee-e4134b146f8b",
+      "role": "Fasteners",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ FibreLine FC Nail 30mm x 2.8mm 1kg",
+        "sku": "BQ-FL-NAIL-30MM-1KG",
+        "description": "Hot-dipped galvanised clout nail for face-fixing BQ FibreLine fibre cement products to timber framing. 30mm length, 2.8mm shank, flat head. Also suitable for pneumatic nail gun installation.",
+        "category": "Fasteners",
+        "uom": "bag",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "a3d9bc46-fe27-462e-9016-72e2b5df53ea",
+      "role": "Sealants",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ FibreLine FC Joint Sealant 300mL",
+        "sku": "BQ-FL-SEALANT-300ML",
+        "description": "Paintable, flexible polyurethane joint sealant for sealing butt joints, cut ends and penetrations in BQ FibreLine fibre cement products. Adheres to primed FC surfaces without primer. Overpaintable after 24 hrs.",
+        "category": "Sealants",
+        "uom": "box",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "01d6aa13-1b3b-46e9-9400-5b12866b62af",
+      "role": "Primers",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ FibreLine Cut End Sealer 250mL",
+        "sku": "BQ-FL-ENDSEAL-250ML",
+        "description": "Penetrating acrylic end-grain sealer for treating all cut edges of BQ FibreLine fibre cement products. Prevents moisture ingress at cut ends. Brush apply two coats. Required at all cut ends prior to installation.",
+        "category": "Primers",
+        "uom": "tin",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "81fe9e69-c701-4996-b399-16b93e24ab39",
+      "role": "Trims & Flashings",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ FibreLine Aluminium Jointer Bead 3000mm",
+        "sku": "BQ-FL-JOINTER-AL-3000",
+        "description": "Extruded aluminium H-section jointer bead for open-joint installation of BQ FibreLine Flat Sheet and VGroove panels. Accepts 9mm sheet thickness each side. Mill finish - field-paintable. Includes factory-applied foam backing strip.",
+        "category": "Trims & Flashings",
+        "uom": "length",
+        "procurement_route": null
+      }
+    }
+  ],
+  "local_stockists": [
+    {
+      "id": "845346fe-4e02-403c-8264-8a67a0056ac1",
+      "name": "BuildQuote Trade Centre",
+      "suburb": "Quedjinup",
+      "state": "WA",
+      "region": null,
+      "phone": "0406913522",
+      "website_url": "https://search.buildquote.com.au/supplierdirectory/buildquote.com.au",
+      "google_maps_url": null,
+      "opening_hours": null,
+      "delivery_info": null,
+      "service_postcodes": [],
+      "trade_desk_email": "hello@buildquote.com.au",
+      "confirmed_at": null
+    }
+  ]
+}

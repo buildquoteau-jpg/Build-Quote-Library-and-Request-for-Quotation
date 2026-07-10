@@ -1,0 +1,69 @@
+{
+  "format": "buildquote-system-card-package",
+  "version": 1,
+  "package_version": 1,
+  "generated_at": "2026-07-10T01:32:43.379Z",
+  "manufacturer": "bq-fibreline",
+  "install_path": "/system-cards/",
+  "site_url": "https://buildquote.com.au/manufacturers/bq-fibreline",
+  "card_count": 4,
+  "cards": [
+    {
+      "slug": "weatherboard-plank",
+      "name": "BQ FibreLine Weatherboard Plank",
+      "path": "cards/weatherboard-plank/index.html"
+    },
+    {
+      "slug": "flat-sheet-panel",
+      "name": "BQ FibreLine Flat Sheet Panel",
+      "path": "cards/flat-sheet-panel/index.html"
+    },
+    {
+      "slug": "vgroove-panel",
+      "name": "BQ FibreLine VGroove Panel",
+      "path": "cards/vgroove-panel/index.html"
+    },
+    {
+      "slug": "soffit-sheet",
+      "name": "BQ FibreLine Soffit Sheet",
+      "path": "cards/soffit-sheet/index.html"
+    }
+  ],
+  "files": [
+    "system-cards/README.md",
+    "system-cards/assets/brand-hero.jpg",
+    "system-cards/assets/brand-hero.png",
+    "system-cards/assets/logo.webp",
+    "system-cards/assets/site.css",
+    "system-cards/assets/system-card.js",
+    "system-cards/card-link-list.csv",
+    "system-cards/cards/flat-sheet-panel/assets/hero.jpg",
+    "system-cards/cards/flat-sheet-panel/assets/hero.webp",
+    "system-cards/cards/flat-sheet-panel/card.json",
+    "system-cards/cards/flat-sheet-panel/content.md",
+    "system-cards/cards/flat-sheet-panel/index.html",
+    "system-cards/cards/flat-sheet-panel/qr-code.png",
+    "system-cards/cards/soffit-sheet/assets/hero.jpg",
+    "system-cards/cards/soffit-sheet/assets/hero.webp",
+    "system-cards/cards/soffit-sheet/card.json",
+    "system-cards/cards/soffit-sheet/content.md",
+    "system-cards/cards/soffit-sheet/index.html",
+    "system-cards/cards/soffit-sheet/qr-code.png",
+    "system-cards/cards/vgroove-panel/assets/hero.jpg",
+    "system-cards/cards/vgroove-panel/assets/hero.webp",
+    "system-cards/cards/vgroove-panel/card.json",
+    "system-cards/cards/vgroove-panel/content.md",
+    "system-cards/cards/vgroove-panel/index.html",
+    "system-cards/cards/vgroove-panel/qr-code.png",
+    "system-cards/cards/weatherboard-plank/assets/hero.jpg",
+    "system-cards/cards/weatherboard-plank/assets/hero.webp",
+    "system-cards/cards/weatherboard-plank/card.json",
+    "system-cards/cards/weatherboard-plank/content.md",
+    "system-cards/cards/weatherboard-plank/index.html",
+    "system-cards/cards/weatherboard-plank/qr-code.png",
+    "system-cards/embed-snippets.html",
+    "system-cards/feed.json",
+    "system-cards/index.html",
+    "system-cards/install-guide.html"
+  ]
+}
