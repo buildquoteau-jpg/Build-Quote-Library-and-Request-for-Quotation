@@ -1,0 +1,39 @@
+{
+  "format": "buildquote-system-card-feed",
+  "version": 1,
+  "generated_at": "2026-07-10T01:12:22.832Z",
+  "package_version": 1,
+  "install_path": "/system-cards/",
+  "site_url": "https://buildquote.com.au/manufacturers/bq-timberlock",
+  "manufacturer": {
+    "name": "BQ TimberLock",
+    "slug": "bq-timberlock",
+    "description": "BQ TimberLock Pergola Systems designs and manufactures premium flat-pack architectural pergola frames for residential and light commercial outdoor living applications. The TimberLock range is available in Accoya acetylated timber and Australian hardwood glulam — all systems arrive pre-drilled with proprietary stainless steel fixings included.",
+    "website_url": "https://buildquote.com.au/manufacturers/bq-timberlock/",
+    "logo": "assets/logo.png"
+  },
+  "cards": [
+    {
+      "slug": "accoya-pergola",
+      "name": "BQ TimberLock Accoya Pergola",
+      "category": "Pergolas & Outdoor Structures",
+      "subcategory": "Flat-pack Accoya timber architectural pergola frame",
+      "description": "BQ TimberLock Accoya is a premium flat-pack architectural pergola frame system manufactured from Accoya acetylated radiata pine. Accoya offers Class 1 above-ground durability, exceptional dimensional stability and outstanding paint/oil retention - making it ideal for exposed coastal and high-rainfall environments. Each kit arrives pre-drilled with all members labelled for assembly. Proprietary stainless steel fixings, post bases and rafter saddles are included. Available in 3m, 4m and 6m bay widths at 3m rafter span.",
+      "path": "cards/accoya-pergola/",
+      "json": "cards/accoya-pergola/card.json",
+      "content": "cards/accoya-pergola/content.md",
+      "url": "https://buildquote.com.au/manufacturers/bq-timberlock/system-cards/cards/accoya-pergola/"
+    },
+    {
+      "slug": "glulam-hardwood-pergola",
+      "name": "BQ TimberLock Glulam Hardwood Pergola",
+      "category": "Pergolas & Outdoor Structures",
+      "subcategory": "Flat-pack Australian hardwood glulam pergola frame",
+      "description": "BQ TimberLock Glulam is a flat-pack architectural pergola frame system manufactured from Australian hardwood glulam - H3 treated, finger-jointed and laminated for strength and stability. Sourced from certified Australian plantation and native hardwood mills. Each kit arrives pre-drilled with all members labelled. Proprietary stainless steel fixings, post bases and rafter saddles are included. Available in 3m, 4m and 6m bay widths at 3m rafter span.",
+      "path": "cards/glulam-hardwood-pergola/",
+      "json": "cards/glulam-hardwood-pergola/card.json",
+      "content": "cards/glulam-hardwood-pergola/content.md",
+      "url": "https://buildquote.com.au/manufacturers/bq-timberlock/system-cards/cards/glulam-hardwood-pergola/"
+    }
+  ]
+}

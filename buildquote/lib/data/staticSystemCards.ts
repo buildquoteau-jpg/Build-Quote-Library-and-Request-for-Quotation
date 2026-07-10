@@ -47,6 +47,16 @@ const STATIC_CARDS: { manufacturerSlug: string; cardPath: string; slugSuffix: st
     cardPath: 'manufacturers/bq-compform/system-cards/cards/screenmax-privacy-screening',
     slugSuffix: '-static',
   },
+  {
+    manufacturerSlug: 'bq-timberlock',
+    cardPath: 'manufacturers/bq-timberlock/system-cards/cards/accoya-pergola',
+    slugSuffix: '-static',
+  },
+  {
+    manufacturerSlug: 'bq-timberlock',
+    cardPath: 'manufacturers/bq-timberlock/system-cards/cards/glulam-hardwood-pergola',
+    slugSuffix: '-static',
+  },
 ]
 
 type PackageCardJson = {

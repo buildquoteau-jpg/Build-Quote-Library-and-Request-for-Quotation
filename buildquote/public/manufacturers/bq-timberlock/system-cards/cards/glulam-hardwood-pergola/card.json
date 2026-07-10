@@ -1,0 +1,181 @@
+{
+  "id": "99c9d507-a760-4337-be19-6a12988965ab",
+  "name": "BQ TimberLock Glulam Hardwood Pergola",
+  "product_code": "BQ-TL-GLULAM",
+  "slug": "glulam-hardwood-pergola",
+  "category": "Pergolas & Outdoor Structures",
+  "subcategory": "Flat-pack Australian hardwood glulam pergola frame",
+  "description": "BQ TimberLock Glulam is a flat-pack architectural pergola frame system manufactured from Australian hardwood glulam - H3 treated, finger-jointed and laminated for strength and stability. Sourced from certified Australian plantation and native hardwood mills. Each kit arrives pre-drilled with all members labelled. Proprietary stainless steel fixings, post bases and rafter saddles are included. Available in 3m, 4m and 6m bay widths at 3m rafter span.",
+  "hero_image_url": "./assets/hero.webp",
+  "hero_image_position_x": 50,
+  "hero_image_position_y": 29,
+  "australian_made": true,
+  "bal_rating": "12.5",
+  "fire_rating": null,
+  "moisture_resistant": true,
+  "acoustic_rating": null,
+  "structural_grade": "Structural Grade",
+  "notes": null,
+  "website_url": "https://buildquote.com.au/manufacturers/bq-timberlock",
+  "install_guide_urls": [
+    {
+      "url": "https://buildquote.com.au/manufacturers/bq-timberlock/bq-timberlock-installation-guide.pdf",
+      "label": "Installation guide"
+    }
+  ],
+  "design_guide_url": "https://buildquote.com.au/manufacturers/bq-timberlock/bq-timberlock-design-guide.pdf",
+  "tech_data_url": "https://buildquote.com.au/manufacturers/bq-timberlock/bq-timberlock-technical-data-sheet.pdf",
+  "manufacturer": {
+    "name": "BQ TimberLock",
+    "slug": "bq-timberlock",
+    "logo_url": "../../assets/logo.png"
+  },
+  "system_colours": [
+    {
+      "colour_name": "Natural Hardwood",
+      "image_url": null,
+      "sort_order": 0,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Dark Walnut Stain",
+      "image_url": null,
+      "sort_order": 1,
+      "is_stocked": true
+    }
+  ],
+  "system_profiles": [
+    {
+      "id": "0bdd0734-8ca7-440a-9ee0-6bd934c11134",
+      "profile_name": "Glulam 3x3m Bay Kit",
+      "name": null,
+      "product_code": "BQ-TL-GLULAM-3X3",
+      "dimensions": "3,000mm bay x 3,000mm rafter span",
+      "length_mm": 3000,
+      "width_mm": 3000,
+      "height_mm": null,
+      "thickness_mm": null,
+      "uom": "kit",
+      "supplier_pack_qty": 1,
+      "supplier_pack_uom": "kit",
+      "sort_order": 40
+    },
+    {
+      "id": "4b13a825-5fc8-4976-b564-1e24f8328ff3",
+      "profile_name": "Glulam 4x3m Bay Kit",
+      "name": null,
+      "product_code": "BQ-TL-GLULAM-4X3",
+      "dimensions": "4,000mm bay x 3,000mm rafter span",
+      "length_mm": 4000,
+      "width_mm": 3000,
+      "height_mm": null,
+      "thickness_mm": null,
+      "uom": "kit",
+      "supplier_pack_qty": 1,
+      "supplier_pack_uom": "kit",
+      "sort_order": 50
+    },
+    {
+      "id": "4138b5ee-4dd9-4f85-a1ee-e648684db8e7",
+      "profile_name": "Glulam 6x3m Bay Kit",
+      "name": null,
+      "product_code": "BQ-TL-GLULAM-6X3",
+      "dimensions": "6,000mm bay x 3,000mm rafter span",
+      "length_mm": 6000,
+      "width_mm": 3000,
+      "height_mm": null,
+      "thickness_mm": null,
+      "uom": "kit",
+      "supplier_pack_qty": 1,
+      "supplier_pack_uom": "kit",
+      "sort_order": 60
+    }
+  ],
+  "system_components": [
+    {
+      "id": "cadfffe0-b9d9-417e-98c1-73a9fa4141d0",
+      "role": "Structural",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ TimberLock Stainless Post Base Surface Mount",
+        "sku": "BQ-TL-POSTBASE-SS",
+        "description": "Grade 316 stainless steel adjustable post base for surface mounting BQ TimberLock pergola posts to concrete slabs or decking frames. Accepts 140x140mm post. Adjustable 0-10mm for level setting. Supplied with M12 stainless anchor bolts.",
+        "category": "Structural",
+        "uom": "each",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "faad7343-91f5-4e62-9d72-e17c6e7e5fad",
+      "role": "Structural",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ TimberLock Stainless Beam-to-Post Bracket",
+        "sku": "BQ-TL-BEAMBRACKET-SS",
+        "description": "Grade 316 stainless steel concealed beam-to-post connection bracket for BQ TimberLock pergola systems. Slides into pre-routed slot in post top and accepts beam from either side. Rated to 8kN vertical load.",
+        "category": "Structural",
+        "uom": "each",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "3713cdd9-1b27-480e-a19a-8d948699efce",
+      "role": "Structural",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ TimberLock Stainless Rafter Saddle Clip",
+        "sku": "BQ-TL-RAFTERSADDLE-SS",
+        "description": "Grade 316 stainless steel rafter saddle clip for locating and securing BQ TimberLock rafters to the beam at 600mm centres. Prevents rafter twist and lateral movement. Suits 140x35mm and 140x45mm rafter profiles.",
+        "category": "Structural",
+        "uom": "bag",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "4fd6445d-0362-42f1-b009-ad403e498043",
+      "role": "Accessories",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ TimberLock Stainless Post Cap 140x140",
+        "sku": "BQ-TL-POSTCAP-SS",
+        "description": "Grade 316 stainless steel flat cap for the top of exposed BQ TimberLock pergola posts. Prevents moisture ingress into end grain on unprotected post tops. Press-fit with stainless fixings. Suits 140x140mm posts.",
+        "category": "Accessories",
+        "uom": "each",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "0f65e485-8b62-4760-9c70-fbcd5d79b32a",
+      "role": "Fasteners",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ TimberLock M12 Stainless Bolt Pack",
+        "sku": "BQ-TL-BOLTPACK-M12",
+        "description": "Grade 316 stainless M12 x 100mm hex head bolt pack for structural connections in BQ TimberLock pergola systems. Includes bolts, washers and nuts. 10 sets per pack. Suits post base and beam-to-post bracket connections.",
+        "category": "Fasteners",
+        "uom": "pack",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "57b23598-d556-433b-abca-7374c1c09344",
+      "role": "Maintenance",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ TimberLock Exterior Timber Oil 4L",
+        "sku": "BQ-TL-TIMBEROIL-4L",
+        "description": "UV-stable penetrating exterior timber oil for maintaining and protecting BQ TimberLock Accoya and Glulam pergola frames. Water-based, low VOC. Apply 2 coats on installation; reapply annually or as required. Available in Natural, Dark Walnut and Weathered Silver tints.",
+        "category": "Maintenance",
+        "uom": "tin",
+        "procurement_route": null
+      }
+    }
+  ],
+  "local_stockists": []
+}
