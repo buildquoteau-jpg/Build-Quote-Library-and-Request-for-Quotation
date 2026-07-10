@@ -1,0 +1,61 @@
+{
+  "format": "buildquote-system-card-feed",
+  "version": 1,
+  "generated_at": "2026-07-10T00:53:23.184Z",
+  "package_version": 1,
+  "install_path": "/system-cards/",
+  "site_url": "https://buildquote.com.au/manufacturers/bq-compform",
+  "manufacturer": {
+    "name": "BQ Compform",
+    "slug": "bq-compform",
+    "description": "Compform Building Products designs and manufactures co-extruded composite systems for outdoor living applications. The Compform range includes composite decking, facade cladding, privacy screening and garage door cladding — all engineered with a UV-stable polymer cap layer and timber fibre core for lasting timber-look performance in the Australian climate.",
+    "website_url": "https://buildquote.com.au/manufacturers/bq-compform/",
+    "logo": "assets/logo.webp"
+  },
+  "cards": [
+    {
+      "slug": "deckmax-composite-decking",
+      "name": "BQ DeckMax Composite Decking",
+      "category": "Decking",
+      "subcategory": "Composite timber-look deck board",
+      "description": "BQ DeckMax is a co-extruded composite deck board system with a hardwearing polymer cap layer and timber fibre core. Suitable for residential and light commercial outdoor decking applications. Available in standard and wide board profiles across a range of timber-look colours.",
+      "path": "cards/deckmax-composite-decking/",
+      "json": "cards/deckmax-composite-decking/card.json",
+      "content": "cards/deckmax-composite-decking/content.md",
+      "url": "https://buildquote.com.au/manufacturers/bq-compform/system-cards/cards/deckmax-composite-decking/"
+    },
+    {
+      "slug": "cladmax-composite-cladding",
+      "name": "BQ CladMax Composite Cladding",
+      "category": "Cladding",
+      "subcategory": "Composite timber-look facade cladding",
+      "description": "BQ CladMax is a co-extruded composite facade cladding system with a UV-stable polymer cap layer and timber fibre core. Designed for residential and light commercial exterior wall applications. Tongue-and-groove profile for concealed fixing. Available in Shadowline and Vertical Batten profiles across a range of timber-look and solid colours.",
+      "path": "cards/cladmax-composite-cladding/",
+      "json": "cards/cladmax-composite-cladding/card.json",
+      "content": "cards/cladmax-composite-cladding/content.md",
+      "url": "https://buildquote.com.au/manufacturers/bq-compform/system-cards/cards/cladmax-composite-cladding/"
+    },
+    {
+      "slug": "screenmax-privacy-screening",
+      "name": "BQ ScreenMax Composite Privacy Screening",
+      "category": "Screening & Fencing",
+      "subcategory": "Composite privacy batten screen panel",
+      "description": "BQ ScreenMax is a co-extruded composite batten screening system with a UV-stable polymer cap layer and timber fibre core. Designed for residential privacy screens, feature fences, carport infill panels and outdoor room dividers. Available in Narrow Batten, Wide Batten and Slatted Panel profiles across a range of contemporary architectural colours.",
+      "path": "cards/screenmax-privacy-screening/",
+      "json": "cards/screenmax-privacy-screening/card.json",
+      "content": "cards/screenmax-privacy-screening/content.md",
+      "url": "https://buildquote.com.au/manufacturers/bq-compform/system-cards/cards/screenmax-privacy-screening/"
+    },
+    {
+      "slug": "cladmax-garage-door-cladding",
+      "name": "BQ CladMax Ultra Light Garage Door Cladding",
+      "category": "Cladding",
+      "subcategory": "Composite garage roller door cladding panel",
+      "description": "BQ CladMax Ultra Light is a lightweight co-extruded composite cladding system engineered specifically for application to residential garage roller door panels. The low-density timber fibre core and thin-wall polymer cap layer deliver a timber-look finish while remaining within the weight tolerances of standard garage door motors. Available in Standard Slat, Wide Slat and Vented Slat profiles with a dedicated door-frame clip fixing system. Suitable for new and retrofit garage door installations.",
+      "path": "cards/cladmax-garage-door-cladding/",
+      "json": "cards/cladmax-garage-door-cladding/card.json",
+      "content": "cards/cladmax-garage-door-cladding/content.md",
+      "url": "https://buildquote.com.au/manufacturers/bq-compform/system-cards/cards/cladmax-garage-door-cladding/"
+    }
+  ]
+}

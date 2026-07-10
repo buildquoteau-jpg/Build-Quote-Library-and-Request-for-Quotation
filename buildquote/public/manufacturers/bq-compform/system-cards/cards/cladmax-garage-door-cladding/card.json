@@ -1,0 +1,157 @@
+{
+  "id": "25cca334-47f2-4290-b54d-f214916b6061",
+  "name": "BQ CladMax Ultra Light Garage Door Cladding",
+  "product_code": "BQ-CLADMAX-UL",
+  "slug": "cladmax-garage-door-cladding",
+  "category": "Cladding",
+  "subcategory": "Composite garage roller door cladding panel",
+  "description": "BQ CladMax Ultra Light is a lightweight co-extruded composite cladding system engineered specifically for application to residential garage roller door panels. The low-density timber fibre core and thin-wall polymer cap layer deliver a timber-look finish while remaining within the weight tolerances of standard garage door motors. Available in Standard Slat, Wide Slat and Vented Slat profiles with a dedicated door-frame clip fixing system. Suitable for new and retrofit garage door installations.",
+  "hero_image_url": "./assets/hero.webp",
+  "hero_image_position_x": 50,
+  "hero_image_position_y": 50,
+  "australian_made": true,
+  "bal_rating": "12.5",
+  "fire_rating": null,
+  "moisture_resistant": true,
+  "acoustic_rating": null,
+  "structural_grade": null,
+  "notes": null,
+  "website_url": "https://buildquote.com.au/manufacturers/bq-compform",
+  "install_guide_urls": [
+    {
+      "url": "https://buildquote.com.au/manufacturers/bq-compform/bq-cladmax-installation-guide.pdf",
+      "label": "Installation guide"
+    }
+  ],
+  "design_guide_url": "https://buildquote.com.au/manufacturers/bq-compform/bq-cladmax-design-guide.pdf",
+  "tech_data_url": null,
+  "manufacturer": {
+    "name": "BQ Compform",
+    "slug": "bq-compform",
+    "logo_url": "../../assets/logo.webp"
+  },
+  "system_colours": [
+    {
+      "colour_name": "Surfmist",
+      "image_url": null,
+      "sort_order": 0,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Basalt",
+      "image_url": null,
+      "sort_order": 1,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Shale Grey",
+      "image_url": null,
+      "sort_order": 2,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Jarrah",
+      "image_url": null,
+      "sort_order": 3,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Woodland Brown",
+      "image_url": null,
+      "sort_order": 4,
+      "is_stocked": false
+    }
+  ],
+  "system_profiles": [
+    {
+      "id": "f20e689e-7efe-4bc3-8530-43137a0dffb9",
+      "profile_name": "120mm Standard Slat",
+      "name": null,
+      "product_code": "BQ-CLADMAX-UL-SS-120",
+      "dimensions": "2,400 x 120 x 12mm",
+      "length_mm": 2400,
+      "width_mm": 120,
+      "height_mm": null,
+      "thickness_mm": 12,
+      "uom": "lm",
+      "supplier_pack_qty": 12,
+      "supplier_pack_uom": "slats",
+      "sort_order": 10
+    },
+    {
+      "id": "6ec5a107-cb62-49ef-bf15-e37951b5b854",
+      "profile_name": "180mm Wide Slat",
+      "name": null,
+      "product_code": "BQ-CLADMAX-UL-WS-180",
+      "dimensions": "2,400 x 180 x 12mm",
+      "length_mm": 2400,
+      "width_mm": 180,
+      "height_mm": null,
+      "thickness_mm": 12,
+      "uom": "lm",
+      "supplier_pack_qty": 8,
+      "supplier_pack_uom": "slats",
+      "sort_order": 20
+    },
+    {
+      "id": "cc083e24-47c4-47ca-a544-5dbd90aebeca",
+      "profile_name": "120mm Vented Slat",
+      "name": null,
+      "product_code": "BQ-CLADMAX-UL-VS-120",
+      "dimensions": "2,400 x 120 x 12mm (vented)",
+      "length_mm": 2400,
+      "width_mm": 120,
+      "height_mm": null,
+      "thickness_mm": 12,
+      "uom": "lm",
+      "supplier_pack_qty": 12,
+      "supplier_pack_uom": "slats",
+      "sort_order": 30
+    }
+  ],
+  "system_components": [
+    {
+      "id": "13cf4096-9545-495c-817f-ecf5edfa1497",
+      "role": "Fasteners",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ CladMax UL Aluminium Door Frame Clip",
+        "sku": "BQ-UL-DOORCLIP-AL",
+        "description": "Extruded aluminium spring-lock clip for concealed fixing of BQ CladMax Ultra Light slats to aluminium garage door panel frames. Snaps into door frame channel - no drilling required. Suits all UL slat profiles.",
+        "category": "Fasteners",
+        "uom": "bag",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "f161ce43-0480-4d0a-bb04-fa1e89e6e066",
+      "role": "Accessories",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ CladMax UL Aluminium Slat End Cap",
+        "sku": "BQ-UL-ENDCAP-AL",
+        "description": "Snap-on aluminium end cap for finishing exposed slat ends on BQ CladMax Ultra Light installations. Prevents moisture ingress and gives a clean factory-finish appearance at door edges. Supplied in pairs.",
+        "category": "Accessories",
+        "uom": "pair",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "e870520c-69ef-468b-9c0f-9b9d4c7707e9",
+      "role": "Accessories",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ CladMax UL Aluminium Vent Mesh Insert",
+        "sku": "BQ-UL-VENTMESH-AL",
+        "description": "Aluminium insect-proof mesh insert for use with BQ CladMax UL Vented Slat profile. Clips into the slat perforation channel from behind to prevent insect entry while maintaining passive airflow. Supplied in 2400mm lengths.",
+        "category": "Accessories",
+        "uom": "length",
+        "procurement_route": null
+      }
+    }
+  ],
+  "local_stockists": []
+}

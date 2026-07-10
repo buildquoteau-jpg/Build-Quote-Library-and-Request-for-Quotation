@@ -1,0 +1,69 @@
+{
+  "format": "buildquote-system-card-package",
+  "version": 1,
+  "package_version": 1,
+  "generated_at": "2026-07-10T00:53:23.184Z",
+  "manufacturer": "bq-compform",
+  "install_path": "/system-cards/",
+  "site_url": "https://buildquote.com.au/manufacturers/bq-compform",
+  "card_count": 4,
+  "cards": [
+    {
+      "slug": "deckmax-composite-decking",
+      "name": "BQ DeckMax Composite Decking",
+      "path": "cards/deckmax-composite-decking/index.html"
+    },
+    {
+      "slug": "cladmax-composite-cladding",
+      "name": "BQ CladMax Composite Cladding",
+      "path": "cards/cladmax-composite-cladding/index.html"
+    },
+    {
+      "slug": "screenmax-privacy-screening",
+      "name": "BQ ScreenMax Composite Privacy Screening",
+      "path": "cards/screenmax-privacy-screening/index.html"
+    },
+    {
+      "slug": "cladmax-garage-door-cladding",
+      "name": "BQ CladMax Ultra Light Garage Door Cladding",
+      "path": "cards/cladmax-garage-door-cladding/index.html"
+    }
+  ],
+  "files": [
+    "system-cards/README.md",
+    "system-cards/assets/brand-hero.jpg",
+    "system-cards/assets/brand-hero.png",
+    "system-cards/assets/logo.webp",
+    "system-cards/assets/site.css",
+    "system-cards/assets/system-card.js",
+    "system-cards/card-link-list.csv",
+    "system-cards/cards/cladmax-composite-cladding/assets/hero.jpg",
+    "system-cards/cards/cladmax-composite-cladding/assets/hero.webp",
+    "system-cards/cards/cladmax-composite-cladding/card.json",
+    "system-cards/cards/cladmax-composite-cladding/content.md",
+    "system-cards/cards/cladmax-composite-cladding/index.html",
+    "system-cards/cards/cladmax-composite-cladding/qr-code.png",
+    "system-cards/cards/cladmax-garage-door-cladding/assets/hero.jpg",
+    "system-cards/cards/cladmax-garage-door-cladding/assets/hero.webp",
+    "system-cards/cards/cladmax-garage-door-cladding/card.json",
+    "system-cards/cards/cladmax-garage-door-cladding/content.md",
+    "system-cards/cards/cladmax-garage-door-cladding/index.html",
+    "system-cards/cards/cladmax-garage-door-cladding/qr-code.png",
+    "system-cards/cards/deckmax-composite-decking/assets/hero.jpg",
+    "system-cards/cards/deckmax-composite-decking/assets/hero.webp",
+    "system-cards/cards/deckmax-composite-decking/card.json",
+    "system-cards/cards/deckmax-composite-decking/content.md",
+    "system-cards/cards/deckmax-composite-decking/index.html",
+    "system-cards/cards/deckmax-composite-decking/qr-code.png",
+    "system-cards/cards/screenmax-privacy-screening/assets/hero.jpg",
+    "system-cards/cards/screenmax-privacy-screening/assets/hero.webp",
+    "system-cards/cards/screenmax-privacy-screening/card.json",
+    "system-cards/cards/screenmax-privacy-screening/content.md",
+    "system-cards/cards/screenmax-privacy-screening/index.html",
+    "system-cards/cards/screenmax-privacy-screening/qr-code.png",
+    "system-cards/embed-snippets.html",
+    "system-cards/feed.json",
+    "system-cards/index.html",
+    "system-cards/install-guide.html"
+  ]
+}

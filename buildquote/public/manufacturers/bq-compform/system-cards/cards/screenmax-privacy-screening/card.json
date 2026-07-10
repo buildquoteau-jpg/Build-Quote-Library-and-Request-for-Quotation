@@ -1,0 +1,157 @@
+{
+  "id": "4aa786da-e309-4863-9cdd-326dbcc57f81",
+  "name": "BQ ScreenMax Composite Privacy Screening",
+  "product_code": "BQ-SCREENMAX-COMPOSITE",
+  "slug": "screenmax-privacy-screening",
+  "category": "Screening & Fencing",
+  "subcategory": "Composite privacy batten screen panel",
+  "description": "BQ ScreenMax is a co-extruded composite batten screening system with a UV-stable polymer cap layer and timber fibre core. Designed for residential privacy screens, feature fences, carport infill panels and outdoor room dividers. Available in Narrow Batten, Wide Batten and Slatted Panel profiles across a range of contemporary architectural colours.",
+  "hero_image_url": "./assets/hero.webp",
+  "hero_image_position_x": 50,
+  "hero_image_position_y": 50,
+  "australian_made": true,
+  "bal_rating": "29",
+  "fire_rating": null,
+  "moisture_resistant": true,
+  "acoustic_rating": "true",
+  "structural_grade": null,
+  "notes": null,
+  "website_url": "https://buildquote.com.au/manufacturers/bq-compform",
+  "install_guide_urls": [
+    {
+      "url": "https://buildquote.com.au/manufacturers/bq-compform/bq-screenmax-installation-guide.pdf",
+      "label": "Installation guide"
+    }
+  ],
+  "design_guide_url": "https://buildquote.com.au/manufacturers/bq-compform/bq-screenmax-design-guide.pdf",
+  "tech_data_url": null,
+  "manufacturer": {
+    "name": "BQ Compform",
+    "slug": "bq-compform",
+    "logo_url": "../../assets/logo.webp"
+  },
+  "system_colours": [
+    {
+      "colour_name": "Monument Grey",
+      "image_url": null,
+      "sort_order": 0,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Driftwood",
+      "image_url": null,
+      "sort_order": 1,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Sandstone",
+      "image_url": null,
+      "sort_order": 2,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Ebony",
+      "image_url": null,
+      "sort_order": 3,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Paperbark",
+      "image_url": null,
+      "sort_order": 4,
+      "is_stocked": false
+    }
+  ],
+  "system_profiles": [
+    {
+      "id": "7c80dc77-f17b-4404-b43b-0ab85d297cd6",
+      "profile_name": "65mm Narrow Batten",
+      "name": null,
+      "product_code": "BQ-SCREENMAX-NB-65",
+      "dimensions": "3,600 x 65 x 20mm",
+      "length_mm": 3600,
+      "width_mm": 65,
+      "height_mm": null,
+      "thickness_mm": 20,
+      "uom": "lm",
+      "supplier_pack_qty": 15,
+      "supplier_pack_uom": "battens",
+      "sort_order": 10
+    },
+    {
+      "id": "89a255d6-95c1-4fad-ad76-bd0d9688335e",
+      "profile_name": "90mm Wide Batten",
+      "name": null,
+      "product_code": "BQ-SCREENMAX-WB-90",
+      "dimensions": "3,600 x 90 x 25mm",
+      "length_mm": 3600,
+      "width_mm": 90,
+      "height_mm": null,
+      "thickness_mm": 25,
+      "uom": "lm",
+      "supplier_pack_qty": 10,
+      "supplier_pack_uom": "battens",
+      "sort_order": 20
+    },
+    {
+      "id": "130cf015-5471-43d1-923e-2520950463a0",
+      "profile_name": "165mm Slatted Panel",
+      "name": null,
+      "product_code": "BQ-SCREENMAX-SP-165",
+      "dimensions": "3,600 x 165 x 18mm",
+      "length_mm": 3600,
+      "width_mm": 165,
+      "height_mm": null,
+      "thickness_mm": 18,
+      "uom": "lm",
+      "supplier_pack_qty": 8,
+      "supplier_pack_uom": "battens",
+      "sort_order": 30
+    }
+  ],
+  "system_components": [
+    {
+      "id": "7a940545-a045-4b7c-bef7-c56edcba665e",
+      "role": "Structural",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ ScreenMax Steel Post 65x65x3000mm SHS",
+        "sku": "BQ-SM-POST-SHS65",
+        "description": "Powder-coated square hollow section (SHS) steel post for BQ ScreenMax privacy screen framing. Pre-drilled at 150mm centres to accept batten fixing screws. 3mm wall thickness. Specify colour to match screening.",
+        "category": "Structural",
+        "uom": "length",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "240a223b-55c4-4bfb-bce8-8d2725c5174c",
+      "role": "Accessories",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ ScreenMax Aluminium Top Track 3600mm",
+        "sku": "BQ-SM-TOPTRACK-AL",
+        "description": "Extruded aluminium U-channel top track for BQ ScreenMax batten screen panels. Captivates batten tops for a clean flush finish and prevents lateral movement. Suits all batten profiles.",
+        "category": "Accessories",
+        "uom": "length",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "7903b8f7-1186-4960-8e25-cf54d510c786",
+      "role": "Fasteners",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ ScreenMax Batten Fixing Screw 45mm TX10",
+        "sku": "BQ-SM-SCREW-TX10",
+        "description": "BQ branded class 4 self-drilling screw for fixing ScreenMax composite battens to steel SHS post framing. 45mm length, TX10 drive, low-profile countersunk head, grey epoxy coated.",
+        "category": "Fasteners",
+        "uom": "bag",
+        "procurement_route": null
+      }
+    }
+  ],
+  "local_stockists": []
+}

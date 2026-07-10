@@ -1,0 +1,157 @@
+{
+  "id": "cafc1fc5-a121-47ab-a699-26af1bc647cb",
+  "name": "BQ CladMax Composite Cladding",
+  "product_code": "BQ-CLADMAX-COMPOSITE",
+  "slug": "cladmax-composite-cladding",
+  "category": "Cladding",
+  "subcategory": "Composite timber-look facade cladding",
+  "description": "BQ CladMax is a co-extruded composite facade cladding system with a UV-stable polymer cap layer and timber fibre core. Designed for residential and light commercial exterior wall applications. Tongue-and-groove profile for concealed fixing. Available in Shadowline and Vertical Batten profiles across a range of timber-look and solid colours.",
+  "hero_image_url": "./assets/hero.webp",
+  "hero_image_position_x": 50,
+  "hero_image_position_y": 50,
+  "australian_made": true,
+  "bal_rating": "12.5",
+  "fire_rating": null,
+  "moisture_resistant": true,
+  "acoustic_rating": null,
+  "structural_grade": null,
+  "notes": null,
+  "website_url": "https://buildquote.com.au/manufacturers/bq-compform",
+  "install_guide_urls": [
+    {
+      "url": "https://buildquote.com.au/manufacturers/bq-compform/bq-cladmax-installation-guide.pdf",
+      "label": "Installation guide"
+    }
+  ],
+  "design_guide_url": "https://buildquote.com.au/manufacturers/bq-compform/bq-cladmax-design-guide.pdf",
+  "tech_data_url": null,
+  "manufacturer": {
+    "name": "BQ Compform",
+    "slug": "bq-compform",
+    "logo_url": "../../assets/logo.webp"
+  },
+  "system_colours": [
+    {
+      "colour_name": "Ironbark",
+      "image_url": null,
+      "sort_order": 0,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Coastal Grey",
+      "image_url": null,
+      "sort_order": 1,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Brushbox Natural",
+      "image_url": null,
+      "sort_order": 2,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Slate Black",
+      "image_url": null,
+      "sort_order": 3,
+      "is_stocked": true
+    },
+    {
+      "colour_name": "Warm White",
+      "image_url": null,
+      "sort_order": 4,
+      "is_stocked": false
+    }
+  ],
+  "system_profiles": [
+    {
+      "id": "27351b5f-e035-432c-a2ce-32cc4d50f03f",
+      "profile_name": "150mm Shadowline",
+      "name": null,
+      "product_code": "BQ-CLADMAX-SL-150",
+      "dimensions": "5,400 x 150 x 20mm",
+      "length_mm": 5400,
+      "width_mm": 150,
+      "height_mm": null,
+      "thickness_mm": 20,
+      "uom": "lm",
+      "supplier_pack_qty": 10,
+      "supplier_pack_uom": "boards",
+      "sort_order": 10
+    },
+    {
+      "id": "04b45e5c-7040-470d-95b7-2832112078f5",
+      "profile_name": "300mm Shadowline",
+      "name": null,
+      "product_code": "BQ-CLADMAX-SL-300",
+      "dimensions": "5,400 x 300 x 20mm",
+      "length_mm": 5400,
+      "width_mm": 300,
+      "height_mm": null,
+      "thickness_mm": 20,
+      "uom": "lm",
+      "supplier_pack_qty": 6,
+      "supplier_pack_uom": "boards",
+      "sort_order": 20
+    },
+    {
+      "id": "e978d29f-fc0f-4a22-9670-33236d564651",
+      "profile_name": "90mm Vertical Batten",
+      "name": null,
+      "product_code": "BQ-CLADMAX-VB-90",
+      "dimensions": "5,400 x 90 x 32mm",
+      "length_mm": 5400,
+      "width_mm": 90,
+      "height_mm": null,
+      "thickness_mm": 32,
+      "uom": "lm",
+      "supplier_pack_qty": 12,
+      "supplier_pack_uom": "boards",
+      "sort_order": 30
+    }
+  ],
+  "system_components": [
+    {
+      "id": "f5ac0746-94de-4895-b653-c0206b8b55b1",
+      "role": "Fasteners",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ CladMax Concealed Fixing Clip",
+        "sku": "BQ-CM-CLIP-CONC",
+        "description": "Stainless steel concealed fixing clip for BQ CladMax tongue-and-groove composite cladding boards. Provides positive lock and allows for thermal movement. Suits all CladMax profiles.",
+        "category": "Fasteners",
+        "uom": "bag",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "dca2838f-aab2-4caf-ad28-23e5a9546630",
+      "role": "Accessories",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ CladMax Aluminium Starter Strip 5400mm",
+        "sku": "BQ-CM-STARTER-AL",
+        "description": "Extruded aluminium starter strip for the first course of BQ CladMax cladding. Provides level datum, correct profile engagement and pest/weather exclusion at base.",
+        "category": "Accessories",
+        "uom": "length",
+        "procurement_route": null
+      }
+    },
+    {
+      "id": "d6b99bf8-5544-4dbc-86f1-f84a47ec8e72",
+      "role": "Trims & Flashings",
+      "notes": null,
+      "sort_order": 0,
+      "components": {
+        "name": "BQ CladMax Internal Corner Trim 3000mm",
+        "sku": "BQ-CM-ICORNER-AL",
+        "description": "Powder-coated aluminium internal corner trim for BQ CladMax cladding. Provides clean termination at re-entrant corners. Available in standard and custom colours to match cladding.",
+        "category": "Trims & Flashings",
+        "uom": "length",
+        "procurement_route": null
+      }
+    }
+  ],
+  "local_stockists": []
+}

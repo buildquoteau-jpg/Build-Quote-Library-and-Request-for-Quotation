@@ -27,6 +27,26 @@ const STATIC_CARDS: { manufacturerSlug: string; cardPath: string; slugSuffix: st
     cardPath: 'manufacturers/bq-aquashield/system-cards/cards/wet-area-membrane',
     slugSuffix: '-static',
   },
+  {
+    manufacturerSlug: 'bq-compform',
+    cardPath: 'manufacturers/bq-compform/system-cards/cards/cladmax-composite-cladding',
+    slugSuffix: '-static',
+  },
+  {
+    manufacturerSlug: 'bq-compform',
+    cardPath: 'manufacturers/bq-compform/system-cards/cards/cladmax-garage-door-cladding',
+    slugSuffix: '-static',
+  },
+  {
+    manufacturerSlug: 'bq-compform',
+    cardPath: 'manufacturers/bq-compform/system-cards/cards/deckmax-composite-decking',
+    slugSuffix: '-static',
+  },
+  {
+    manufacturerSlug: 'bq-compform',
+    cardPath: 'manufacturers/bq-compform/system-cards/cards/screenmax-privacy-screening',
+    slugSuffix: '-static',
+  },
 ]
 
 type PackageCardJson = {
