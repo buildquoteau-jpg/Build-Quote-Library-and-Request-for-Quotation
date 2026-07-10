@@ -51,10 +51,14 @@ export default async function ManufacturerPage({
 
   // Experimental: static Data Studio package cards run alongside the live
   // Supabase-backed systems for this manufacturer (see staticSystemCards.ts).
-  const systems = [
-    ...(await getSystemsForManufacturer(manufacturer)),
-    ...getStaticSystemsForManufacturer(manufacturer),
-  ]
+  // Where a static package has replaced a live DB system (same base slug),
+  // hide the live original so the two don't show as duplicate tiles.
+  const staticSystems = getStaticSystemsForManufacturer(manufacturer)
+  const staticBaseSlugs = new Set(staticSystems.map(s => s.slug.replace(/-static$/, '')))
+  const liveSystems = (await getSystemsForManufacturer(manufacturer)).filter(
+    s => !staticBaseSlugs.has(s.slug)
+  )
+  const systems = [...liveSystems, ...staticSystems]
 
   const heroImg = mfr.hero_wide_image_url ?? mfr.hero_image_url
   const heroPosY = (mfr.hero_wide_image_url ? mfr.hero_wide_image_position_y : mfr.hero_image_position_y) ?? 50
