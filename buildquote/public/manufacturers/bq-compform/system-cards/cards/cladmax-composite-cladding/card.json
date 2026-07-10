@@ -8,7 +8,7 @@
   "description": "BQ CladMax is a co-extruded composite facade cladding system with a UV-stable polymer cap layer and timber fibre core. Designed for residential and light commercial exterior wall applications. Tongue-and-groove profile for concealed fixing. Available in Shadowline and Vertical Batten profiles across a range of timber-look and solid colours.",
   "hero_image_url": "./assets/hero.webp",
   "hero_image_position_x": 50,
-  "hero_image_position_y": 50,
+  "hero_image_position_y": 1,
   "australian_made": true,
   "bal_rating": "12.5",
   "fire_rating": null,
