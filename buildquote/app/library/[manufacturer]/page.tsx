@@ -2,9 +2,11 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getManufacturerBySlug, getSystemsForManufacturer } from '@/lib/data/getSystems'
 import { getStaticSystemsForManufacturer } from '@/lib/data/staticSystemCards'
+import { getPublishedSystemsForManufacturer } from '@/lib/data/publishedCards'
 import { SystemCardTileUI } from '@/components/library/SystemCardTileUI'
 
-export const dynamic = 'force-dynamic'
+// ISR — revalidated on demand by /api/revalidate-card when a card publishes.
+export const revalidate = 3600
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 
@@ -55,10 +57,18 @@ export default async function ManufacturerPage({
   // hide the live original so the two don't show as duplicate tiles.
   const staticSystems = getStaticSystemsForManufacturer(manufacturer)
   const staticBaseSlugs = new Set(staticSystems.map(s => s.slug.replace(/-static$/, '')))
+  // Hybrid-published snapshots win over legacy DB rows and static packages
+  // with the same slug — one tile per card, newest source first.
+  const publishedSystems = await getPublishedSystemsForManufacturer(manufacturer)
+  const publishedSlugs = new Set(publishedSystems.map(s => s.slug))
   const liveSystems = (await getSystemsForManufacturer(manufacturer)).filter(
-    s => !staticBaseSlugs.has(s.slug)
+    s => !staticBaseSlugs.has(s.slug) && !publishedSlugs.has(s.slug)
   )
-  const systems = [...liveSystems, ...staticSystems]
+  const systems = [
+    ...publishedSystems,
+    ...liveSystems,
+    ...staticSystems.filter(s => !publishedSlugs.has(s.slug.replace(/-static$/, ''))),
+  ]
 
   const heroImg = mfr.hero_wide_image_url ?? mfr.hero_image_url
   const heroPosY = (mfr.hero_wide_image_url ? mfr.hero_wide_image_position_y : mfr.hero_image_position_y) ?? 50

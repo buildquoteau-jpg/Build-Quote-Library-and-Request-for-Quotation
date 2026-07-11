@@ -2,9 +2,12 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getSystemByManufacturerAndSlug, getStockistsForSystem } from '@/lib/data/getSystems'
 import { getStaticSystemByManufacturerAndSlug, getStaticStockists } from '@/lib/data/staticSystemCards'
+import { getPublishedCard, getPublishedStockists } from '@/lib/data/publishedCards'
 import { SystemCardWrapper } from '@/app/library/[manufacturer]/[system]/SystemCardWrapper'
 
-export const dynamic = 'force-dynamic'
+// ISR: pages are cached and re-rendered on demand — Data Studio pings
+// /api/revalidate-card on every publish, with the hourly TTL as backstop.
+export const revalidate = 3600
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 
@@ -14,7 +17,9 @@ export async function generateMetadata({
   params: Promise<{ manufacturer: string; system: string }>
 }): Promise<Metadata> {
   const { manufacturer, system: systemSlug } = await params
-  const system = (await getSystemByManufacturerAndSlug(manufacturer, systemSlug))
+  const published = await getPublishedCard(manufacturer, systemSlug)
+  const system = published?.system
+    ?? (await getSystemByManufacturerAndSlug(manufacturer, systemSlug))
     ?? getStaticSystemByManufacturerAndSlug(manufacturer, systemSlug)
   if (!system) return {}
 
@@ -45,10 +50,10 @@ export async function generateMetadata({
     ? `${rawDescription.slice(0, 160).replace(/\s+\S*$/, '')}…`
     : rawDescription
 
-  // Absolute, valid image — the published hero image when present, else a
-  // generated BuildQuote-branded fallback (guaranteed correct 1200×630, never
-  // a broken/relative URL).
-  const heroUrl = system.hero_image_url?.trim()
+  // Absolute, valid image — the crawler-safe jpg cover for hybrid-published
+  // cards, else the hero image, else a generated BuildQuote-branded fallback
+  // (guaranteed correct 1200×630, never a broken/relative URL).
+  const heroUrl = (published?.ogImageUrl ?? system.hero_image_url)?.trim()
   const hasValidHero = !!heroUrl && /^https?:\/\//i.test(heroUrl)
   const imageUrl = hasValidHero
     ? heroUrl!
@@ -84,16 +89,26 @@ export default async function SystemPage({
   params: Promise<{ manufacturer: string; system: string }>
 }) {
   const { manufacturer, system: systemSlug } = await params
-  const liveSystem = await getSystemByManufacturerAndSlug(manufacturer, systemSlug)
-  const system = liveSystem ?? getStaticSystemByManufacturerAndSlug(manufacturer, systemSlug)
+
+  // Resolution order: hybrid-published snapshot → legacy systems row →
+  // installed static package. Snapshot wins so a re-publish instantly
+  // supersedes older copies of the same card.
+  const published = await getPublishedCard(manufacturer, systemSlug)
+  const liveSystem = published ? null : await getSystemByManufacturerAndSlug(manufacturer, systemSlug)
+  const system = published?.system ?? liveSystem ?? getStaticSystemByManufacturerAndSlug(manufacturer, systemSlug)
   if (!system) notFound()
 
-  // Static package cards aren't in the `systems` table, so the Supabase
-  // stockist join can't find them — the package's own bundled stockist list
-  // (card.json → local_stockists) is loaded separately instead.
-  const stockists = liveSystem
-    ? await getStockistsForSystem(liveSystem.id)
-    : getStaticStockists(manufacturer, systemSlug)
+  // Stockists stay live from the DB (per-revalidation): published cards use
+  // the production join when linked (production_system_id), falling back to
+  // the stockist copy embedded in the snapshot; static package cards read
+  // their own bundled list from card.json.
+  const stockists = published
+    ? (published.productionSystemId
+        ? await getStockistsForSystem(published.productionSystemId)
+        : await getPublishedStockists(manufacturer, systemSlug))
+    : liveSystem
+      ? await getStockistsForSystem(liveSystem.id)
+      : getStaticStockists(manufacturer, systemSlug)
 
   const jsonLd = {
     '@context': 'https://schema.org',

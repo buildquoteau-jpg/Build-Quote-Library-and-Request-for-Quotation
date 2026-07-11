@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import { getAllSystems, getManufacturers } from '@/lib/data/getSystems'
+import { getAllPublishedSystems } from '@/lib/data/publishedCards'
 import { LibraryPageClient } from '@/components/library/LibraryPageClient'
 
-export const dynamic = 'force-dynamic'
+// ISR — revalidated on demand by /api/revalidate-card when a card publishes.
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Building Product Library | BuildQuote',
@@ -20,7 +22,19 @@ export const metadata: Metadata = {
 }
 
 export default async function LibraryPage() {
-  const [systems, manufacturers] = await Promise.all([getAllSystems(), getManufacturers()])
+  const [legacySystems, publishedSystems, manufacturers] = await Promise.all([
+    getAllSystems(),
+    getAllPublishedSystems(),
+    getManufacturers(),
+  ])
+
+  // Hybrid-published snapshots win over legacy systems rows with the same
+  // manufacturer + slug so re-published cards never show as duplicates.
+  const publishedKeys = new Set(publishedSystems.map(s => `${s.manufacturer?.slug}/${s.slug}`))
+  const systems = [
+    ...publishedSystems,
+    ...legacySystems.filter(s => !publishedKeys.has(`${s.manufacturer?.slug}/${s.slug}`)),
+  ]
 
   const categories = Array.from(
     new Set(systems.map(s => s.category || 'Other'))
