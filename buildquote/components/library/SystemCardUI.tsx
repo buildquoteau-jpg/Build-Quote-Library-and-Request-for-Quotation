@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import { HeroGallery } from '@/components/library/HeroGallery'
 import type { LibrarySystem, LibraryProfile, LibraryColour, LibraryComponent, Stockist } from '@/lib/data/getSystems'
 
 // Strip trailing " System" / " Systems" from display names
@@ -788,29 +788,17 @@ export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: P
       fontFamily: 'var(--font-barlow), sans-serif',
     }}>
 
-      {/* Hero */}
-      <div style={{
-        position: 'relative',
-        height: 'clamp(180px, 42vw, 240px)',
-        background: system.hero_image_url?.trim()
-          ? undefined
-          : 'linear-gradient(135deg, #185D7A 0%, #0f3d52 100%)',
-        overflow: 'hidden',
-      }}>
-        {system.hero_image_url?.trim() && (
-          <Image
-            src={system.hero_image_url.trim()}
-            alt={system.name}
-            fill
-            priority
-            sizes="(max-width: 720px) 100vw, 680px"
-            style={{ objectFit: 'cover', objectPosition: `${posX}% ${posY}%` }}
-          />
-        )}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,30,45,0.88) 0%, rgba(15,30,45,0.2) 60%, transparent 100%)' }} />
-
-        {/* Favourite heart — logged-in builders only */}
-        {isLoggedIn && (
+      {/* Hero — swipeable gallery when the card ships multiple images,
+          classic single hero otherwise (HeroGallery handles both). */}
+      <HeroGallery
+        images={system.gallery_images ?? []}
+        fallbackHero={{
+          url: system.hero_image_url?.trim() ?? null,
+          alt: system.name,
+          posX,
+          posY,
+        }}
+        topRight={isLoggedIn ? (
           <button
             type="button"
             onClick={toggleFavourite}
@@ -832,28 +820,42 @@ export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: P
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21l7.78-7.55 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
           </button>
+        ) : undefined}
+        overlay={(
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px 18px', pointerEvents: 'none' }}>
+            {system.manufacturer && (
+              <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', marginBottom: '4px' }}>
+                {system.manufacturer.name}
+              </div>
+            )}
+            <h1 style={{
+              fontSize: 'clamp(20px, 3vw, 26px)', fontWeight: 800, color: '#fff',
+              margin: 0, lineHeight: 1.15, letterSpacing: '-0.01em',
+              fontFamily: 'var(--font-barlow-condensed), sans-serif',
+            }}>
+              {stripSystem(system.name)}
+            </h1>
+            {(system.category || system.subcategory) && (
+              <div style={{ marginTop: '4px', fontSize: '12px', color: 'rgba(255,255,255,0.65)' }}>
+                {[system.category, system.subcategory].filter(Boolean).join(' · ')}
+              </div>
+            )}
+          </div>
         )}
+      />
 
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px 18px' }}>
-          {system.manufacturer && (
-            <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', marginBottom: '4px' }}>
-              {system.manufacturer.name}
-            </div>
+      {/* Primary resources — pinned directly beneath the gallery so the two
+          most-used actions are reachable before any scrolling. */}
+      {(system.website_url?.trim() || (system.install_guide_urls?.length ?? 0) > 0) && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px 20px 0' }}>
+          {system.website_url?.trim() && (
+            <GuideLink href={system.website_url.trim()} context={`View ${mfrName}`} label="Website" />
           )}
-          <h1 style={{
-            fontSize: 'clamp(20px, 3vw, 26px)', fontWeight: 800, color: '#fff',
-            margin: 0, lineHeight: 1.15, letterSpacing: '-0.01em',
-            fontFamily: 'var(--font-barlow-condensed), sans-serif',
-          }}>
-            {stripSystem(system.name)}
-          </h1>
-          {(system.category || system.subcategory) && (
-            <div style={{ marginTop: '4px', fontSize: '12px', color: 'rgba(255,255,255,0.65)' }}>
-              {[system.category, system.subcategory].filter(Boolean).join(' · ')}
-            </div>
-          )}
+          {(Array.isArray(system.install_guide_urls) ? system.install_guide_urls : []).map((guide, i) => (
+            <GuideLink key={i} href={guide.url} context={`View ${mfrName}`} label="Installation guide" />
+          ))}
         </div>
-      </div>
+      )}
 
       {/* Body */}
       <div style={{ padding: '20px 20px 24px' }}>
@@ -1039,16 +1041,8 @@ export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: P
             </div>
           )}
 
-          {/* Manufacturer website — only when the column holds a real URL
-              (guard against NULL and whitespace-only/dirty values). */}
-          {system.website_url?.trim() && (
-            <GuideLink href={system.website_url.trim()} context={`View ${mfrName}`} label="Website" />
-          )}
-
-          {/* Install guides */}
-          {(Array.isArray(system.install_guide_urls) ? system.install_guide_urls : []).map((guide, i) => (
-            <GuideLink key={i} href={guide.url} context={`View ${mfrName}`} label="Installation guide" />
-          ))}
+          {/* Website + install guides moved beneath the hero gallery (top of
+              card) — only the secondary guides remain here. */}
 
           {/* Design guide */}
           {system.design_guide_url && (

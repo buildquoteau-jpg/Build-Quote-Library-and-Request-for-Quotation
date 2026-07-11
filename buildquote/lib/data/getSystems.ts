@@ -1,4 +1,3 @@
-import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseService } from '@/lib/supabase-service'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -55,6 +54,14 @@ export type LibrarySystem = {
   hero_image_url: string | null
   hero_image_position_x: number | null
   hero_image_position_y: number | null
+  // Optional swipeable hero gallery (hybrid-published cards). Index 0 is the
+  // cover/share image; cards without one render the single hero as before.
+  gallery_images?: {
+    url: string
+    og_jpg_url?: string | null
+    alt: string
+    caption?: string | null
+  }[] | null
   australian_made: boolean | null
   bal_rating: string | null
   fire_rating: string | null
@@ -131,7 +138,9 @@ export type ManufacturerListItem = {
 // Reads Supabase directly (was previously fetched cross-origin from the MFP
 // /api/manufacturers endpoint).
 export async function getManufacturers(): Promise<ManufacturerListItem[]> {
-  const supabase = await createSupabaseServerClient()
+  // Cookie-free client: these are public-catalogue reads used by ISR library
+  // pages — touching cookies() would force them back to per-request rendering.
+  const supabase = supabaseService
 
   const { data, error } = await supabase
     .from('manufacturers')
@@ -158,7 +167,9 @@ export async function getManufacturers(): Promise<ManufacturerListItem[]> {
 }
 
 export async function getAllSystems(): Promise<LibrarySystem[]> {
-  const supabase = await createSupabaseServerClient()
+  // Cookie-free client: these are public-catalogue reads used by ISR library
+  // pages — touching cookies() would force them back to per-request rendering.
+  const supabase = supabaseService
 
   const { data, error } = await supabase
     .from('manufacturers')
@@ -280,7 +291,9 @@ function mapSystemDetail(sys: any): LibrarySystem {
 }
 
 export async function getSystemBySlug(slug: string): Promise<LibrarySystem | null> {
-  const supabase = await createSupabaseServerClient()
+  // Cookie-free client: these are public-catalogue reads used by ISR library
+  // pages — touching cookies() would force them back to per-request rendering.
+  const supabase = supabaseService
   const { data, error } = await supabase
     .from('systems').select(SYSTEM_DETAIL_SELECT).eq('slug', slug).maybeSingle()
   if (error || !data) {
@@ -296,7 +309,9 @@ export async function getSystemByManufacturerAndSlug(
   mfrSlug: string,
   systemSlug: string,
 ): Promise<LibrarySystem | null> {
-  const supabase = await createSupabaseServerClient()
+  // Cookie-free client: these are public-catalogue reads used by ISR library
+  // pages — touching cookies() would force them back to per-request rendering.
+  const supabase = supabaseService
   const { data, error } = await supabase
     .from('systems').select(SYSTEM_DETAIL_SELECT)
     .eq('slug', systemSlug)
@@ -325,7 +340,9 @@ export type ManufacturerDetail = {
 }
 
 export async function getManufacturerBySlug(slug: string): Promise<ManufacturerDetail | null> {
-  const supabase = await createSupabaseServerClient()
+  // Cookie-free client: these are public-catalogue reads used by ISR library
+  // pages — touching cookies() would force them back to per-request rendering.
+  const supabase = supabaseService
   const { data, error } = await supabase
     .from('manufacturers')
     .select('id, name, slug, description, logo_url, website_url, hero_image_url, hero_image_position_y, hero_wide_image_url, hero_wide_image_position_y, seo_title, seo_description')
@@ -341,7 +358,9 @@ export async function getManufacturerBySlug(slug: string): Promise<ManufacturerD
 // A manufacturer's systems for its landing-page grid — mirrors getAllSystems'
 // shape (tile counts) but scoped to one manufacturer.
 export async function getSystemsForManufacturer(mfrSlug: string): Promise<LibrarySystem[]> {
-  const supabase = await createSupabaseServerClient()
+  // Cookie-free client: these are public-catalogue reads used by ISR library
+  // pages — touching cookies() would force them back to per-request rendering.
+  const supabase = supabaseService
   const { data, error } = await supabase
     .from('manufacturers')
     .select(`
