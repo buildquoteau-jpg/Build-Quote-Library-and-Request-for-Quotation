@@ -797,6 +797,7 @@ export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: P
           alt: system.name,
           posX,
           posY,
+          zoom: system.hero_image_zoom ?? 1,
         }}
         topRight={isLoggedIn ? (
           <button

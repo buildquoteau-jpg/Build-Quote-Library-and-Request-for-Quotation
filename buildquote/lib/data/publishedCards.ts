@@ -57,6 +57,7 @@ function adaptPublishedCardJson(row: PublishedCardRow): LibrarySystem {
     hero_image_url: card.gallery_images?.[0]?.url ?? card.hero_image_url ?? row.cover_url,
     hero_image_position_x: card.hero_image_position_x ?? null,
     hero_image_position_y: card.hero_image_position_y ?? null,
+    hero_image_zoom: card.hero_image_zoom ?? null,
     gallery_images: card.gallery_images ?? null,
     australian_made: card.australian_made ?? null,
     bal_rating: card.bal_rating ?? null,

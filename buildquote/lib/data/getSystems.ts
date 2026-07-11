@@ -54,6 +54,9 @@ export type LibrarySystem = {
   hero_image_url: string | null
   hero_image_position_x: number | null
   hero_image_position_y: number | null
+  // Zoom into the hero around the crop position (1 = fit … 3 = 300%);
+  // carried by hybrid-published cards, absent on legacy systems rows.
+  hero_image_zoom?: number | null
   // Optional swipeable hero gallery (hybrid-published cards). Index 0 is the
   // cover/share image; cards without one render the single hero as before.
   gallery_images?: {
