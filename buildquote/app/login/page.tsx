@@ -175,7 +175,15 @@ function LoginForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-text-secondary mb-1.5">Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-semibold text-text-secondary">Password</label>
+                <a
+                  href={`/reset-password?next=${encodeURIComponent(next)}`}
+                  className="text-sm font-semibold text-navy hover:underline"
+                >
+                  Forgot password?
+                </a>
+              </div>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
