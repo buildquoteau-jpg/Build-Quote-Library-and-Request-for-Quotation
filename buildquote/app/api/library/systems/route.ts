@@ -68,6 +68,7 @@ export async function GET(req: NextRequest) {
       design_guide_url: null,
       tech_data_url: null,
       custom_document_links: null,
+      custom_technical_attributes: null,
       product_code: '',
       manufacturer: sys.manufacturers ?? null,
       system_colours: ((sys.system_colours ?? []) as any[])

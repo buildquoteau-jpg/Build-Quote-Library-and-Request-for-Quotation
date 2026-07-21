@@ -137,6 +137,7 @@ type PackageCardJson = {
   design_guide_url: string | null
   tech_data_url: string | null
   custom_document_links: { url: string; label: string }[] | null
+  custom_technical_attributes: { label: string; value: string }[] | null
   manufacturer: { name: string; slug: string; logo_url: string | null }
   system_colours: LibrarySystem['system_colours']
   system_profiles: LibrarySystem['system_profiles']
@@ -220,6 +221,7 @@ function toLibrarySystem(card: PackageCardJson, cardPath: string, slugSuffix: st
     design_guide_url: card.design_guide_url,
     tech_data_url: card.tech_data_url,
     custom_document_links: card.custom_document_links ?? null,
+    custom_technical_attributes: card.custom_technical_attributes ?? null,
     sort_order: 9999,
     manufacturer: card.manufacturer,
     system_colours: card.system_colours,

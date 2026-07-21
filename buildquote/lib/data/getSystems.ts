@@ -79,6 +79,9 @@ export type LibrarySystem = {
   // Extra named document buttons (energy ratings, sustainability reports…).
   // `label` is the button text; `url` is a PDF or web page.
   custom_document_links: { label: string; url: string }[] | null
+  // Freeform spec facts with no dedicated column (warranty period, R-value…),
+  // rendered as extra "label: value" attribute pills.
+  custom_technical_attributes: { label: string; value: string }[] | null
   sort_order: number
   manufacturer: {
     name: string
@@ -212,6 +215,7 @@ export async function getAllSystems(): Promise<LibrarySystem[]> {
         design_guide_url: null,
         tech_data_url: null,
         custom_document_links: null,
+        custom_technical_attributes: null,
         manufacturer: { name: mfr.name, slug: mfr.slug, logo_url: mfr.logo_url, description: mfr.description ?? null },
         system_colours: ((sys.system_colours || []) as LibraryColour[])
           .sort((a, b) => a.sort_order - b.sort_order),
@@ -270,6 +274,7 @@ const SYSTEM_DETAIL_SELECT = `
   australian_made, bal_rating, fire_rating, moisture_resistant,
   acoustic_rating, structural_grade, notes, sort_order,
   website_url, install_guide_urls, design_guide_url, tech_data_url, custom_document_links,
+  custom_technical_attributes,
   manufacturers!inner ( name, slug, logo_url ),
   system_colours ( colour_name, image_url, sort_order, is_stocked ),
   system_profiles (
@@ -401,6 +406,7 @@ export async function getSystemsForManufacturer(mfrSlug: string): Promise<Librar
     design_guide_url: null,
     tech_data_url: null,
     custom_document_links: null,
+    custom_technical_attributes: null,
     manufacturer: { name: mfr.name, slug: mfr.slug, logo_url: mfr.logo_url, description: mfr.description ?? null },
     system_colours: ((sys.system_colours || []) as LibraryColour[]).sort((a, b) => a.sort_order - b.sort_order),
     system_profiles: sys.system_profiles || [],
