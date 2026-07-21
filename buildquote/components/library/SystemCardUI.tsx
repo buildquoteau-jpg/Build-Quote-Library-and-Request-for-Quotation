@@ -1055,6 +1055,12 @@ export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: P
             <GuideLink href={system.tech_data_url} context={`View ${mfrName}`} label="Technical guide" />
           )}
 
+          {/* Extra named documents (energy ratings, sustainability reports…) —
+              the manufacturer-supplied label is the button text. */}
+          {(Array.isArray(system.custom_document_links) ? system.custom_document_links : []).map((doc, i) => (
+            <GuideLink key={i} href={doc.url} context={`View ${mfrName}`} label={doc.label || 'Document'} />
+          ))}
+
         </div>
 
       </div>

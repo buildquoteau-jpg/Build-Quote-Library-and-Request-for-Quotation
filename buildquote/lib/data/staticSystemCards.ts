@@ -136,6 +136,7 @@ type PackageCardJson = {
   install_guide_urls: { url: string; label: string }[] | null
   design_guide_url: string | null
   tech_data_url: string | null
+  custom_document_links: { url: string; label: string }[] | null
   manufacturer: { name: string; slug: string; logo_url: string | null }
   system_colours: LibrarySystem['system_colours']
   system_profiles: LibrarySystem['system_profiles']
@@ -218,6 +219,7 @@ function toLibrarySystem(card: PackageCardJson, cardPath: string, slugSuffix: st
     install_guide_urls: card.install_guide_urls,
     design_guide_url: card.design_guide_url,
     tech_data_url: card.tech_data_url,
+    custom_document_links: card.custom_document_links ?? null,
     sort_order: 9999,
     manufacturer: card.manufacturer,
     system_colours: card.system_colours,

@@ -70,6 +70,7 @@ function adaptPublishedCardJson(row: PublishedCardRow): LibrarySystem {
     install_guide_urls: card.install_guide_urls ?? null,
     design_guide_url: card.design_guide_url ?? null,
     tech_data_url: card.tech_data_url ?? null,
+    custom_document_links: card.custom_document_links ?? null,
     sort_order: card.sort_order ?? 0,
     manufacturer: card.manufacturer ?? { name: row.mfr_name, slug: row.mfr_slug, logo_url: null },
     system_colours: card.system_colours ?? [],
