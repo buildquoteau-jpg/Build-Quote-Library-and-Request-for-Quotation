@@ -15,6 +15,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { LibrarySystem } from '@/lib/data/getSystems'
+import { fuzzyIncludes } from '@/lib/fuzzyMatch'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -313,7 +314,7 @@ function scoreSystem(s: LibrarySystem, baseTerms: Set<string>, allTerms: string[
     const isBase = baseTerms.has(term)
     const factor = isBase ? 1 : SYNONYM_FACTOR
     for (const f of fields) {
-      if (f.text.includes(term)) {
+      if (fuzzyIncludes(f.text, term)) {
         score += f.weight * factor
         // A typed word landing in a high-signal field = confident match.
         if (isBase && f.strong) strong = true

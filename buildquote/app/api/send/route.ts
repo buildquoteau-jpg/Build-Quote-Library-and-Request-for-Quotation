@@ -99,7 +99,11 @@ export async function POST(req: NextRequest) {
         bcc: ['rfq@buildquote.com.au'],
         cc,
         replyTo: builderEmail,
-        subject: `RFQ from ${payload.builder.builderName} — ${payload.builder.company} — ${payload.rfqId}`,
+        subject: [
+          `RFQ from ${payload.builder.builderName}`,
+          payload.builder.company && payload.builder.company !== payload.builder.builderName ? payload.builder.company : null,
+          payload.rfqId,
+        ].filter(Boolean).join(' — '),
         html,
         attachments: [
           { filename: `${payload.rfqId}.pdf`, content: pdfBuffer },
@@ -139,6 +143,15 @@ export async function POST(req: NextRequest) {
         supplier_email: payload.supplier?.supplierEmail || null,
         rfq_id_short: payload.rfqId || null,
         draft_id: payload.draftId || null,
+        builder_abn: payload.builder.abn || null,
+        builder_phone: payload.builder.phone || null,
+        pm_name: payload.pmName || null,
+        pm_phone: payload.pmPhone || null,
+        site_suburb: payload.siteSuburb || null,
+        date_required: payload.dateRequired || null,
+        site_access_notes: payload.siteAccessNotes || null,
+        preferred_contact: payload.preferredContact || null,
+        supplier_account_number: payload.supplier?.accountNumber || null,
       })
       .select('id')
       .single()

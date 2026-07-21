@@ -43,14 +43,14 @@ export async function GET(
     builder: {
       builderName: rfq.builder_name || '',
       company: rfq.project_name || '',
-      abn: '',
-      phone: '',
+      abn: rfq.builder_abn || '',
+      phone: rfq.builder_phone || '',
       email: rfq.builder_email || '',
     },
     supplier: {
       supplierName: rfq.supplier_name || '',
       supplierEmail: rfq.supplier_email || '',
-      accountNumber: '',
+      accountNumber: rfq.supplier_account_number || '',
     },
     items: (rfqItems || []).map((item: any) => ({
       id: item.id,
@@ -67,16 +67,16 @@ export async function GET(
     })),
     delivery: 'delivery',
     siteAddress: rfq.delivery_location || '',
-    siteSuburb: '',
-    dateRequired: '',
+    siteSuburb: rfq.site_suburb || '',
+    dateRequired: rfq.date_required || '',
     message: rfq.notes || '',
     projectReference: rfq.project_reference || '',
     sendToSupplier: rfq.send_to_supplier !== false,
     sendCopyToSelf: false,
-    pmName: '',
-    pmPhone: '',
-    siteAccessNotes: '',
-    preferredContact: 'either',
+    pmName: rfq.pm_name || '',
+    pmPhone: rfq.pm_phone || '',
+    siteAccessNotes: rfq.site_access_notes || '',
+    preferredContact: (rfq.preferred_contact as 'phone' | 'email' | 'either') || 'either',
   }
 
   try {

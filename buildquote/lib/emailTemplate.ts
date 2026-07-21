@@ -53,9 +53,20 @@ export function buildEmailHtml(payload: RFQPayload): string {
   <!-- ORANGE ACCENT BAR -->
   <tr><td style="background:#f97316;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
 
+  <!-- GREETING -->
+  <tr>
+    <td style="padding:24px 32px 0;">
+      <p style="margin:0 0 6px;font-size:15px;color:#0f172a;">Dear ${supplier.supplierName || 'Supplier'},</p>
+      <p style="margin:0;font-size:13px;color:#334155;line-height:1.5;">
+        You have received a request for quotation for building materials from <strong>${builder.builderName}</strong>.
+        Please correspond directly with ${builder.builderName} to acknowledge this request for quotation.
+      </p>
+    </td>
+  </tr>
+
   <!-- FROM / TO -->
   <tr>
-    <td style="padding:24px 32px 16px;">
+    <td style="padding:16px 32px 16px;">
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
           <td style="width:50%;vertical-align:top;padding-right:16px;">
