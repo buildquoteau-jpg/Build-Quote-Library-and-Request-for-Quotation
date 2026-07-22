@@ -14,6 +14,7 @@ export type LibraryProfile = {
   profile_name: string | null
   name: string | null
   product_code: string | null
+  description: string | null
   dimensions: string | null
   length_mm: number | null
   width_mm: number | null
@@ -278,7 +279,7 @@ const SYSTEM_DETAIL_SELECT = `
   manufacturers!inner ( name, slug, logo_url ),
   system_colours ( colour_name, image_url, sort_order, is_stocked ),
   system_profiles (
-    id, profile_name, name, product_code, dimensions,
+    id, profile_name, name, product_code, description, dimensions,
     length_mm, width_mm, height_mm, thickness_mm,
     uom, supplier_pack_qty, supplier_pack_uom, sort_order
   ),
