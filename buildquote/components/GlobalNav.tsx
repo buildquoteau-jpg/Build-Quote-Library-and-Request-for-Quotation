@@ -15,7 +15,7 @@ const NAV_LINKS = [
 ]
 
 const INTERNAL_LINKS = [
-  { label: 'Supplier Portal', href: 'https://search.buildquote.com.au',        external: true },
+  { label: 'Supplier Portal', href: `${MFP}/supplier/login`,             external: true },
   { label: 'Data Studio',     href: 'https://studio.buildquote.com.au',     external: true },
 ]
 
