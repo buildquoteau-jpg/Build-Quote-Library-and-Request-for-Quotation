@@ -147,15 +147,25 @@ export type ManufacturerListItem = {
 // Manufacturers with at least one system, for the SEO directory page.
 // Reads Supabase directly (was previously fetched cross-origin from the MFP
 // /api/manufacturers endpoint).
+//
+// Counts both the legacy `systems` join AND hybrid-published cards
+// (published_cards, written by Data Studio's publishCardLive — see
+// lib/data/publishedCards.ts). Manufacturers who have only ever used the
+// new instant-publish flow have zero legacy `systems` rows, so counting
+// legacy systems alone hid them from this list entirely even though their
+// cards are live on the product grid.
 export async function getManufacturers(): Promise<ManufacturerListItem[]> {
   // Cookie-free client: these are public-catalogue reads used by ISR library
   // pages — touching cookies() would force them back to per-request rendering.
   const supabase = supabaseService
 
-  const { data, error } = await supabase
-    .from('manufacturers')
-    .select('id, name, slug, description, logo_url, hero_image_url, hero_image_position_y, systems ( id )')
-    .order('name')
+  const [{ data, error }, publishedCounts] = await Promise.all([
+    supabase
+      .from('manufacturers')
+      .select('id, name, slug, description, logo_url, hero_image_url, hero_image_position_y, systems ( id )')
+      .order('name'),
+    getPublishedCardCountsBySlug(),
+  ])
 
   if (error || !data) {
     console.error('[getManufacturers]', error)
@@ -171,9 +181,30 @@ export async function getManufacturers(): Promise<ManufacturerListItem[]> {
       logo_url: m.logo_url,
       hero_image_url: m.hero_image_url,
       hero_image_position_y: m.hero_image_position_y ?? null,
-      system_count: (m.systems || []).length,
+      system_count: (m.systems || []).length + (publishedCounts.get(m.slug) ?? 0),
     }))
     .filter(m => m.system_count > 0)
+}
+
+async function getPublishedCardCountsBySlug(): Promise<Map<string, number>> {
+  const { data, error } = await supabaseService
+    .from('published_cards')
+    .select('mfr_slug')
+    .eq('is_latest', true)
+    .eq('status', 'published')
+
+  const counts = new Map<string, number>()
+  if (error || !data) {
+    // Table absent (migration not applied yet) degrades to legacy-only counts.
+    if (error && !/does not exist/i.test(error.message)) {
+      console.error('[getPublishedCardCountsBySlug]', error)
+    }
+    return counts
+  }
+  for (const row of data as { mfr_slug: string }[]) {
+    counts.set(row.mfr_slug, (counts.get(row.mfr_slug) ?? 0) + 1)
+  }
+  return counts
 }
 
 export async function getAllSystems(): Promise<LibrarySystem[]> {
