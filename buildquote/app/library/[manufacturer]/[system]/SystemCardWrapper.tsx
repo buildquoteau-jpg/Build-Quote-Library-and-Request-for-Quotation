@@ -1,7 +1,7 @@
 'use client'
 
 import { useShoppingList } from '@/components/library/ShoppingListProvider'
-import { SystemCardUI } from '@/components/library/SystemCardUI'
+import { SystemCardV2Experience } from '@/components/library/system-card-v2/SystemCardV2Experience'
 import type { LibrarySystem, Stockist } from '@/lib/data/getSystems'
 
 export function SystemCardWrapper({
@@ -14,5 +14,5 @@ export function SystemCardWrapper({
   cardUrl?: string
 }) {
   const { addItems } = useShoppingList()
-  return <SystemCardUI system={system} stockists={stockists} onAddToList={addItems} cardUrl={cardUrl} />
+  return <SystemCardV2Experience system={system} stockists={stockists} onAddToList={addItems} cardUrl={cardUrl} />
 }

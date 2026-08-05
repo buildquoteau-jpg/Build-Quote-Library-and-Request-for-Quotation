@@ -134,9 +134,12 @@ export default async function SystemPage({
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <main style={{ fontFamily: 'var(--font-barlow), sans-serif', background: '#f5f7f9', minHeight: '100vh' }}>
+      <main style={{ fontFamily: 'var(--font-barlow), sans-serif', minHeight: '100vh' }}>
 
-        {/* Sticky branded nav — back to manufacturer + wordmark, always reachable */}
+        {/* Sticky branded nav — back to manufacturer + wordmark, always reachable.
+            System Card V2 supplies its own full-bleed dark backdrop below this,
+            so the light 720px page shell the old card sat in was dropped here —
+            the "Back to X" link it carried is redundant with this nav bar. */}
         <div style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(255,255,255,0.92)', backdropFilter: 'saturate(180%) blur(8px)', WebkitBackdropFilter: 'saturate(180%) blur(8px)', borderBottom: '1px solid #d1d9e0', boxShadow: '0 1px 8px rgba(15,30,45,0.05)' }}>
           <div style={{ maxWidth: '720px', margin: '0 auto', padding: '9px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
             <a href={`/library/${manufacturer}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#185D7A', textDecoration: 'none', fontWeight: 700, fontSize: '14px', minWidth: 0 }}>
@@ -149,27 +152,11 @@ export default async function SystemPage({
           </div>
         </div>
 
-        {/* Card */}
-        <div style={{ maxWidth: '720px', margin: '0 auto', padding: '32px 24px 80px' }}>
-          <SystemCardWrapper
-            system={system}
-            stockists={stockists}
-            cardUrl={`https://buildquote.com.au/library/${manufacturer}/${systemSlug}`}
-          />
-
-          {/* Back link */}
-          <div style={{ marginTop: '24px', textAlign: 'center' }}>
-            <a href={`/library/${manufacturer}`} style={{
-              fontSize: '13px', fontWeight: 600, color: '#185D7A',
-              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px',
-            }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M9 12L4 7L9 2" stroke="#185D7A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Back to {system.manufacturer?.name ?? 'library'}
-            </a>
-          </div>
-        </div>
+        <SystemCardWrapper
+          system={system}
+          stockists={stockists}
+          cardUrl={`https://buildquote.com.au/library/${manufacturer}/${systemSlug}`}
+        />
 
       </main>
     </>
