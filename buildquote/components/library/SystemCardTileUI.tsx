@@ -1,8 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Image from 'next/image'
 import type { LibrarySystem } from '@/lib/data/getSystems'
+
+function ChevronGlyph({ direction }: { direction: 'left' | 'right' }) {
+  const points = direction === 'left' ? '15 18 9 12 15 6' : '9 18 15 12 9 6'
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1a17" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points={points} />
+    </svg>
+  )
+}
 
 export const CATEGORY_COLOURS: Record<string, { bg: string; color: string }> = {
   'Cladding':                      { bg: '#dbeafe', color: '#1e40af' },
@@ -32,6 +41,43 @@ export function SystemCardTileUI({
   const posX = system.hero_image_position_x ?? 50
   const posY = system.hero_image_position_y ?? 50
 
+  // A swipeable mini-carousel instead of one static photo, when there's a
+  // real gallery to show — matches Airbnb's own search-tile treatment
+  // (dots + hover arrows), the thing that made these look premium.
+  const images = (() => {
+    const seen = new Set<string>()
+    const list: { url: string; alt: string }[] = []
+    if (system.hero_image_url?.trim()) {
+      list.push({ url: system.hero_image_url.trim(), alt: system.name })
+      seen.add(system.hero_image_url.trim())
+    }
+    for (const g of system.gallery_images ?? []) {
+      if (g.url && !seen.has(g.url)) {
+        list.push({ url: g.url, alt: g.alt || system.name })
+        seen.add(g.url)
+      }
+    }
+    return list
+  })()
+  const hasCarousel = images.length >= 2
+
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  function goToSlide(i: number) {
+    const el = trackRef.current
+    if (!el) return
+    setActiveIndex(i)
+    el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' })
+  }
+
+  function handleTrackScroll() {
+    const el = trackRef.current
+    if (!el || el.clientWidth === 0) return
+    const idx = Math.round(el.scrollLeft / el.clientWidth)
+    setActiveIndex(Math.max(0, Math.min(images.length - 1, idx)))
+  }
+
   return (
     <a
       href={system.manufacturer ? `/library/${system.manufacturer.slug}/${system.slug}` : '/library'}
@@ -48,14 +94,36 @@ export function SystemCardTileUI({
         transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s',
       }}
     >
-      {/* Hero — name + category overlaid on image */}
+      {/* Hero — name + category overlaid on image(s) */}
       <div style={{
         height: '220px', flexShrink: 0, position: 'relative', overflow: 'hidden',
-        background: system.hero_image_url?.trim() ? undefined : 'linear-gradient(135deg, #185D7A 0%, #0f3d52 100%)',
+        background: images.length > 0 ? undefined : 'linear-gradient(135deg, #185D7A 0%, #0f3d52 100%)',
       }}>
-        {system.hero_image_url?.trim() && (
+        {hasCarousel ? (
+          <div
+            ref={trackRef}
+            onScroll={handleTrackScroll}
+            style={{
+              position: 'absolute', inset: 0, display: 'flex', overflowX: 'auto', overflowY: 'hidden',
+              scrollSnapType: 'x mandatory', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            {images.map((img, i) => (
+              <div key={img.url} style={{ position: 'relative', flex: '0 0 100%', height: '100%', scrollSnapAlign: 'start', scrollSnapStop: 'always' }}>
+                <Image
+                  src={img.url}
+                  alt={img.alt}
+                  fill
+                  loading="lazy"
+                  sizes="(max-width: 600px) 100vw, 280px"
+                  style={{ objectFit: 'cover', objectPosition: i === 0 ? `${posX}% ${posY}%` : undefined }}
+                />
+              </div>
+            ))}
+          </div>
+        ) : images.length > 0 && (
           <Image
-            src={system.hero_image_url.trim()}
+            src={images[0].url}
             alt={system.name}
             fill
             loading="lazy"
@@ -64,6 +132,63 @@ export function SystemCardTileUI({
           />
         )}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,30,45,0.88) 0%, rgba(15,30,45,0.18) 55%, transparent 100%)' }} />
+
+        {hasCarousel && (
+          <>
+            {hovered && (
+              <>
+                {activeIndex > 0 && (
+                  <button
+                    type="button"
+                    aria-label="Previous photo"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); goToSlide(activeIndex - 1) }}
+                    style={{
+                      position: 'absolute', top: '50%', left: '8px', transform: 'translateY(-50%)', zIndex: 2,
+                      width: '28px', height: '28px', borderRadius: '50%', border: 'none',
+                      background: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                    }}
+                  >
+                    <ChevronGlyph direction="left" />
+                  </button>
+                )}
+                {activeIndex < images.length - 1 && (
+                  <button
+                    type="button"
+                    aria-label="Next photo"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); goToSlide(activeIndex + 1) }}
+                    style={{
+                      position: 'absolute', top: '50%', right: '8px', transform: 'translateY(-50%)', zIndex: 2,
+                      width: '28px', height: '28px', borderRadius: '50%', border: 'none',
+                      background: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                    }}
+                  >
+                    <ChevronGlyph direction="right" />
+                  </button>
+                )}
+              </>
+            )}
+            <div style={{ position: 'absolute', top: '10px', left: 0, right: 0, zIndex: 2, display: 'flex', justifyContent: 'center', gap: '5px' }}>
+              {images.map((img, i) => (
+                <button
+                  key={img.url}
+                  type="button"
+                  aria-label={`Photo ${i + 1} of ${images.length}`}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); goToSlide(i) }}
+                  style={{ width: '16px', height: '16px', padding: 0, border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <span style={{
+                    width: '5px', height: '5px', borderRadius: '50%',
+                    background: i === activeIndex ? '#ffffff' : 'rgba(255,255,255,0.5)',
+                    transform: i === activeIndex ? 'scale(1.3)' : 'scale(1)',
+                    transition: 'transform 0.15s, background-color 0.15s',
+                  }} />
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         {addedCount > 0 && (
           <span style={{
