@@ -100,12 +100,7 @@ export function SystemCardV2Experience({ system, stockists = [], onAddToList, ca
                 onToggle={() => toggleSection('attributes')}
                 disabled={!hasAttributesContent(system)}
               >
-                <div className={styles.sectionBgWrap}>
-                  {system.hero_image_url && (
-                    <div className={styles.screenBgImage} style={{ backgroundImage: `url(${system.hero_image_url})` }} />
-                  )}
-                  <AttributesInfoReveal system={system} />
-                </div>
+                <AttributesInfoReveal system={system} />
               </SystemCardSection>
 
               <SystemCardSection
