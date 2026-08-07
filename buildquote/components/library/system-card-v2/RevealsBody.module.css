@@ -100,31 +100,38 @@
   margin: 0;
   display: flex;
   justify-content: center;
-  padding: 0.55rem 1rem;
+  padding: 0.15rem 1rem;
   background: var(--paper);
 }
 
 .sectionBar {
   position: relative;
-  /* Narrow — just wide enough for its own text plus room for the chevron
-     — not a full-width slab. Five of these read as a curated menu of
-     distinct headings, not one continuous stripe cut into five. */
+  /* Narrow — a slim drawer-pull strip, not a big padded button. Just wide
+     enough for its own text — five of these read as a curated menu of
+     distinct headings, not one continuous stripe cut into five. Height
+     is trimmed right down to the 44px minimum tap target rather than
+     sitting well above it. */
   width: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.85rem 2.6rem;
+  padding: 0.3rem 1.75rem;
   background: none;
   border: none;
   border-radius: 0;
   cursor: pointer;
   font-family: inherit;
-  min-height: 58px;
-  transition: opacity 0.15s ease;
+  min-height: 44px;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .sectionBar:hover:not(:disabled) {
   opacity: 0.6;
+}
+
+.sectionBar:active:not(:disabled) {
+  opacity: 0.45;
+  transform: scale(0.98);
 }
 
 .sectionBar:focus-visible {
@@ -168,7 +175,9 @@
 .sectionGrid {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Slow, deliberate glide that decelerates hard into the stop — reads as
+     the drawer settling and locking into place rather than just stopping. */
+  transition: grid-template-rows 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sectionGrid[data-open='true'] {
@@ -183,14 +192,14 @@
 .sectionPanel {
   padding: 0.25rem 1.25rem 2rem;
   opacity: 0;
-  transform: translateY(-6px);
-  transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sectionGrid[data-open='true'] .sectionPanel {
   opacity: 1;
   transform: translateY(0);
-  transition-delay: 0.08s;
+  transition-delay: 0.1s;
 }
 
 @media (prefers-reduced-motion: reduce) {
