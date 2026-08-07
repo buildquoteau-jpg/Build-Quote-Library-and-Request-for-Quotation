@@ -165,27 +165,6 @@
   color: var(--ink);
 }
 
-.sectionBarSubtitle {
-  display: block;
-  font-size: 0.72rem;
-  color: var(--ink-faint);
-  margin-top: 0.25rem;
-}
-
-.sectionChevron {
-  position: absolute;
-  right: 1.25rem;
-  top: 50%;
-  display: flex;
-  color: var(--ink);
-  transform: translateY(-50%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.sectionBar[aria-expanded='true'] .sectionChevron {
-  transform: translateY(-50%) rotate(180deg);
-}
-
 .sectionGrid {
   display: grid;
   grid-template-rows: 0fr;
@@ -215,7 +194,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sectionGrid, .sectionPanel, .sectionChevron {
+  .sectionGrid, .sectionPanel {
     transition: none;
   }
 }
