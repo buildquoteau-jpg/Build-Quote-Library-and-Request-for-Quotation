@@ -20,9 +20,10 @@
 import { useEffect, useRef } from 'react'
 import styles from './RevealsBody.module.css'
 
-export function SystemCardSection({ id, title, open, onToggle, disabled, children }: {
+export function SystemCardSection({ id, title, badge, open, onToggle, disabled, children }: {
   id: string
   title: string
+  badge?: React.ReactNode
   open: boolean
   onToggle: () => void
   disabled?: boolean
@@ -64,7 +65,7 @@ export function SystemCardSection({ id, title, open, onToggle, disabled, childre
           onClick={onToggle}
         >
           <span className={styles.sectionBarText}>
-            <span className={styles.sectionBarTitle}>{title}</span>
+            <span className={styles.sectionBarTitle}>{title}{badge}</span>
           </span>
         </button>
       </h2>
