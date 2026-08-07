@@ -219,12 +219,12 @@
    the accordion bars in normal page flow, not inside any of them, so it's
    never hidden behind a tap (matches V1's SystemCardUI.tsx). */
 .materialsListBar {
-  padding: 1rem 1.25rem 1rem;
+  padding: 0.65rem 1.25rem 0.65rem;
   border-top: 1px solid var(--line);
 }
 
 .cardClose {
-  padding: 1.5rem 1.25rem 2rem;
+  padding: 0.85rem 1.25rem 1.25rem;
   text-align: center;
   border-top: 1px solid var(--line);
 }

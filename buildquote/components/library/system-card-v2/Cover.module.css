@@ -190,7 +190,7 @@
 
 .mobileTextBlock {
   background: #ffffff;
-  padding: 1rem 1.5rem 1rem;
+  padding: 1rem 1.5rem 0.5rem;
 }
 
 .manufacturer {
@@ -226,7 +226,7 @@
   color: #100e0b;
   padding-left: 0.75rem;
   border-left: 2px solid #0d4258;
-  margin: 0 0 1rem;
+  margin: 0 0 0.5rem;
 }
 
 /* ── Swipe gallery — native horizontal scroll-snap, one image per slide ── */
