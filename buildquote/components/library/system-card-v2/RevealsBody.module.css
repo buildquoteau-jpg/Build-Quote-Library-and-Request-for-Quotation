@@ -195,8 +195,11 @@
   display: grid;
   grid-template-rows: 0fr;
   /* Slow, deliberate glide that decelerates hard into the stop — reads as
-     the drawer settling and locking into place rather than just stopping. */
-  transition: grid-template-rows 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+     the drawer settling and locking into place rather than just stopping.
+     Melia flagged 0.55s as still too fast on a second pass — more than
+     doubled to 1.2s here rather than nudging it, since a small bump would
+     likely read as barely different from the last round. */
+  transition: grid-template-rows 1.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sectionGrid[data-open='true'] {
@@ -216,13 +219,13 @@
      it's still visibly gliding into place, not fading in place. That's
      what actually reads as "sliding" rather than "growing". */
   transform: translateY(-28px);
-  transition: opacity 0.2s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.45s ease, transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sectionGrid[data-open='true'] .sectionPanel {
   opacity: 1;
   transform: translateY(0);
-  transition-delay: 0.05s;
+  transition-delay: 0.1s;
 }
 
 @media (prefers-reduced-motion: reduce) {
