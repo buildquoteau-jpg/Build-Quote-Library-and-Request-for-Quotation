@@ -17,14 +17,35 @@ import type { LibraryColour, LibraryProfile } from '@/lib/data/getSystems'
 import { useSelection } from './SelectionContext'
 import styles from './RevealsBody.module.css'
 
-function SwatchImage({ url, alt }: { url: string | null; alt: string }) {
+// Real photo when there's a usable image_url; otherwise a compact name
+// pill instead of an empty placeholder box — some manufacturers (e.g.
+// Cutek's stain colours) list many colours with no swatch photography at
+// all, and a whole grid of identical blank boxes reads as broken.
+function ColourOption({ colour, pressed, onToggle }: {
+  colour: LibraryColour
+  pressed: boolean
+  onToggle: () => void
+}) {
   const [errored, setErrored] = useState(false)
-  if (!url || errored) {
-    return <span className={styles.swatchImg} style={{ background: '#eeece6' }} />
+  const hasImage = !!colour.image_url && !errored
+
+  if (!hasImage) {
+    return (
+      <button type="button" className={styles.swatchPill} aria-pressed={pressed} onClick={onToggle}>
+        {colour.colour_name}
+      </button>
+    )
   }
+
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img className={styles.swatchImg} src={url} alt={alt} onError={() => setErrored(true)} />
+    <button type="button" className={styles.swatch} aria-pressed={pressed} onClick={onToggle}>
+      <span className={styles.swatchImgWrap}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className={styles.swatchImg} src={colour.image_url!} alt="" onError={() => setErrored(true)} />
+        {pressed && <span className={styles.swatchCheck}><CheckIcon /></span>}
+      </span>
+      <span className={styles.swatchLabel}>{colour.colour_name}</span>
+    </button>
   )
 }
 
@@ -60,19 +81,12 @@ export function ChooseReveal({ colours, profiles }: {
             {colours.map(c => {
               const pressed = colourName === c.colour_name
               return (
-                <button
+                <ColourOption
                   key={c.colour_name}
-                  type="button"
-                  className={styles.swatch}
-                  aria-pressed={pressed}
-                  onClick={() => setColourName(pressed ? null : c.colour_name)}
-                >
-                  <span className={styles.swatchImgWrap}>
-                    <SwatchImage url={c.image_url} alt="" />
-                    {pressed && <span className={styles.swatchCheck}><CheckIcon /></span>}
-                  </span>
-                  <span className={styles.swatchLabel}>{c.colour_name}</span>
-                </button>
+                  colour={c}
+                  pressed={pressed}
+                  onToggle={() => setColourName(pressed ? null : c.colour_name)}
+                />
               )
             })}
           </div>
