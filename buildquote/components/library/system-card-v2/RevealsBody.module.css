@@ -41,7 +41,7 @@
      tinted with ink instead of pure black so it reads as a shadow the card
      casts on the page, not a smudge behind it. */
   box-shadow: 0 30px 80px -12px rgba(16, 14, 11, 0.28), 0 10px 26px -10px rgba(16, 14, 11, 0.16);
-  background: #14161a;
+  background: #ffffff;
 }
 
 @media (min-width: 640px) {
@@ -108,23 +108,23 @@
   position: relative;
   /* Narrow — just wide enough for its own text plus room for the chevron
      — not a full-width slab. Five of these read as a curated menu of
-     distinct pills, not one continuous black stripe cut into five. */
+     distinct headings, not one continuous stripe cut into five. */
   width: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0.85rem 2.6rem;
-  background: var(--ink);
+  background: none;
   border: none;
-  border-radius: 999px;
+  border-radius: 0;
   cursor: pointer;
   font-family: inherit;
   min-height: 58px;
-  transition: background-color 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 .sectionBar:hover:not(:disabled) {
-  background: #2a2620;
+  opacity: 0.6;
 }
 
 .sectionBar:focus-visible {
@@ -152,7 +152,7 @@
 .sectionBarIcon {
   display: flex;
   flex-shrink: 0;
-  color: var(--paper);
+  color: var(--ink);
   opacity: 0.8;
 }
 
@@ -162,15 +162,13 @@
   font-weight: 800;
   font-size: 0.95rem;
   letter-spacing: -0.005em;
-  color: var(--paper);
+  color: var(--ink);
 }
 
 .sectionBarSubtitle {
   display: block;
   font-size: 0.72rem;
-  /* Was 0.62 opacity — the dimming, not the white-on-black itself, was
-     what read as soft/uncrisp next to the bold title. */
-  color: rgba(246, 244, 239, 0.88);
+  color: var(--ink-faint);
   margin-top: 0.25rem;
 }
 
@@ -179,7 +177,7 @@
   right: 1.25rem;
   top: 50%;
   display: flex;
-  color: var(--paper);
+  color: var(--ink);
   transform: translateY(-50%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
