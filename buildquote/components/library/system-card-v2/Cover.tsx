@@ -36,9 +36,18 @@ function firstSentence(text: string | null): string | null {
 
 function ShareIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-      <line x1="8.6" y1="10.6" x2="15.4" y2="6.4" /><line x1="8.6" y1="13.4" x2="15.4" y2="17.6" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 15V4" />
+      <path d="M7.5 8.5 12 4l4.5 4.5" />
+      <path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
     </svg>
   )
 }
@@ -202,9 +211,13 @@ export function Cover({ manufacturer, system, cardUrl }: {
           </div>
         )}
 
-        <button type="button" className={styles.shareBtn} onClick={handleShare}>
-          <ShareIcon />
-          {shareState === 'copied' ? 'Link copied' : 'Share System Card'}
+        <button
+          type="button"
+          className={styles.shareBtn}
+          onClick={handleShare}
+          aria-label={shareState === 'copied' ? 'Link copied' : 'Share System Card'}
+        >
+          {shareState === 'copied' ? <CheckIcon /> : <ShareIcon />}
         </button>
 
         <div className={styles.content}>
@@ -255,9 +268,13 @@ export function Cover({ manufacturer, system, cardUrl }: {
               )
             })}
 
-            <button type="button" className={styles.desktopShareBtn} onClick={handleShare}>
-              <ShareIcon />
-              {shareState === 'copied' ? 'Link copied' : 'Share'}
+            <button
+              type="button"
+              className={styles.desktopShareBtn}
+              onClick={handleShare}
+              aria-label={shareState === 'copied' ? 'Link copied' : 'Share System Card'}
+            >
+              {shareState === 'copied' ? <CheckIcon /> : <ShareIcon />}
             </button>
           </div>
 
