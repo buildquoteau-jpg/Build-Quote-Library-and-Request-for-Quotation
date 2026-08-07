@@ -15,7 +15,7 @@
 import { useState } from 'react'
 import type { LibrarySystem, Stockist } from '@/lib/data/getSystems'
 import { Cover } from './Cover'
-import { SelectionProvider, useSelection } from './SelectionContext'
+import { SelectionProvider } from './SelectionContext'
 import { SystemCardSection } from './SystemCardSection'
 import { ChooseReveal } from './ChooseReveal'
 import { AttributesInfoReveal, hasAttributesContent } from './AttributesInfoReveal'
@@ -36,18 +36,6 @@ function ShareIcon() {
   )
 }
 
-
-// Count of picks made in Choose/Components waiting to be added to the
-// shopping list — the only visual cue pointing at Stockists now that bars
-// carry no subtitle/chevron. Reads SelectionContext directly rather than
-// threading the count down as a prop, since it must live inside
-// <SelectionProvider> to call useSelection().
-function StockistsBadge() {
-  const { profileNames, componentIds } = useSelection()
-  const count = profileNames.length + componentIds.length
-  if (count === 0) return null
-  return <span className={styles.sectionBarBadge}>{count}</span>
-}
 
 const SECTION_IDS = ['choose', 'attributes', 'guides', 'components', 'stockists'] as const
 type SectionId = typeof SECTION_IDS[number]
@@ -140,7 +128,6 @@ export function SystemCardV2Experience({ system, stockists = [], onAddToList, ca
               <SystemCardSection
                 id="stockists"
                 title="Stockists"
-                badge={<StockistsBadge />}
                 open={openSections.has('stockists')}
                 onToggle={() => toggleSection('stockists')}
               >
