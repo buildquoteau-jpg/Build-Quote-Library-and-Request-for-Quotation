@@ -20,14 +20,19 @@ export function hasAttributesContent(system: LibrarySystem): boolean {
   return false
 }
 
+type RatingTone = 'moisture' | 'bal' | 'fire' | 'acoustic' | 'structural' | 'australian'
+
 export function AttributesInfoReveal({ system }: { system: LibrarySystem }) {
-  const ratings: { label: string; value: string }[] = []
-  if (system.moisture_resistant) ratings.push({ label: 'Moisture resistance', value: 'Resistant' })
-  if (system.bal_rating) ratings.push({ label: 'BAL rating', value: system.bal_rating })
-  if (system.fire_rating) ratings.push({ label: 'Fire rating', value: system.fire_rating })
-  if (system.acoustic_rating) ratings.push({ label: 'Acoustic rating', value: system.acoustic_rating })
-  if (system.structural_grade) ratings.push({ label: 'Structural grade', value: system.structural_grade })
-  if (system.australian_made != null) ratings.push({ label: 'Australian made', value: system.australian_made ? 'Yes' : 'No' })
+  // Colour-coded pills, one per attribute type -- restores the look
+  // SystemCardUI.tsx (V1) used (see AttributePills there): each rating
+  // gets its own hue rather than sitting in a shared label/value table.
+  const ratings: { text: string; tone: RatingTone }[] = []
+  if (system.moisture_resistant) ratings.push({ text: 'Moisture resistant', tone: 'moisture' })
+  if (system.bal_rating) ratings.push({ text: system.bal_rating, tone: 'bal' })
+  if (system.fire_rating) ratings.push({ text: `FRL ${system.fire_rating}`, tone: 'fire' })
+  if (system.acoustic_rating) ratings.push({ text: system.acoustic_rating, tone: 'acoustic' })
+  if (system.structural_grade) ratings.push({ text: system.structural_grade, tone: 'structural' })
+  if (system.australian_made) ratings.push({ text: 'Australian made', tone: 'australian' })
 
   const badges: { label: string; tone: 'performance' | 'neutral' }[] = []
   if (system.moisture_resistant) badges.push({ label: 'Moisture resistant', tone: 'performance' })
@@ -55,12 +60,9 @@ export function AttributesInfoReveal({ system }: { system: LibrarySystem }) {
       {ratings.length > 0 && (
         <div className={styles.specGroup}>
           <p className={styles.specGroupLabel}>Performance</p>
-          <div className={styles.specBox}>
+          <div className={styles.attributePillRow}>
             {ratings.map(r => (
-              <div key={r.label} className={styles.specRow}>
-                <span className={styles.specRowLabel}>{r.label}</span>
-                <span className={styles.specRowValue}>{r.value}</span>
-              </div>
+              <span key={r.tone} className={styles.attributePill} data-tone={r.tone}>{r.text}</span>
             ))}
           </div>
         </div>

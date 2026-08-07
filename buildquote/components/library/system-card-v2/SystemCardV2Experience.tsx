@@ -98,7 +98,7 @@ export function SystemCardV2Experience({ system, stockists = [], onAddToList, ca
 
               <SystemCardSection
                 id="attributes"
-                title="Attributes and Information"
+                title="Applications"
                 open={openSections.has('attributes')}
                 onToggle={() => toggleSection('attributes')}
                 disabled={!hasAttributesContent(system)}

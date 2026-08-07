@@ -403,6 +403,61 @@
   color: #ffffff;
 }
 
+/* Performance ratings -- one pill per attribute type, each its own hue
+   (ported from SystemCardUI.tsx's AttributePills) rather than a shared
+   single-tone badge, so BAL/fire/moisture/etc read apart at a glance. */
+.attributePillRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.attributePill {
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid transparent;
+}
+
+.attributePill[data-tone='moisture'] {
+  background: #f0f9ff;
+  color: #0369a1;
+  border-color: #0369a133;
+}
+
+.attributePill[data-tone='bal'] {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #c2410c33;
+}
+
+.attributePill[data-tone='fire'] {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #b91c1c33;
+}
+
+.attributePill[data-tone='acoustic'] {
+  background: #faf5ff;
+  color: #7e22ce;
+  border-color: #7e22ce33;
+}
+
+.attributePill[data-tone='structural'] {
+  background: #f0fdf4;
+  color: #15803d;
+  border-color: #15803d33;
+}
+
+.attributePill[data-tone='australian'] {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #16653433;
+}
+
 .specGroup {
   margin-bottom: 1.75rem;
 }
