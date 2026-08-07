@@ -192,14 +192,18 @@
 .sectionPanel {
   padding: 0.25rem 1.25rem 2rem;
   opacity: 0;
-  transform: translateY(-10px);
-  transition: opacity 0.3s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  /* A real travel distance, not a nudge — and opacity ramps up much faster
+     than the transform, so the content is fully visible and legible while
+     it's still visibly gliding into place, not fading in place. That's
+     what actually reads as "sliding" rather than "growing". */
+  transform: translateY(-28px);
+  transition: opacity 0.2s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sectionGrid[data-open='true'] .sectionPanel {
   opacity: 1;
   transform: translateY(0);
-  transition-delay: 0.1s;
+  transition-delay: 0.05s;
 }
 
 @media (prefers-reduced-motion: reduce) {
