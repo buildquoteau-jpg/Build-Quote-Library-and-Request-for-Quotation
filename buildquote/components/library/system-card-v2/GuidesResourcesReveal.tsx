@@ -1,8 +1,8 @@
 // Guides and Resources screen — ported byte-for-byte (aside from the type
 // import) from Data Studio's System Card V2
 // (components/system-card-v2/GuidesResourcesReveal.tsx). Real centred
-// buttons (meta line + bold label + arrow). Resource type is derived from
-// the real URL (file extension / which field it came from), not invented.
+// buttons (meta line + bold label). Resource type is derived from the
+// real URL (file extension / which field it came from), not invented.
 
 import type { LibrarySystem } from '@/lib/data/getSystems'
 import styles from './RevealsBody.module.css'
@@ -40,7 +40,7 @@ export function GuidesResourcesReveal({ system }: { system: LibrarySystem }) {
       {resources.map(r => (
         <a key={r.url} href={r.url} target="_blank" rel="noopener noreferrer" className={styles.resourceRow}>
           <span className={styles.resourceMeta}>{r.type} · {hostOf(r.url)}</span>
-          <span className={styles.resourceLabel}>{r.label} ↗</span>
+          <span className={styles.resourceLabel}>{r.label}</span>
         </a>
       ))}
     </div>
