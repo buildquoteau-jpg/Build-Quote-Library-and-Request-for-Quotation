@@ -21,7 +21,9 @@ import { ChooseReveal } from './ChooseReveal'
 import { AttributesInfoReveal, hasAttributesContent } from './AttributesInfoReveal'
 import { GuidesResourcesReveal } from './GuidesResourcesReveal'
 import { ComponentsAccessoriesReveal } from './ComponentsAccessoriesReveal'
-import { StockistsReveal, type ShoppingListItem } from './StockistsReveal'
+import { StockistsReveal } from './StockistsReveal'
+import { MaterialsListBar } from './MaterialsListBar'
+import type { ShoppingListItem } from './useMaterialsListRows'
 import { shareSystemCard } from './shareCard'
 import styles from './RevealsBody.module.css'
 
@@ -142,8 +144,10 @@ export function SystemCardV2Experience({ system, stockists = [], onAddToList, ca
                 open={openSections.has('stockists')}
                 onToggle={() => toggleSection('stockists')}
               >
-                <StockistsReveal system={system} stockists={stockists} onAddToList={onAddToList} />
+                <StockistsReveal system={system} stockists={stockists} />
               </SystemCardSection>
+
+              <MaterialsListBar system={system} onAddToList={onAddToList} />
 
               <div className={styles.cardClose}>
                 <button type="button" className={styles.barNext} onClick={handleShare}>

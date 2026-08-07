@@ -231,6 +231,14 @@
   }
 }
 
+/* Always-visible "Your materials list" + Add-to-list action — sits below
+   the accordion bars in normal page flow, not inside any of them, so it's
+   never hidden behind a tap (matches V1's SystemCardUI.tsx). */
+.materialsListBar {
+  padding: 1.5rem 1.25rem 1.75rem;
+  border-top: 1px solid var(--line);
+}
+
 .cardClose {
   padding: 1.5rem 1.25rem 2rem;
   text-align: center;
