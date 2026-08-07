@@ -591,6 +591,80 @@
   outline-offset: 2px;
 }
 
+/* ── Shared: Profile / Component picker rows ──────────────────────────────
+   Stacked rows instead of a fixed-column table, so long specs/part-no/UOM
+   values wrap onto their own line instead of forcing horizontal scroll at
+   phone widths. Used by both Choose's profile list and Components and
+   Accessories' per-category lists. */
+
+.itemList {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--raised);
+}
+
+.itemRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.itemRow:last-child {
+  border-bottom: none;
+}
+
+.itemRowText {
+  min-width: 0;
+  flex: 1;
+}
+
+.itemRowName {
+  display: block;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
+.itemRowSub {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--ink-faint);
+  line-height: 1.4;
+  margin-top: 0.15rem;
+}
+
+.itemMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 1rem;
+  row-gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+
+.itemMetaField {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.itemMetaLabel {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.itemMetaValue {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
 /* ── Stockists ─────────────────────────────────────────────────────────── */
 
 .emptyState {
