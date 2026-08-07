@@ -141,7 +141,11 @@ export default async function SystemPage({
             so the light 720px page shell the old card sat in was dropped here —
             the "Back to X" link it carried is redundant with this nav bar. */}
         <div style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(255,255,255,0.92)', backdropFilter: 'saturate(180%) blur(8px)', WebkitBackdropFilter: 'saturate(180%) blur(8px)', borderBottom: '1px solid #d1d9e0', boxShadow: '0 1px 8px rgba(15,30,45,0.05)' }}>
-          <div style={{ maxWidth: '720px', margin: '0 auto', padding: '9px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+          {/* Right padding cleared to 72px (not the usual 20px) — GlobalNav's
+              hamburger is a fixed 42px button sitting at top:16px/right:16px
+              with a higher z-index, so it was overlapping/hiding the tail end
+              of the BuildQuote wordmark without the extra clearance. */}
+          <div style={{ maxWidth: '720px', margin: '0 auto', padding: '9px 72px 9px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
             <a href={`/library/${manufacturer}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#185D7A', textDecoration: 'none', fontWeight: 700, fontSize: '14px', minWidth: 0 }}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}><path d="M10 3.5L5.5 8L10 12.5" stroke="#185D7A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{system.manufacturer?.name ?? 'Library'}</span>

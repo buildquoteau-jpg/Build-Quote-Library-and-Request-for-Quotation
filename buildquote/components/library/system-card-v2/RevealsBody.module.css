@@ -79,7 +79,7 @@
      highest-leverage fix. */
   --ink: #100e0b;
   --ink-soft: #35312b;
-  --ink-faint: #6b6459;
+  --ink-faint: #544d40;
   --paper: #ffffff;
   --raised: #ffffff;
   --line: rgba(16, 14, 11, 0.22);
@@ -167,7 +167,7 @@
   display: block;
   font-family: var(--font-barlow-condensed), sans-serif;
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   letter-spacing: -0.005em;
   color: var(--ink);
 }
@@ -240,7 +240,7 @@
   border: none;
   border-radius: 5px;
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
@@ -254,13 +254,13 @@
 /* ── Reveal 1 — Choose ─────────────────────────────────────────────────── */
 
 .chooseHint {
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   color: var(--ink-soft);
   margin: 0 0 1.5rem;
 }
 
 .groupLabel {
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -329,7 +329,7 @@
 }
 
 .swatchLabel {
-  font-size: 0.76rem;
+  font-size: 0.86rem;
   font-weight: 600;
   color: var(--ink);
   text-align: center;
@@ -346,7 +346,7 @@
   background: var(--paper);
   border: 1.5px solid var(--line-strong);
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: var(--ink);
   cursor: pointer;
@@ -362,7 +362,7 @@
 
 .profileRole {
   display: block;
-  font-size: 0.66rem;
+  font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -381,7 +381,7 @@
 
 .badge {
   display: inline-block;
-  font-size: 0.66rem;
+  font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   border-radius: 999px;
@@ -412,7 +412,7 @@
 }
 
 .specGroupLabel {
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -421,7 +421,7 @@
 }
 
 .descriptionText {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--ink-soft);
   line-height: 1.6;
   margin: 0;
@@ -444,7 +444,7 @@
   gap: 1rem;
   padding: 0.75rem 0;
   border-bottom: 1px solid var(--line);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
 }
 
 .specRow:last-child {
@@ -477,7 +477,7 @@
 
 .specTable th {
   text-align: left;
-  font-size: 0.64rem;
+  font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -488,7 +488,7 @@
 }
 
 .specTable td {
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   color: var(--ink-soft);
   padding: 0.75rem;
   border-bottom: 1px solid var(--line);
@@ -550,14 +550,14 @@
 }
 
 .resourceLabel {
-  font-size: 0.87rem;
+  font-size: 0.97rem;
   font-weight: 700;
   color: var(--accent);
   margin: 0;
 }
 
 .resourceMeta {
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   color: var(--ink-faint);
   margin: 0 0 0.1rem;
 }
@@ -565,7 +565,7 @@
 /* ── Components and Accessories ───────────────────────────────────────── */
 
 .systemIntro {
-  font-size: 0.9rem;
+  font-size: 0.98rem;
   color: var(--ink-soft);
   margin: 0 0 1.5rem;
 }
@@ -596,7 +596,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: 800;
   color: var(--ink-soft);
 }
@@ -607,7 +607,7 @@
 }
 
 .systemGroupLabel {
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -682,13 +682,13 @@
 .itemRowName {
   display: block;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--ink);
 }
 
 .itemRowSub {
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   font-weight: 400;
   color: var(--ink-faint);
   line-height: 1.4;
@@ -710,7 +710,7 @@
 }
 
 .itemMetaLabel {
-  font-size: 0.6rem;
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -718,7 +718,7 @@
 }
 
 .itemMetaValue {
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   color: var(--ink-soft);
 }
 
@@ -729,12 +729,12 @@
   align-items: center;
   gap: 0.55rem;
   color: var(--ink-faint);
-  font-size: 0.84rem;
+  font-size: 0.92rem;
   padding: 0.3rem 0 0.5rem;
 }
 
 .selectionColourNote {
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   color: var(--ink-soft);
   margin: -0.3rem 0 0.75rem;
 }
@@ -748,7 +748,7 @@
   display: block;
   font-weight: 400;
   color: var(--ink-faint);
-  font-size: 0.76rem;
+  font-size: 0.86rem;
   margin-top: 0.15rem;
   white-space: normal;
 }
@@ -774,7 +774,7 @@
   border: 1.5px solid var(--accent);
   border-radius: 10px;
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -839,7 +839,7 @@
   margin: 0;
   font-family: var(--font-barlow-condensed), sans-serif;
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: var(--ink);
 }
 
@@ -852,7 +852,7 @@
 
 .stockistMetaLine {
   margin: 0.25rem 0 0;
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   color: var(--ink-soft);
   line-height: 1.5;
   white-space: pre-line;
@@ -869,7 +869,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.76rem;
+  font-size: 0.86rem;
   font-weight: 600;
   color: var(--accent);
   background: var(--paper);
@@ -885,7 +885,7 @@
   border-radius: 8px;
   background: var(--accent-soft);
   border: 1px solid var(--line);
-  font-size: 0.76rem;
+  font-size: 0.86rem;
   color: var(--accent);
   line-height: 1.5;
 }
@@ -897,7 +897,7 @@
   border: 1.5px solid var(--line-strong);
   border-radius: 8px;
   padding: 0.6rem 0.7rem;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-family: inherit;
   color: var(--ink);
   background: var(--paper);
