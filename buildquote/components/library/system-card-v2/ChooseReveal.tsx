@@ -88,7 +88,7 @@ export function ChooseReveal({ colours, profiles }: {
               const dims = [p.length_mm && `${p.length_mm}mm`, p.width_mm && `${p.width_mm}mm`, p.thickness_mm && `${p.thickness_mm}mm`]
                 .filter(Boolean).join(' × ') || p.dimensions
               return (
-                <div className={styles.itemRow} key={p.id}>
+                <div className={styles.itemRow} data-selected={pressed} key={p.id}>
                   <div className={styles.itemRowText}>
                     <span className={styles.profileRole}>{roleLabel(p, i)}</span>
                     <span className={styles.itemRowName}>{p.profile_name}</span>

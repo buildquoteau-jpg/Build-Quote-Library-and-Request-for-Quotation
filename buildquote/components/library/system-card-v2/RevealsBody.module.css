@@ -643,10 +643,18 @@
   gap: 0.75rem;
   padding: 0.85rem 1rem;
   border-bottom: 1px solid var(--line);
+  transition: background-color 0.12s ease;
 }
 
 .itemRow:last-child {
   border-bottom: none;
+}
+
+/* Whole row lights up on selection — the shopping-list "you picked this"
+   feedback V1's SystemCardUI.tsx gave (pale accent fill on a selected
+   row), which the plain always-white row here had lost. */
+.itemRow[data-selected='true'] {
+  background: var(--accent-soft);
 }
 
 .itemRowText {
@@ -740,9 +748,13 @@
   gap: 0.45rem;
   padding: 0.8rem 1rem;
   min-height: 44px;
-  background: var(--ink);
+  /* Brand accent, not plain ink — V1's equivalent button was brand blue
+     when ready to click (green on success), which made it read as the
+     page's one real call-to-action instead of blending into all the
+     other black text on the card. */
+  background: var(--accent);
   color: var(--paper);
-  border: 1.5px solid var(--ink);
+  border: 1.5px solid var(--accent);
   border-radius: 10px;
   font-family: inherit;
   font-size: 0.85rem;

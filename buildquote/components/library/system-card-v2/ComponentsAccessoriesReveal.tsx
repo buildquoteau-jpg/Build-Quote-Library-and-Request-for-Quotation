@@ -92,7 +92,7 @@ export function ComponentsAccessoriesReveal({ system }: { system: LibrarySystem 
             {byCategory[category].map(c => {
               const pressed = componentIds.includes(c.id)
               return (
-                <div className={styles.itemRow} key={c.id}>
+                <div className={styles.itemRow} data-selected={pressed} key={c.id}>
                   <div className={styles.itemRowText}>
                     <span className={styles.itemRowName}>{c.components?.name}</span>
                     {c.components?.description && <span className={styles.itemRowSub}>{c.components.description}</span>}
