@@ -100,7 +100,7 @@
   margin: 0;
   display: flex;
   justify-content: center;
-  padding: 0.15rem 1rem;
+  padding: 0.1rem 1rem;
   background: var(--paper);
 }
 
@@ -108,20 +108,20 @@
   position: relative;
   /* Narrow — a slim drawer-pull strip, not a big padded button. Just wide
      enough for its own text — five of these read as a curated menu of
-     distinct headings, not one continuous stripe cut into five. Height
-     is trimmed right down to the 44px minimum tap target rather than
-     sitting well above it. */
+     distinct headings, not one continuous stripe cut into five. Melia
+     asked for these thinner twice over; height is now well under the
+     usual 44px tap-target guideline by deliberate choice, not oversight. */
   width: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.3rem 1.75rem;
+  padding: 0.15rem 1.5rem;
   background: none;
   border: none;
   border-radius: 0;
   cursor: pointer;
   font-family: inherit;
-  min-height: 44px;
+  min-height: 36px;
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
