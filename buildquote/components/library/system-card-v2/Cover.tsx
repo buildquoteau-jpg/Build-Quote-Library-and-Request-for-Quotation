@@ -7,18 +7,21 @@
 // gallery_images, deduplicated and capped at 10, swipeable via native
 // horizontal scroll-snap.
 //
+// Airbnb-listing pattern throughout: the photo stays clean and bright —
+// no scrim, nothing written on top of it — and manufacturer/title/
+// category/statement sit in their own plain white block underneath.
+// Melia flagged the old scrim + white-text-over-photo version as "dark
+// and covered in writing" next to a real Airbnb card.
+//
 // Two layouts, chosen once by photo count (not pure CSS breakpoint
 // toggling, so a system with too few photos never renders a half-empty
-// grid): under 3 images, always the original single-swipe layout with the
-// scrim + white text overlay, at every width — that's also what phones get
-// regardless of count, since the card is mostly opened from a text-message
-// link. At 3+ images, both layouts render, CSS-toggled at 1024px: the
-// swipe layout below that, and a one-big-plus-four-small photo grid above
-// it (Melia's "make it feel like a premium Airbnb listing" ask) — a
-// "Show all photos" pill appears on the last small cell when there are
-// more than 5 photos. Manufacturer/title/category/statement move to a
-// plain block below the grid in that layout, since there's no single
-// continuous photo to overlay them onto.
+// grid): under 3 images, always the single-swipe layout, at every width —
+// that's also what phones get regardless of count, since the card is
+// mostly opened from a text-message link. At 3+ images, both layouts
+// render, CSS-toggled at 1024px: the swipe layout below that, and a
+// one-big-plus-four-small photo grid above it (Melia's "make it feel like
+// a premium Airbnb listing" ask) — a "Show all photos" pill appears on
+// the last small cell when there are more than 5 photos.
 //
 // Tapping any photo (either layout) opens the same fullscreen lightbox
 // (close/prev/next/counter) at that photo's real index.
@@ -169,66 +172,65 @@ export function Cover({ manufacturer, system, cardUrl }: {
   return (
     <section className={styles.cover} aria-label={`${system.name} — ${manufacturer.name} System Card`}>
       <div className={showGrid ? `${styles.mobileHero} ${styles.mobileHeroHidesOnWide}` : styles.mobileHero}>
-        {images.length > 0 ? (
-          <div ref={trackRef} className={styles.gallery} onScroll={handleTrackScroll}>
-            {images.map((img, i) => (
-              <button
-                key={img.url}
-                type="button"
-                className={styles.galleryImgBtn}
-                onClick={() => openLightbox(i)}
-                aria-label={`Open ${img.alt} full screen`}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  className={styles.galleryImg}
-                  src={img.url}
-                  alt={img.alt}
-                  style={i === 0 ? { objectPosition: `${posX}% ${posY}%` } : undefined}
+        <div className={styles.mobileHeroPhoto}>
+          {images.length > 0 ? (
+            <div ref={trackRef} className={styles.gallery} onScroll={handleTrackScroll}>
+              {images.map((img, i) => (
+                <button
+                  key={img.url}
+                  type="button"
+                  className={styles.galleryImgBtn}
+                  onClick={() => openLightbox(i)}
+                  aria-label={`Open ${img.alt} full screen`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className={styles.galleryImg}
+                    src={img.url}
+                    alt={img.alt}
+                    style={i === 0 ? { objectPosition: `${posX}% ${posY}%` } : undefined}
+                  />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.galleryFallback} />
+          )}
+
+          {images.length > 1 && (
+            <div className={styles.galleryNav} role="tablist" aria-label="Product photos">
+              {images.map((img, i) => (
+                <button
+                  key={img.url}
+                  type="button"
+                  role="tab"
+                  aria-selected={i === activeIndex}
+                  aria-label={`Photo ${i + 1} of ${images.length}`}
+                  className={styles.galleryDot}
+                  data-active={i === activeIndex}
+                  onClick={() => goToSlide(i)}
                 />
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className={styles.galleryFallback} />
-        )}
-        <div className={styles.scrim} />
+              ))}
+            </div>
+          )}
 
-        {images.length > 1 && (
-          <div className={styles.galleryNav} role="tablist" aria-label="Product photos">
-            {images.map((img, i) => (
-              <button
-                key={img.url}
-                type="button"
-                role="tab"
-                aria-selected={i === activeIndex}
-                aria-label={`Photo ${i + 1} of ${images.length}`}
-                className={styles.galleryDot}
-                data-active={i === activeIndex}
-                onClick={() => goToSlide(i)}
-              />
-            ))}
-          </div>
-        )}
+          <button
+            type="button"
+            className={styles.shareBtn}
+            onClick={handleShare}
+            aria-label={shareState === 'copied' ? 'Link copied' : 'Share System Card'}
+          >
+            {shareState === 'copied' ? <CheckIcon /> : <ShareIcon />}
+          </button>
+        </div>
 
-        <button
-          type="button"
-          className={styles.shareBtn}
-          onClick={handleShare}
-          aria-label={shareState === 'copied' ? 'Link copied' : 'Share System Card'}
-        >
-          {shareState === 'copied' ? <CheckIcon /> : <ShareIcon />}
-        </button>
-
-        <div className={styles.content}>
-          <div className={styles.contentInner}>
-            <p className={styles.manufacturer}>{manufacturer.name}</p>
-            <h1 className={styles.title}>{system.name}</h1>
-            <p className={styles.category}>
-              {system.category}{system.subcategory ? ` · ${system.subcategory}` : ''}
-            </p>
-            {statement && <p className={styles.statement}>{statement}</p>}
-          </div>
+        <div className={styles.mobileTextBlock}>
+          <p className={styles.manufacturer}>{manufacturer.name}</p>
+          <h1 className={styles.title}>{system.name}</h1>
+          <p className={styles.category}>
+            {system.category}{system.subcategory ? ` · ${system.subcategory}` : ''}
+          </p>
+          {statement && <p className={styles.statement}>{statement}</p>}
         </div>
       </div>
 

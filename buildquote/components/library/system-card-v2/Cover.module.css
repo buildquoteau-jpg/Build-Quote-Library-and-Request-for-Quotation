@@ -9,10 +9,12 @@
 }
 
 /* ── Narrow layout (always used under 3 photos; used under 1024px whenever
-   the grid variant below is also present) — everything that already
-   existed: swipe gallery, dark scrim, white text overlay. ────────────────── */
+   the grid variant below is also present) — swipe gallery on top, plain
+   .mobileTextBlock underneath (see below). .mobileHero itself carries no
+   styling of its own — it exists only so .mobileHeroHidesOnWide has a box
+   to hide as a unit at 1024px+. ─────────────────────────────────────────── */
 
-.mobileHero {
+.mobileHeroPhoto {
   position: relative;
   aspect-ratio: 3 / 2;
   width: 100%;
@@ -31,7 +33,7 @@
   }
 }
 
-/* ── Wide layout — one big photo + a 2x2 of smaller ones, title block
+/* ── Wide layout — one big photo + a 2x2 of smaller ones, .desktopTextBlock
    underneath instead of overlaid (nothing to overlay onto — five separate
    photos with gaps between them, not one continuous image). ─────────────── */
 
@@ -181,6 +183,52 @@
   margin: 0;
 }
 
+/* ── Narrow layout's own text block — same type scale/weights the
+   overlay version always had (kept "unchanged" per Melia), just moved
+   into normal flow below the photo instead of absolutely positioned on
+   top of it, so the colors flip from white-on-photo to dark-on-white. ── */
+
+.mobileTextBlock {
+  background: #ffffff;
+  padding: 1.5rem 1.5rem 1.75rem;
+}
+
+.manufacturer {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #6b6459;
+  margin: 0 0 0.25rem;
+}
+
+.title {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.1rem, 12vw, 2.75rem);
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+  color: #100e0b;
+  margin: 0 0 0.4rem;
+}
+
+.category {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #35312b;
+  margin: 0 0 0.9rem;
+}
+
+.statement {
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.42;
+  color: #100e0b;
+  padding-left: 0.75rem;
+  border-left: 2px solid #0d4258;
+  margin: 0 0 1rem;
+}
+
 /* ── Swipe gallery — native horizontal scroll-snap, one image per slide ── */
 
 .gallery {
@@ -224,16 +272,6 @@
   background: linear-gradient(135deg, #1c2b34 0%, #0f1720 100%);
 }
 
-.scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background:
-    linear-gradient(to top, rgba(8, 10, 14, 0.95) 0%, rgba(8, 10, 14, 0.72) 32%, rgba(8, 10, 14, 0.22) 58%, rgba(8, 10, 14, 0.02) 76%, transparent 100%),
-    linear-gradient(to bottom, rgba(8, 10, 14, 0.4) 0%, rgba(8, 10, 14, 0) 18%);
-}
-
 .galleryNav {
   position: absolute;
   z-index: 3;
@@ -263,7 +301,10 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.75);
+  /* No dark scrim behind the photo any more, so the dot needs its own
+     built-in contrast to stay visible against a bright/light photo. */
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.35);
   transition: background-color 0.15s ease, transform 0.15s ease;
 }
 
@@ -305,58 +346,6 @@
 .shareBtn:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 2px;
-}
-
-/* ── Identity + copy block ─────────────────────────────────────────────── */
-
-.content {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 2;
-  padding: 1.5rem 1.5rem 2.1rem;
-  pointer-events: none;
-}
-
-.contentInner {
-  max-width: 100%;
-}
-
-.manufacturer {
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.88);
-  margin: 0 0 0.25rem;
-}
-
-.title {
-  font-family: var(--font-barlow-condensed), sans-serif;
-  font-weight: 800;
-  font-size: clamp(2.1rem, 12vw, 2.75rem);
-  line-height: 0.98;
-  letter-spacing: -0.01em;
-  color: #fff;
-  margin: 0 0 0.4rem;
-}
-
-.category {
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.66);
-  margin: 0 0 0.9rem;
-}
-
-.statement {
-  font-size: 0.92rem;
-  font-weight: 500;
-  line-height: 1.42;
-  color: rgba(255, 255, 255, 0.97);
-  padding-left: 0.75rem;
-  border-left: 2px solid rgba(255, 255, 255, 0.55);
-  margin: 0 0 1rem;
 }
 
 /* ── Fullscreen lightbox — parity with the real card's existing gallery ── */
