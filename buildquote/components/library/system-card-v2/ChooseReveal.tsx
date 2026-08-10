@@ -27,9 +27,14 @@ function ColourOption({ colour, pressed, onToggle }: {
   onToggle: () => void
 }) {
   const [errored, setErrored] = useState(false)
-  const hasImage = !!colour.image_url && !errored
+  // Some Supabase rows carry invisible leading/trailing whitespace on
+  // image_url (same known data-entry issue as hero_image_url, likely from
+  // spreadsheet-based imports — a stray BOM or space silently breaks the
+  // <img> load in the browser) — trim before use, not just before the
+  // truthiness check.
+  const imageUrl = colour.image_url?.trim()
 
-  if (!hasImage) {
+  if (!imageUrl || errored) {
     return (
       <button type="button" className={styles.swatchPill} aria-pressed={pressed} onClick={onToggle}>
         {colour.colour_name}
@@ -41,7 +46,7 @@ function ColourOption({ colour, pressed, onToggle }: {
     <button type="button" className={styles.swatch} aria-pressed={pressed} onClick={onToggle}>
       <span className={styles.swatchImgWrap}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className={styles.swatchImg} src={colour.image_url!} alt="" onError={() => setErrored(true)} />
+        <img className={styles.swatchImg} src={imageUrl} alt="" onError={() => setErrored(true)} />
         {pressed && <span className={styles.swatchCheck}><CheckIcon /></span>}
       </span>
       <span className={styles.swatchLabel}>{colour.colour_name}</span>

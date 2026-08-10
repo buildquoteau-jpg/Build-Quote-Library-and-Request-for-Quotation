@@ -92,14 +92,20 @@ export function Cover({ manufacturer, system, cardUrl }: {
   const images = (() => {
     const seen = new Set<string>()
     const list: { url: string; alt: string }[] = []
-    if (system.hero_image_url) {
-      list.push({ url: system.hero_image_url, alt: `${system.name} by ${manufacturer.name}` })
-      seen.add(system.hero_image_url)
+    // Trim once here, at the one place the list is built -- every
+    // downstream <img> (mobile gallery, desktop grid, lightbox) reads from
+    // this list, so stray whitespace from Supabase (same known issue as
+    // system_colours.image_url) can't reach any of them.
+    const heroUrl = system.hero_image_url?.trim()
+    if (heroUrl) {
+      list.push({ url: heroUrl, alt: `${system.name} by ${manufacturer.name}` })
+      seen.add(heroUrl)
     }
     for (const g of system.gallery_images ?? []) {
-      if (g.url && !seen.has(g.url)) {
-        list.push({ url: g.url, alt: g.alt || `${system.name} by ${manufacturer.name}` })
-        seen.add(g.url)
+      const url = g.url?.trim()
+      if (url && !seen.has(url)) {
+        list.push({ url, alt: g.alt || `${system.name} by ${manufacturer.name}` })
+        seen.add(url)
       }
     }
     return list.slice(0, 10)
