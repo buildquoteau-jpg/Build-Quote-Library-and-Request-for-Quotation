@@ -333,6 +333,34 @@ function scoreSystem(s: LibrarySystem, baseTerms: Set<string>, allTerms: string[
   return { system: s, score, strong }
 }
 
+// ── BAL rating gate ──────────────────────────────────────────────────────────
+// The 'bal' concept's synonym expansion (bushfire, fibre cement, external
+// cladding…) is topical, not a compliance signal — on its own it let ANY
+// decking/cladding product through a "BAL 29" search regardless of whether it
+// actually carries that rating. A query naming a BAL level (or generically
+// asking for bushfire/BAL compliance) is treated as a hard filter against the
+// real bal_rating field instead of just another scored keyword.
+
+type BalRequirement = { level: string | null }
+
+function parseBalRequirement(cleaned: string): BalRequirement | null {
+  const q = cleaned.toLowerCase()
+  const levelMatch = q.match(/\bbal[\s-]*(\d+(?:\.\d+)?|fz)\b/)
+  if (levelMatch) return { level: levelMatch[1] }
+  if (/\bbal\b/.test(q) || /\bbushfire\b/.test(q) || /\bflame zone\b/.test(q)) return { level: null }
+  return null
+}
+
+// bal_rating is free text ("29", "BAL-29", "All levels", or null) — normalise
+// both sides before comparing so either storage style matches.
+function systemMeetsBalRequirement(s: LibrarySystem, req: BalRequirement): boolean {
+  const rating = (s.bal_rating || '').trim().toLowerCase()
+  if (!rating) return false
+  if (rating.includes('all')) return true
+  if (!req.level) return true
+  return rating.replace(/^bal[\s-]*/, '').trim() === req.level
+}
+
 /**
  * The main entry point. Returns relevance-ranked systems plus the parsed intent
  * and a confidence flag. Never throws; an empty/whitespace query returns all
@@ -348,9 +376,12 @@ export function searchLibrarySystems(raw: string, systems: LibrarySystem[]): Lib
     return { systems, intent, exact: false }
   }
 
+  const balRequirement = parseBalRequirement(cleaned)
+
   const scored = systems
     .map(s => scoreSystem(s, baseTerms, allTerms, cleaned))
     .filter(r => r.score > 0)
+    .filter(r => !balRequirement || systemMeetsBalRequirement(r.system, balRequirement))
     .sort((a, b) =>
       b.score - a.score ||
       (a.system.sort_order ?? 0) - (b.system.sort_order ?? 0) ||
