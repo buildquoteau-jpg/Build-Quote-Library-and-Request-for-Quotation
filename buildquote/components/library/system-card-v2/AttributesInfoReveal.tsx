@@ -34,7 +34,7 @@ export function AttributesInfoReveal({ system }: { system: LibrarySystem }) {
   // fact, all under the Performance heading.
   const pills: { text: string; tone: PillTone }[] = []
   if (system.moisture_resistant) pills.push({ text: 'Moisture resistant', tone: 'moisture' })
-  if (system.bal_rating) pills.push({ text: system.bal_rating, tone: 'bal' })
+  if (system.bal_rating) pills.push({ text: `BAL ${system.bal_rating}`, tone: 'bal' })
   if (system.fire_rating) pills.push({ text: `FRL ${system.fire_rating}`, tone: 'fire' })
   if (system.acoustic_rating) pills.push({ text: system.acoustic_rating, tone: 'acoustic' })
   if (system.structural_grade) pills.push({ text: system.structural_grade, tone: 'structural' })

@@ -63,8 +63,12 @@ function CheckIcon() {
 }
 
 function roleLabel(p: LibraryProfile, index: number): string {
-  const name = `${p.name ?? ''} ${p.profile_name ?? ''}`.toLowerCase()
-  if (name.includes('edge')) return 'Edge board'
+  // Real per-profile name takes priority — "Main profile"/"Additional
+  // profile" was only ever a fallback for systems whose data has no
+  // distinguishing name, not the primary label.
+  if (p.name?.trim()) return p.name.trim()
+  const text = (p.profile_name ?? '').toLowerCase()
+  if (text.includes('edge')) return 'Edge board'
   if (index === 0) return 'Main profile'
   return 'Additional profile'
 }
