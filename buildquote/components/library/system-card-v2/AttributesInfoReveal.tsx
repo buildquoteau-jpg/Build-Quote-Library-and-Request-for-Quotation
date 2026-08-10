@@ -20,7 +20,10 @@ export function hasAttributesContent(system: LibrarySystem): boolean {
   return false
 }
 
-type PillTone = 'moisture' | 'bal' | 'fire' | 'acoustic' | 'structural' | 'australian' | 'colourways' | 'custom'
+type PillTone = 'moisture' | 'bal' | 'fire' | 'acoustic' | 'structural' | 'australian' | 'colourways'
+  | 'custom0' | 'custom1' | 'custom2' | 'custom3' | 'custom4'
+
+const CUSTOM_TONES: PillTone[] = ['custom0', 'custom1', 'custom2', 'custom3', 'custom4']
 
 export function AttributesInfoReveal({ system }: { system: LibrarySystem }) {
   // Every attribute-like fact about the system as one flat list of pills --
@@ -39,9 +42,12 @@ export function AttributesInfoReveal({ system }: { system: LibrarySystem }) {
   if (system.system_colours.length > 0) {
     pills.push({ text: `${system.system_colours.length} colourway${system.system_colours.length !== 1 ? 's' : ''}`, tone: 'colourways' })
   }
-  for (const attr of system.custom_technical_attributes ?? []) {
-    pills.push({ text: `${attr.label}: ${attr.value}`, tone: 'custom' })
-  }
+  // Cycle through a dedicated palette so custom attributes read as distinct
+  // facts, not one uniform grey block -- Melia flagged them all being the
+  // same colour as still looking flat next to the named ratings' hues.
+  system.custom_technical_attributes?.forEach((attr, i) => {
+    pills.push({ text: `${attr.label}: ${attr.value}`, tone: CUSTOM_TONES[i % CUSTOM_TONES.length] })
+  })
 
   return (
     <>

@@ -452,10 +452,34 @@
   border-color: #99f6e4;
 }
 
-.attributePill[data-tone='custom'] {
-  background: #f1f5f9;
-  color: #475569;
-  border-color: #e2e8f0;
+.attributePill[data-tone='custom0'] {
+  background: #e0e7ff;
+  color: #4338ca;
+  border-color: #c7d2fe;
+}
+
+.attributePill[data-tone='custom1'] {
+  background: #cffafe;
+  color: #0e7490;
+  border-color: #a5f3fc;
+}
+
+.attributePill[data-tone='custom2'] {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.attributePill[data-tone='custom3'] {
+  background: #ffe4e6;
+  color: #be123c;
+  border-color: #fecdd3;
+}
+
+.attributePill[data-tone='custom4'] {
+  background: #ecfccb;
+  color: #4d7c0f;
+  border-color: #d9f99d;
 }
 
 .specGroup {
