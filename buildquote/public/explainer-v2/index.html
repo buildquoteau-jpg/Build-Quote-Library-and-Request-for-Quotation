@@ -1,0 +1,2542 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuildQuote — The whole system. One card.</title>
+<meta name="description" content="Three minutes on how BuildQuote turns a glance into a specification, a counter conversation into a quote, and a manufacturer catalogue into verified product truth.">
+<meta name="robots" content="noindex">
+
+<!--
+  ══════════════════════════════════════════════════════════════════════════
+  BuildQuote Explainer v2
+  ══════════════════════════════════════════════════════════════════════════
+
+  A self-playing ~3.5 minute film. Single file, everything inline.
+
+  THE CORE IDEA
+  The DOM is a pure function of the playhead. A cue declares an INTERVAL
+  ("#foo carries .on during [12s, 19.5s)"), never an event. Interval
+  membership is idempotent and order-independent, so render(t) fully
+  determines the picture from t alone. Play, pause, scrub, chapter-jump and
+  resume are all the same operation: set t, call render(t).
+
+  AUTHORING
+  Sections 1-5 of the script block are pure data. Edit those to change the
+  film. Sections 6-13 are the engine and should rarely change.
+
+  DEVTOOLS
+    ?script    printable narration transcript (hand this to a voice artist)
+    ?audit     timing + authoring problems
+    ?shotlist  the image brief
+    ?shots     force every image slot to placeholder mode
+    ?t=95      jump to a timecode
+    ?autoplay  skip the play gate
+    #s2        deep link to a chapter
+
+  Fonts: Barlow + Barlow Condensed, SIL Open Font License 1.1.
+  ══════════════════════════════════════════════════════════════════════════
+-->
+
+<style>
+/* ══ FONTS ══════════════════════════════════════════════════════════════
+   Barlow + Barlow Condensed, latin subsets, SIL Open Font License 1.1.
+   The @font-face rules are injected by injectFonts() rather than written
+   here, because a relative url() in an inline <style> resolves against the
+   document URL — which is "/explainer-v2" (no trailing slash) once the
+   Next.js rewrite is in play, and that would send every request to the
+   site root. injectFonts() builds them against a computed BASE instead.
+   build-artifact.mjs swaps the same paths for base64 payloads.           */
+
+:root{
+  --font-body:'Barlow','BQ-Fallback',system-ui,-apple-system,'Segoe UI Variable Text','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --font-disp:'Barlow Condensed','Barlow','BQ-Fallback','Roboto Condensed','Arial Narrow','Segoe UI Variable Display',system-ui,Arial,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+html,body{
+  height:100%;background:#04090f;overflow:hidden;
+  font-family:var(--font-body);font-synthesis:none;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ══ STAGE ═════════════════════════════════════════════════════════════ */
+#stagewrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+
+#stage{
+  width:1600px;height:900px;position:relative;overflow:hidden;
+  transform-origin:center center;will-change:transform;
+  background:var(--deep);
+  color:var(--ink);
+
+  /* ── brand ── */
+  --nav:#185D7A; --nav-deep:#0d3347; --nav-lift:#1e7399;
+  --orange:#f97316; --orange-soft:rgba(249,115,22,.14);
+  --teal:#4FCBB0;   --teal-soft:rgba(79,203,176,.14);
+  --deep:#091524;
+
+  /* ── themeable surface (flipped by .t-light) ── */
+  --ink:#ffffff; --ink-2:#8fb0c4; --ink-3:#587c93;
+  --surface:rgba(255,255,255,.055); --surface-2:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.15); --line-2:rgba(255,255,255,.28);
+
+  /* ── rhythm ── */
+  --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px; --s6:90px; --s7:120px;
+  --pad-x:110px; --pad-y:84px;
+  --e:cubic-bezier(.22,.9,.28,1);
+  --e-pop:cubic-bezier(.2,1.35,.35,1);
+  --d-fast:280ms; --d:520ms; --d-slow:780ms;
+}
+
+/* the ground the whole film sits on */
+#bg{position:absolute;inset:0;background-image:
+  radial-gradient(ellipse 85% 65% at 50% 34%,#12304f 0%,#091524 62%,#050d17 100%)}
+#bg::after{content:'';position:absolute;inset:0;opacity:.5;
+  background:radial-gradient(ellipse 40% 30% at 78% 78%,rgba(24,93,122,.30),transparent 70%)}
+
+/* ══ SCENES ════════════════════════════════════════════════════════════ */
+.scene{position:absolute;inset:0;opacity:0;pointer-events:none;color:var(--ink);
+  transition:opacity var(--d-slow) var(--e);contain:layout paint}
+.scene.is-on{opacity:1;pointer-events:auto}
+
+/* one class flips a scene to a light product surface */
+.scene.t-light{
+  --ink:#0c1a26; --ink-2:#4a637a; --ink-3:#8098ac;
+  --surface:#ffffff; --surface-2:#f2f6f9;
+  --line:rgba(12,26,38,.13); --line-2:rgba(12,26,38,.26);
+  background:linear-gradient(178deg,#fbfdfe 0%,#eef3f7 55%,#e4ecf2 100%);
+}
+
+.pad{position:absolute;inset:0;display:grid;padding:var(--pad-y) var(--pad-x)}
+
+/* ══ LAYOUTS ═══════════════════════════════════════════════════════════ */
+.l-statement{place-content:center;justify-items:center;text-align:center}
+.l-statement > *{max-width:1180px}
+
+.l-split{grid-template-columns:600px 1fr;gap:var(--s7);align-items:center}
+.l-split--rev{grid-template-columns:1fr 600px}
+.l-split--wide{grid-template-columns:520px 1fr;gap:var(--s6)}
+
+.l-chain{grid-template-rows:1fr auto;align-items:center;gap:var(--s4)}
+
+.l-tiles{grid-template-columns:repeat(var(--n,3),1fr);gap:var(--s4);align-content:center}
+
+.l-showcase{place-content:center}
+
+.col{display:flex;flex-direction:column;align-items:flex-start;gap:var(--s3)}
+.col--c{align-items:center;text-align:center}
+.stack{display:flex;flex-direction:column;gap:var(--s2)}
+.row{display:flex;align-items:center;gap:var(--s2)}
+.media{display:grid;place-items:center;position:relative;height:100%}
+
+/* ══ TYPE ══════════════════════════════════════════════════════════════ */
+.eyebrow{font:700 17px/1 var(--font-body);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
+.eyebrow--o{color:var(--orange)}
+.eyebrow--t{color:var(--teal)}
+.display{font:800 112px/1.02 var(--font-disp);letter-spacing:-2.5px}
+.h1{font:800 78px/1.06 var(--font-disp);letter-spacing:-1.6px}
+.h2{font:800 54px/1.1 var(--font-disp);letter-spacing:-1px}
+.h3{font:700 34px/1.15 var(--font-disp);letter-spacing:-.4px}
+.lede{font:500 31px/1.36 var(--font-body);color:var(--ink-2)}
+.body{font:500 24px/1.45 var(--font-body);color:var(--ink-2)}
+.mark{color:var(--orange)}
+.mark--t{color:var(--teal)}
+.mark--n{color:var(--nav)}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ══ REVEAL PRIMITIVES ═════════════════════════════════════════════════ */
+.rv{opacity:0;transform:var(--rv-from,none);
+  transition:opacity var(--d) var(--e),transform var(--d) var(--e)}
+.rv.on{opacity:1;transform:none}
+.rv--up{--rv-from:translateY(28px)}
+.rv--dn{--rv-from:translateY(-24px)}
+.rv--right{--rv-from:translateX(38px)}
+.rv--left{--rv-from:translateX(-38px)}
+.rv--pop{--rv-from:scale(.84);transition-timing-function:var(--e-pop)}
+.rv--rise{--rv-from:translateY(48px) scale(.97)}
+.rv--slow{transition-duration:var(--d-slow)}
+.rv--fast{transition-duration:var(--d-fast)}
+
+/* ══ DEVICE CHROME (pure CSS) ══════════════════════════════════════════ */
+.device{position:relative;flex:none}
+.device__screen{position:relative;overflow:hidden;background:#fff;height:100%}
+
+.device--phone{width:332px;height:652px;border-radius:38px;padding:9px;
+  background:linear-gradient(150deg,#243444,#0d1722 60%);
+  box-shadow:0 44px 90px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.11),
+             inset 0 0 0 2px rgba(255,255,255,.06)}
+.device--phone .device__screen{border-radius:30px}
+.device--phone::before{content:'';position:absolute;z-index:3;top:20px;left:50%;
+  transform:translateX(-50%);width:96px;height:22px;border-radius:12px;background:#0b131c}
+
+.device--laptop{width:900px}
+.device--laptop .device__lid{border-radius:14px 14px 0 0;padding:13px 13px 0;
+  background:linear-gradient(150deg,#28394a,#111c27);
+  box-shadow:0 38px 80px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.1)}
+.device--laptop .device__screen{height:520px;border-radius:6px 6px 0 0}
+.device--laptop .device__base{height:15px;border-radius:0 0 12px 12px;
+  background:linear-gradient(180deg,#2b3d4f,#16222e);
+  box-shadow:0 16px 30px rgba(0,0,0,.45)}
+.device--laptop .device__base::after{content:'';display:block;width:110px;height:5px;
+  margin:0 auto;border-radius:0 0 6px 6px;background:rgba(0,0,0,.42)}
+
+.device--browser{width:100%;border-radius:13px;overflow:hidden;background:#fff;
+  box-shadow:0 34px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.12)}
+.device__bar{display:flex;align-items:center;gap:9px;padding:11px 15px;background:#e8eef3;
+  border-bottom:1px solid #d3dde5}
+.device__dots{display:flex;gap:6px;flex:none}
+.device__dots i{width:11px;height:11px;border-radius:50%;background:#c3ced8}
+.device__url{flex:1;height:26px;border-radius:13px;background:#fff;border:1px solid #d7e0e8;
+  display:flex;align-items:center;padding:0 13px;
+  font:600 14px/1 var(--font-body);color:#5b7183;letter-spacing:.1px}
+
+.device--float{transform:perspective(1900px) rotateY(-7deg) rotateX(1.5deg)}
+
+/* ══ THE LIVE SYSTEM CARD ══════════════════════════════════════════════
+   Mirrors the real System Card V2 tokens so it reads as the product,
+   not an illustration of it.                                             */
+.card{
+  --c-ink:#100e0b; --c-soft:#35312b; --c-faint:#6b6459;
+  --c-accent:#0d4258; --c-accent-soft:rgba(13,66,88,.12);
+  --c-line:rgba(16,14,11,.2); --c-line-2:rgba(16,14,11,.38);
+  background:#fff;height:100%;overflow:hidden;position:relative;
+  font-family:var(--font-body);color:var(--c-ink);display:flex;flex-direction:column}
+.card__scroll{position:absolute;inset:0;overflow:hidden}
+.card__inner{position:absolute;left:0;right:0;top:0}
+
+.card__hero{position:relative;height:290px;background:#dfe6ea;overflow:hidden}
+.card__hero img{width:100%;height:100%;object-fit:cover;display:block}
+.card__dots{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  display:flex;gap:6px}
+.card__dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.55)}
+.card__dots i.is-on{background:#fff;width:9px;height:9px}
+.card__share{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:50%;
+  background:rgba(255,255,255,.94);display:grid;place-items:center;
+  box-shadow:0 3px 10px rgba(0,0,0,.22);font-size:16px;color:#100e0b}
+
+.card__head{padding:22px 26px 18px}
+.card__mfr{font:700 13px/1 var(--font-body);letter-spacing:.15em;text-transform:uppercase;
+  color:var(--c-faint);margin-bottom:9px}
+.card__name{font:800 34px/1.08 var(--font-disp);letter-spacing:-.6px;color:var(--c-ink)}
+.card__cat{font:500 15px/1.3 var(--font-body);color:var(--c-faint);margin-top:7px}
+.card__statement{margin-top:15px;padding-left:14px;border-left:2px solid var(--c-accent);
+  font:500 16px/1.45 var(--font-body);color:var(--c-soft)}
+
+/* the five drawer-pull bars */
+.card__bars{padding:0 18px 18px;display:flex;flex-direction:column;gap:9px}
+.bar{border-radius:11px;overflow:hidden;background:#1c1a17}
+.bar__pull{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:11px 17px;min-height:38px;
+  font:800 17px/1 var(--font-disp);letter-spacing:.1px;color:#fff}
+.bar__pull span:last-child{font-size:15px;color:rgba(255,255,255,.5);
+  transition:transform var(--d) var(--e)}
+.bar.is-open .bar__pull span:last-child{transform:rotate(180deg)}
+.bar__panel{display:grid;grid-template-rows:0fr;background:#fff;
+  transition:grid-template-rows 1s var(--e)}
+.bar.is-open .bar__panel{grid-template-rows:1fr}
+.bar__clip{overflow:hidden}
+.bar__body{padding:17px;transform:translateY(-26px);opacity:0;
+  transition:transform 1s var(--e),opacity .55s var(--e)}
+.bar.is-open .bar__body{transform:none;opacity:1}
+
+.flabel{font:700 12px/1 var(--font-body);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--c-faint);margin-bottom:11px}
+
+/* colour swatches */
+.sw{display:flex;flex-wrap:wrap;gap:9px}
+.sw__i{width:80px;text-align:center;position:relative}
+.sw__chip{height:62px;border-radius:9px;border:1.5px solid var(--c-line);overflow:hidden;
+  background:var(--sw,linear-gradient(145deg,#cbbba2,#8d7a62));
+  display:grid;place-items:center;transition:border-color var(--d),box-shadow var(--d)}
+.sw__chip img{width:100%;height:100%;object-fit:cover}
+.sw__n{font:600 11px/1.25 var(--font-body);color:var(--c-soft);margin-top:6px;display:block}
+.sw__i.is-sel .sw__chip{border-color:var(--c-accent);box-shadow:0 0 0 2px var(--c-accent-soft)}
+.sw__i.is-sel::after{content:'✓';position:absolute;top:5px;right:5px;width:19px;height:19px;
+  border-radius:50%;background:var(--c-accent);color:#fff;font-size:11px;font-weight:800;
+  display:grid;place-items:center}
+
+/* profile / component rows */
+.prow{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:9px;
+  border:1px solid var(--c-line);margin-bottom:8px;background:#fff;
+  transition:background var(--d),border-color var(--d)}
+.prow.is-sel{background:var(--c-accent-soft);border-color:var(--c-accent)}
+.prow__m{flex:1;min-width:0}
+.prow__role{font:700 10px/1 var(--font-body);letter-spacing:.13em;text-transform:uppercase;
+  color:var(--c-faint)}
+.prow__n{font:700 15px/1.2 var(--font-body);color:var(--c-ink);margin:4px 0 5px}
+.prow__meta{display:flex;flex-wrap:wrap;gap:12px;
+  font:500 11.5px/1.3 var(--font-body);color:var(--c-faint)}
+.prow__meta b{font-weight:700;color:var(--c-soft)}
+.prow__tick{width:26px;height:26px;border-radius:7px;border:1.5px solid var(--c-line-2);
+  flex:none;display:grid;place-items:center;color:transparent;font-size:14px;font-weight:800;
+  transition:all var(--d)}
+.prow.is-sel .prow__tick{background:var(--c-accent);border-color:var(--c-accent);color:#fff}
+
+/* performance pills */
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{padding:6px 13px;border-radius:999px;border:1px solid;
+  font:700 13px/1 var(--font-body);white-space:nowrap}
+.pill--bal{background:#ffedd5;color:#c2410c;border-color:#fed7aa}
+.pill--moist{background:#dbeafe;color:#1d4ed8;border-color:#bfdbfe}
+.pill--au{background:#dcfce7;color:#15803d;border-color:#bbf7d0}
+.pill--col{background:#ccfbf1;color:#0f766e;border-color:#99f6e4}
+.pill--fire{background:#fce7f3;color:#be185d;border-color:#fbcfe8}
+.pill--cat{background:#dbeafe;color:#1e40af;border-color:#bfdbfe}
+.pill--deck{background:#d1fae5;color:#065f46;border-color:#a7f3d0}
+
+/* guide buttons */
+.gbtn{display:block;text-align:center;padding:11px;border-radius:10px;
+  background:var(--c-accent-soft);border:1.5px solid var(--c-accent);margin-bottom:8px}
+.gbtn small{display:block;font:600 11px/1 var(--font-body);color:var(--c-faint);margin-bottom:4px}
+.gbtn b{font:700 15px/1 var(--font-body);color:var(--c-accent)}
+
+/* the materials bar that lives outside the accordion */
+.mbar{margin:0 18px 18px;border-radius:12px;border:1px solid var(--c-line);
+  background:#fbfcfd;padding:15px}
+.mbar__t{font:700 12px/1 var(--font-body);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--c-faint);margin-bottom:5px}
+.mbar__empty{font:500 14px/1.4 var(--font-body);color:var(--c-faint)}
+/* index | name over part-no | uom — so nothing wraps in a 332px phone */
+.mbar__row{display:grid;grid-template-columns:18px 1fr auto;gap:1px 9px;padding:7px 0;
+  border-bottom:1px solid rgba(16,14,11,.08);font:500 12.5px/1.3 var(--font-body)}
+.mbar__row > span:first-child{grid-column:1;grid-row:1;color:var(--c-faint)}
+.mbar__row b{grid-column:2;grid-row:1;font-weight:700}
+.mbar__row code{grid-column:2;grid-row:2;font-family:var(--font-mono);font-size:10.5px;
+  color:var(--c-faint)}
+.mbar__row > span:last-child{grid-column:3;grid-row:1/3;align-self:center;
+  font-weight:700;color:var(--c-accent)}
+.mbar__cta{margin-top:13px;padding:13px;border-radius:10px;background:var(--c-accent);
+  color:#fff;text-align:center;font:700 16px/1 var(--font-body)}
+
+#s1mEmpty.is-gone{display:none}
+#s1mRows{display:none}
+#s1mRows.is-shown{display:block}
+
+/* the navy pinned cart bar */
+.cartbar{position:absolute;left:0;right:0;bottom:0;z-index:5;background:var(--nav);
+  color:#fff;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;
+  gap:8px;font:700 13.5px/1.25 var(--font-body);box-shadow:0 -6px 26px rgba(0,0,0,.28)}
+.cartbar.is-pop{box-shadow:0 0 0 3px rgba(249,115,22,.9),0 -6px 30px rgba(249,115,22,.5)}
+.cartbar__pill{background:rgba(255,255,255,.19);border-radius:999px;padding:6px 11px;
+  font-size:11.5px;font-weight:700;white-space:nowrap;flex:none}
+.cartbar__badge{position:absolute;top:-4px;left:50%;transform:translateX(-50%);
+  color:var(--orange);font:800 18px/1 var(--font-body)}
+
+/* ══ CHAIN RAIL ════════════════════════════════════════════════════════ */
+.chain{display:flex;align-items:flex-start;justify-content:space-between;
+  position:relative;padding:0 30px}
+.chain__rail{position:absolute;left:64px;right:64px;top:23px;height:3px;
+  background:var(--line);border-radius:2px;overflow:hidden}
+.chain__fill{position:absolute;inset:0;background:linear-gradient(90deg,var(--teal),var(--orange));
+  transform:scaleX(0);transform-origin:left}
+.chain__node{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;
+  gap:9px;width:190px}
+.chain__dot{width:48px;height:48px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:var(--deep);border:2.5px solid var(--line-2);font-size:20px;
+  transition:border-color var(--d),box-shadow var(--d),transform var(--d) var(--e-pop),background var(--d)}
+.chain__label{font:700 15px/1.2 var(--font-disp);letter-spacing:.02em;color:var(--ink-3);
+  text-align:center;transition:color var(--d)}
+.chain__node.is-lit .chain__dot{border-color:var(--teal);background:#0f2b3c;
+  box-shadow:0 0 0 7px rgba(79,203,176,.14),0 0 26px rgba(79,203,176,.4);transform:scale(1.1)}
+.chain__node.is-lit .chain__label{color:var(--ink)}
+.chain__node.is-done .chain__dot{border-color:var(--orange);box-shadow:0 0 0 5px rgba(249,115,22,.13)}
+.chain__node.is-done .chain__label{color:var(--ink-2)}
+
+/* ══ CALLOUT PINS ══════════════════════════════════════════════════════ */
+.pinhost{position:relative;display:grid;place-items:center;height:100%}
+.pin{position:absolute;left:var(--x);top:var(--y);z-index:6;pointer-events:none}
+.pin__dot{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;
+  background:var(--orange);box-shadow:0 0 0 5px rgba(249,115,22,.26)}
+.pin__line{position:absolute;left:0;top:0;height:2px;width:var(--len,130px);
+  background:linear-gradient(90deg,var(--orange),rgba(249,115,22,.35));
+  transform-origin:left center;transform:rotate(var(--ang,0deg))}
+.pin__label{position:absolute;left:var(--lx,140px);top:var(--ly,-22px);
+  background:var(--orange);color:#fff;border-radius:9px;padding:8px 15px;white-space:nowrap;
+  font:700 17px/1.25 var(--font-body);box-shadow:0 10px 26px rgba(249,115,22,.34)}
+.pin--t .pin__dot{background:var(--teal);box-shadow:0 0 0 5px rgba(79,203,176,.26)}
+.pin--t .pin__line{background:linear-gradient(90deg,var(--teal),rgba(79,203,176,.35))}
+.pin--t .pin__label{background:var(--teal);color:#062b23;box-shadow:0 10px 26px rgba(79,203,176,.3)}
+
+/* ══ SPEECH BUBBLE ═════════════════════════════════════════════════════ */
+.say{position:relative;background:var(--orange);color:#fff;border-radius:18px;
+  padding:20px 30px;font:800 34px/1.24 var(--font-disp);letter-spacing:-.3px;max-width:640px;
+  box-shadow:0 20px 50px rgba(249,115,22,.3)}
+.say::after{content:'';position:absolute;left:44px;bottom:-15px;border:16px solid transparent;
+  border-top-color:var(--orange);border-bottom:0}
+.say--t{background:var(--teal);color:#062b23;box-shadow:0 20px 50px rgba(79,203,176,.26)}
+.say--t::after{border-top-color:var(--teal)}
+
+/* ══ GENERIC UI FRAGMENTS ══════════════════════════════════════════════ */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:var(--s3)}
+.panel--light{background:#fff;border-color:rgba(12,26,38,.12);
+  box-shadow:0 18px 46px rgba(9,21,36,.1)}
+
+.tile{background:#fff;border-radius:14px;overflow:hidden;border:1px solid rgba(12,26,38,.11);
+  box-shadow:0 12px 32px rgba(9,21,36,.13);position:relative}
+.tile__img{height:150px;background:#dde5ea;position:relative;overflow:hidden}
+.tile__img img{width:100%;height:100%;object-fit:cover;display:block}
+.tile__b{padding:14px 15px 16px;color:#0c1a26}
+.tile__mfr{font:700 10.5px/1 var(--font-body);letter-spacing:.15em;text-transform:uppercase;color:#7d93a5}
+.tile__n{font:800 21px/1.14 var(--font-disp);letter-spacing:-.3px;margin:6px 0 8px}
+.tile__tick{position:absolute;top:11px;right:11px;width:30px;height:30px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.85);background:rgba(9,21,36,.34);display:grid;
+  place-items:center;color:transparent;font:800 15px/1 var(--font-body);transition:all var(--d)}
+.tile.is-sel .tile__tick{background:var(--nav);border-color:#fff;color:#fff}
+.tile.is-sel{box-shadow:0 0 0 3px var(--nav),0 12px 32px rgba(9,21,36,.2)}
+
+.searchbar{display:flex;align-items:center;gap:13px;background:#fff;border:1.5px solid #cfdae2;
+  border-radius:14px;padding:17px 21px;font:500 22px/1 var(--font-body);color:#0c1a26;
+  box-shadow:0 8px 24px rgba(9,21,36,.08)}
+.searchbar__ph{color:#8098ac}
+.caret{display:inline-block;width:2px;height:25px;background:var(--nav);
+  vertical-align:-4px;margin-left:2px}
+
+.btn{display:inline-flex;align-items:center;gap:9px;border-radius:11px;padding:14px 24px;
+  font:700 18px/1 var(--font-body)}
+.btn--nav{background:var(--nav);color:#fff}
+.btn--orange{background:var(--orange);color:#fff}
+.btn--green{background:#16a34a;color:#fff}
+.btn--ghost{border:1.5px solid var(--line-2);color:var(--ink)}
+
+.chip{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:8px 16px;
+  font:600 15px/1 var(--font-body);background:var(--surface);border:1px solid var(--line);
+  color:var(--ink-2)}
+.chip--sel{background:var(--nav);border-color:var(--nav);color:#fff;font-weight:700}
+
+/* verification field rows (Section 3) */
+.frow{display:flex;align-items:center;gap:14px;padding:12px 15px;border-radius:10px;
+  border:1px solid rgba(12,26,38,.12);background:#fff;transition:background var(--d),border-color var(--d)}
+.frow.is-ok{background:#f0fdf4;border-color:#bbf7d0}
+.frow.is-edit{background:#eef6fa;border-color:#b8d9e8}
+.frow__l{width:190px;flex:none;font:700 13px/1.2 var(--font-body);letter-spacing:.05em;
+  text-transform:uppercase;color:#7d93a5}
+.frow__v{flex:1;font:600 19px/1.3 var(--font-body);color:#0c1a26}
+.frow__acts{display:flex;gap:7px;flex:none}
+.fbtn{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;
+  border:1.5px solid rgba(12,26,38,.18);font:800 15px/1 var(--font-body);color:#7d93a5;
+  background:#fff;transition:all var(--d)}
+.fbtn--ok.is-on,.fbtn--ok.is-ok{background:#16a34a;border-color:#16a34a;color:#fff}
+.fbtn--ed.is-on{background:var(--nav);border-color:var(--nav);color:#fff}
+.fbtn--fl.is-on{background:#dc2626;border-color:#dc2626;color:#fff}
+
+/* progress rail (Section 3) */
+.prail{display:flex;gap:6px}
+.prail__seg{flex:1;height:9px;border-radius:5px;background:#dde5ea;position:relative;overflow:hidden}
+.prail__seg i{position:absolute;inset:0;transform:scaleX(0);transform-origin:left;
+  transition:transform var(--d-slow) var(--e)}
+.prail__seg.is-on i{transform:scaleX(1)}
+.prail__seg:nth-child(1) i{background:#3b82f6}
+.prail__seg:nth-child(2) i{background:#f59e0b}
+.prail__seg:nth-child(3) i{background:var(--teal)}
+.prail__seg:nth-child(4) i{background:#22c55e}
+.prail__labels{display:flex;gap:6px;margin-top:10px}
+.prail__labels span{flex:1;font:600 13px/1.2 var(--font-body);color:var(--ink-3);
+  transition:color var(--d)}
+.prail__labels span.is-on{color:var(--ink)}
+
+/* email / inbox mock */
+.mail{background:#fff;border-radius:12px;overflow:hidden;color:#0c1a26;
+  box-shadow:0 26px 64px rgba(0,0,0,.42)}
+.mail__head{background:var(--nav);color:#fff;padding:20px 24px}
+.mail__eyebrow{font:700 12px/1 var(--font-body);letter-spacing:.2em;text-transform:uppercase;
+  color:var(--orange);margin-bottom:8px}
+.mail__co{font:800 27px/1.1 var(--font-disp)}
+.mail__accent{height:3px;background:var(--orange)}
+.mail__b{padding:20px 24px;font:500 16px/1.5 var(--font-body)}
+.mail__tbl{width:100%;border-collapse:collapse;margin-top:14px;font-size:14px}
+.mail__tbl th{background:var(--nav);color:#fff;text-align:left;padding:9px 11px;
+  font:700 12px/1 var(--font-body);letter-spacing:.06em;text-transform:uppercase}
+.mail__tbl td{padding:9px 11px;border-bottom:1px solid #eef2f5}
+.mail__tbl tr:nth-child(even) td{background:#f7fafc}
+.mail__att{display:flex;gap:9px;margin-top:16px}
+.mail__att span{border:1px solid #d7e0e8;border-radius:8px;padding:7px 13px;
+  font:600 14px/1 var(--font-body);color:#4a637a;background:#f7fafc}
+
+/* sms bubble */
+.sms{background:#e9edf1;border-radius:19px 19px 19px 5px;padding:15px 19px;
+  font:500 18px/1.42 var(--font-body);color:#0c1a26;max-width:300px}
+.sms__link{color:var(--nav);font-weight:700;text-decoration:underline}
+
+/* ══ IMAGE SLOTS ═══════════════════════════════════════════════════════ */
+.slot{position:relative;aspect-ratio:var(--ar,16/9);width:100%;border-radius:14px;
+  overflow:hidden;background:var(--surface-2);display:block}
+.slot__img{width:100%;height:100%;object-fit:cover;object-position:var(--pos,center);display:block}
+.slot--fill{height:100%;aspect-ratio:auto}
+.slot.is-missing{
+  border:2px dashed rgba(79,203,176,.5);
+  background:repeating-linear-gradient(45deg,transparent 0 15px,rgba(79,203,176,.07) 15px 30px),
+             var(--surface-2);
+  display:grid;place-content:center;text-align:center;gap:9px;padding:26px}
+.slot__id{font:700 15px/1 var(--font-mono);letter-spacing:.16em;color:var(--teal)}
+.slot__title{font:700 19px/1.25 var(--font-disp);color:var(--ink);max-width:340px}
+.slot__note{font:500 13px/1.4 var(--font-body);color:var(--ink-3);max-width:320px}
+
+/* ══ SCENE-LOCAL ═══════════════════════════════════════════════════════ */
+
+/* Full-area beats stack inside a scene; one shows at a time.
+   Anything that positions itself uses .fade instead, so .beat never
+   fights an element's own transform. */
+.beat{position:absolute;inset:0;opacity:0;pointer-events:none;
+  transition:opacity var(--d) var(--e),transform var(--d) var(--e);transform:translateY(20px)}
+/* An absolutely positioned child resolves against the PADDING box, so a
+   beat that fills .pad would sit on top of the page margin. Re-apply it. */
+.pad > .beat{padding:var(--pad-y) var(--pad-x)}
+.beat.on{opacity:1;transform:none;pointer-events:auto}
+.fade{opacity:0;transition:opacity var(--d) var(--e)}
+.fade.on{opacity:1}
+.rv.off{opacity:0;transform:translateY(-22px)}
+
+/* — cold open — */
+#op-pile{position:absolute;inset:0;transform-origin:50% 46%}
+.op-paper{position:absolute;width:var(--w);border-radius:7px;
+  box-shadow:0 24px 58px rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.14);
+  background:#fff;transform:rotate(var(--r));opacity:0;
+  transition:opacity .5s var(--e-pop),transform .5s var(--e-pop)}
+.op-paper.on{opacity:1;transform:rotate(var(--r)) scale(1)}
+.op-paper.rv--pop{--rv-from:none}
+#op-veil{position:absolute;inset:0;
+  background:radial-gradient(ellipse 72% 54% at 50% 50%,rgba(4,9,15,.88) 0%,rgba(4,9,15,.6) 55%,rgba(4,9,15,0) 100%)}
+#op-card{position:absolute;left:50%;top:50%;width:300px;height:420px;margin:-210px 0 0 -150px;
+  border-radius:20px;background:#fff;box-shadow:0 40px 110px rgba(0,0,0,.7);
+  opacity:0;transform:scale(.2);transition:opacity .7s var(--e),transform .9s var(--e-pop);
+  overflow:hidden}
+#op-card.on{opacity:1;transform:scale(1)}
+
+/* — section 1 — */
+#sc-s1{--pad-y:44px}
+.s1-main{position:relative}
+.s1-copy{position:absolute;left:0;top:50%;transform:translateY(-50%);width:580px;height:400px}
+.s1-phone{position:absolute;right:30px;top:50%;transform:translateY(-50%)}
+.s1-reader{display:flex;align-items:center;gap:14px}
+.s1-avatar{width:56px;height:56px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font:800 22px/1 var(--font-disp);background:var(--nav);color:#fff}
+.s1-avatar--o{background:var(--orange)}
+.s1-avatar--t{background:var(--teal);color:#06342b}
+.s1-role{font:700 15px/1 var(--font-body);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.s1-who{font:800 30px/1.1 var(--font-disp);color:var(--ink)}
+
+/* the link travelling out of the phone */
+.s1-link{position:absolute;left:-30px;top:120px;z-index:8;background:#fff;border-radius:12px;
+  padding:12px 18px;display:flex;align-items:center;gap:11px;
+  box-shadow:0 18px 44px rgba(9,21,36,.28);border:1px solid rgba(12,26,38,.1)}
+.s1-link b{font:700 17px/1 var(--font-body);color:#0c1a26}
+.s1-link small{display:block;font:600 12px/1 var(--font-body);color:#7d93a5;margin-top:4px}
+
+.s1-msg{position:absolute;left:-70px;top:200px;z-index:8;width:300px}
+
+/* the card scroll is driven by measured anchors (see cardTo); this just
+   smooths the move between them */
+.card__inner{transition:transform 1.05s var(--e)}
+
+/* — section 2 — */
+.s2-head{display:flex;align-items:center;justify-content:space-between;gap:var(--s4)}
+.s2-results{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3)}
+.s2-xsell{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:15px 18px;
+  border-radius:13px;background:rgba(24,93,122,.07);border:1px dashed rgba(24,93,122,.3)}
+.s2-xsell__l{font:700 12px/1 var(--font-body);letter-spacing:.16em;text-transform:uppercase;
+  color:#5d7f93}
+.s2-modal{width:430px;background:#fff;border-radius:16px;padding:24px;color:#0c1a26;
+  box-shadow:0 34px 80px rgba(9,21,36,.34)}
+.s2-chan{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:14px 0 18px}
+.s2-chan div{border:1.5px solid #d3dde5;border-radius:10px;padding:12px 6px;text-align:center;
+  font:700 15px/1 var(--font-body);color:#4a637a}
+.s2-chan div.is-on{border-color:var(--nav);background:rgba(24,93,122,.09);color:var(--nav)}
+.s2-counter{position:relative;border-radius:18px;overflow:hidden;height:100%}
+
+/* — section 3 — */
+.s3-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s2)}
+.s3-stat{background:#fff;border-radius:13px;padding:18px 20px;border:1px solid rgba(12,26,38,.1);
+  box-shadow:0 10px 26px rgba(9,21,36,.07)}
+.s3-stat b{display:block;font:800 42px/1 var(--font-disp);color:var(--nav);
+  font-variant-numeric:tabular-nums}
+.s3-stat span{display:block;font:600 14px/1.2 var(--font-body);color:#7d93a5;margin-top:7px}
+.s3-fields{display:flex;flex-direction:column;gap:9px}
+.s3-swaps{display:flex;gap:11px}
+.s3-swap{width:92px;text-align:center}
+.s3-swap__c{height:70px;border-radius:10px;border:1.5px solid rgba(12,26,38,.15);overflow:hidden;
+  background:var(--sw);position:relative;transition:box-shadow var(--d)}
+.s3-swap__c img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity var(--d-slow)}
+.s3-swap.is-photo .s3-swap__c img{opacity:1}
+.s3-swap.is-photo .s3-swap__c{box-shadow:0 0 0 2px var(--teal)}
+.s3-swap span{display:block;font:600 12px/1.2 var(--font-body);color:#4a637a;margin-top:7px}
+.s3-fan{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s3);align-items:start}
+.s3-fan__i{text-align:center}
+.s3-fan__box{border-radius:13px;overflow:hidden;border:1px solid rgba(12,26,38,.12);
+  box-shadow:0 14px 34px rgba(9,21,36,.14);background:#fff;height:210px}
+.s3-fan__i span{display:block;margin-top:12px;font:700 16px/1.2 var(--font-disp);color:var(--ink)}
+
+/* — the case — */
+.case-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s5);align-content:center}
+.case-col{border-top:3px solid var(--orange);padding-top:var(--s3)}
+.case-col:nth-child(2){border-color:var(--teal)}
+.case-col:nth-child(3){border-color:var(--nav-lift)}
+.case-col h3{font:800 38px/1.12 var(--font-disp);letter-spacing:-.6px;margin-bottom:var(--s2)}
+.case-col p{font:500 22px/1.42 var(--font-body);color:var(--ink-2)}
+
+/* — end card — */
+#end-logo{font:800 116px/1 var(--font-disp);letter-spacing:-3px}
+#end-logo .q{color:var(--orange)}
+.end-line{display:grid;grid-template-columns:230px 1fr;gap:20px;align-items:baseline;
+  font:600 26px/1.5 var(--font-body);color:var(--ink-2);text-align:left}
+.end-line b{font:800 26px/1.5 var(--font-disp);color:var(--ink);text-align:right}
+#end-url{font:800 40px/1 var(--font-disp);letter-spacing:-.5px;
+  border-bottom:3px solid var(--orange);padding-bottom:5px}
+
+/* ══ STAGE CHROME ══════════════════════════════════════════════════════ */
+.chapmark{position:absolute;right:var(--pad-x);top:41px;z-index:9;
+  font:700 14px/1 var(--font-body);letter-spacing:.22em;text-transform:uppercase;
+  color:var(--ink-3);opacity:0;transition:opacity var(--d)}
+.chapmark.on{opacity:.85}
+
+.bug{position:absolute;left:var(--pad-x);bottom:40px;z-index:9;
+  font:800 25px/1 var(--font-disp);letter-spacing:-.4px;opacity:0;
+  transition:opacity var(--d)}
+.bug.on{opacity:.9}
+.bug .q{color:var(--orange)}
+
+.cap{position:absolute;left:0;right:0;bottom:56px;z-index:10;display:flex;justify-content:center;
+  padding:0 200px;pointer-events:none;transition:transform var(--d) var(--e),opacity var(--d)}
+.cap__t{background:rgba(4,9,15,.76);border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;padding:13px 26px;text-align:center;
+  font:600 25px/1.35 var(--font-body);color:#fff;
+  text-shadow:0 2px 12px rgba(0,0,0,.6);opacity:0;transition:opacity var(--d)}
+.cap__t.on{opacity:1}
+body:not(.idle) .cap{transform:translateY(calc(-1 * var(--bar-lift,0px)))}
+body.captions-off .cap{opacity:0}
+.scene.t-light ~ .cap .cap__t{background:rgba(9,21,36,.86)}
+
+/* ══ PLAY GATE ═════════════════════════════════════════════════════════ */
+#gate{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:pointer;
+  background:radial-gradient(ellipse 85% 65% at 50% 40%,#12304f 0%,#091524 62%,#050d17 100%);
+  transition:opacity .5s ease}
+#gate.gone{opacity:0;pointer-events:none}
+#gate .glogo{font:800 66px/1 var(--font-disp);letter-spacing:-1.6px;margin-bottom:10px}
+#gate .glogo .q{color:var(--orange)}
+#gate .gsub{font:600 21px/1 var(--font-body);color:var(--ink-3);margin-bottom:54px}
+#gplay{width:124px;height:124px;border-radius:50%;background:var(--orange);
+  display:grid;place-items:center;box-shadow:0 18px 60px rgba(249,115,22,.44);
+  transition:transform .22s var(--e)}
+#gate:hover #gplay{transform:scale(1.07)}
+#gplay::after{content:'';border-left:40px solid #fff;border-top:25px solid transparent;
+  border-bottom:25px solid transparent;margin-left:9px}
+#gate .ghint{font:600 17px/1 var(--font-body);color:var(--ink-3);margin-top:42px;opacity:.75}
+#gresume{margin-top:26px;display:none;gap:12px}
+#gresume.on{display:flex}
+
+/* ══ SEEK SUPPRESSION ══════════════════════════════════════════════════ */
+#stage.seeking,#stage.seeking *{
+  transition:none !important;animation-play-state:paused !important}
+
+/* ══ REDUCED MOTION ════════════════════════════════════════════════════ */
+html.rm #stage *{transition-duration:1ms !important;transition-delay:0ms !important}
+html.rm .rv{--rv-from:none !important}
+
+/* ══ TRANSPORT (outside the scaled stage) ══════════════════════════════ */
+#transport{position:fixed;left:0;right:0;bottom:0;z-index:200;
+  padding:14px 22px 15px;
+  background:linear-gradient(180deg,rgba(4,9,15,0),rgba(4,9,15,.9) 42%);
+  font-family:var(--font-body);color:#fff;
+  transition:opacity .35s ease,transform .35s ease}
+body.idle #transport{opacity:0;transform:translateY(16px);pointer-events:none}
+body.idle{cursor:none}
+
+.tp__track{position:relative;padding:9px 0;cursor:pointer}
+.tp__chaps{display:flex;gap:3px;height:6px;transition:height .18s ease}
+.tp__track:hover .tp__chaps{height:11px}
+.tp__chap{position:relative;background:rgba(255,255,255,.24);border-radius:3px;overflow:hidden;
+  transition:background .18s ease}
+.tp__chap:hover{background:rgba(255,255,255,.4)}
+.tp__chap i{position:absolute;inset:0;background:var(--orange,#f97316);
+  transform:scaleX(var(--p,0));transform-origin:left}
+.tp__head{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#fff;
+  transform:translate(-50%,-50%) scale(0);left:0;box-shadow:0 2px 8px rgba(0,0,0,.5);
+  transition:transform .18s ease;pointer-events:none}
+.tp__track:hover .tp__head{transform:translate(-50%,-50%) scale(1)}
+.tp__tip{position:absolute;bottom:26px;transform:translateX(-50%);white-space:nowrap;
+  background:rgba(4,9,15,.95);border:1px solid rgba(255,255,255,.16);border-radius:8px;
+  padding:6px 12px;font:600 13px/1 var(--font-body);opacity:0;pointer-events:none;
+  transition:opacity .15s ease}
+.tp__track:hover .tp__tip{opacity:1}
+
+.tp__row{display:flex;align-items:center;gap:16px;margin-top:7px}
+.tp__btn{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.16);color:#fff;cursor:pointer;display:grid;
+  place-items:center;font:700 15px/1 var(--font-body);transition:background .16s ease}
+.tp__btn:hover{background:rgba(255,255,255,.22)}
+.tp__time{font:600 15px/1 var(--font-body);color:rgba(255,255,255,.8);
+  font-variant-numeric:tabular-nums;min-width:96px}
+.tp__now{flex:1;font:700 15px/1 var(--font-body);color:rgba(255,255,255,.62);
+  letter-spacing:.05em;text-transform:uppercase}
+.tp__jump{display:flex;gap:7px}
+.tp__jump button{border-radius:8px;padding:8px 14px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.16);color:#fff;cursor:pointer;
+  font:600 13px/1 var(--font-body);transition:background .16s ease}
+.tp__jump button:hover{background:rgba(255,255,255,.22)}
+.tp__jump button.is-on{background:var(--orange,#f97316);border-color:var(--orange,#f97316)}
+
+/* ══ DEVTOOL REPORT VIEW ═══════════════════════════════════════════════ */
+#report{position:fixed;inset:0;z-index:900;overflow:auto;background:#0c141d;color:#dbe6ee;
+  padding:48px;display:none;font:400 15px/1.65 var(--font-body)}
+#report.on{display:block}
+#report h1{font:800 40px/1.1 var(--font-disp);color:#fff;margin-bottom:8px}
+#report h2{font:800 24px/1.2 var(--font-disp);color:var(--teal,#4FCBB0);margin:34px 0 12px}
+#report table{border-collapse:collapse;width:100%;max-width:1180px;margin-bottom:26px}
+#report td,#report th{border-bottom:1px solid rgba(255,255,255,.11);padding:9px 12px;
+  text-align:left;vertical-align:top}
+#report th{color:#7fa0b6;font:700 12px/1 var(--font-body);letter-spacing:.12em;text-transform:uppercase}
+#report .tc{font-family:var(--font-mono);color:var(--orange,#f97316);white-space:nowrap}
+#report .warn{color:#fbbf24}
+#report .bad{color:#f87171}
+#report .ok{color:#4ade80}
+#report .note{color:#8fb0c4;font-style:italic}
+</style>
+</head>
+<body>
+
+<div id="stagewrap">
+<div id="stage">
+  <div id="bg"></div>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       COLD OPEN — 0:00 to 0:14
+       ══════════════════════════════════════════════════════════════════ -->
+  <div class="scene is-on" id="sc-open">
+    <div id="op-pile">
+      <figure class="slot op-paper" id="op-p1" data-shot="DOC-3" style="--w:400px;--r:-8deg;--ar:1/1;left:265px;top:140px"></figure>
+      <figure class="slot op-paper" id="op-p2" data-shot="DOC-1" style="--w:390px;--r:6deg;--ar:823/916;left:900px;top:95px"></figure>
+      <figure class="slot op-paper" id="op-p3" data-shot="DOC-4" style="--w:500px;--r:-4deg;--ar:3/2;left:225px;top:445px"></figure>
+      <figure class="slot op-paper" id="op-p4" data-shot="DOC-2" style="--w:385px;--r:10deg;--ar:814/906;left:945px;top:430px"></figure>
+      <figure class="slot op-paper" id="op-p5" data-shot="DOC-5" style="--w:540px;--r:-2deg;--ar:3/2;left:545px;top:265px"></figure>
+    </div>
+    <div id="op-veil"></div>
+
+    <div class="pad l-statement" id="op-copy">
+      <div class="eyebrow eyebrow--t rv rv--up" id="op-eye">BuildQuote</div>
+      <div class="h1 rv rv--up" id="op-l1" style="margin-top:22px">
+        One building product carries a great deal of information.
+      </div>
+    </div>
+
+    <div id="op-card">
+      <div class="card">
+        <div class="card__hero" style="height:190px">
+          <figure class="slot slot--fill" data-shot="CLAD-HERO"></figure>
+        </div>
+        <div class="card__head" style="padding:16px 18px">
+          <div class="card__mfr">BQ CompForm</div>
+          <div class="card__name" style="font-size:22px">BQ CladMax Composite Cladding</div>
+          <div class="card__cat">Cladding &middot; Composite timber-look facade</div>
+        </div>
+        <div class="card__bars" style="padding:0 12px">
+          <div class="bar"><div class="bar__pull" style="font-size:13px"><span>Colours. Profiles. Finishes.</span><span>&#8964;</span></div></div>
+          <div class="bar"><div class="bar__pull" style="font-size:13px"><span>Applications</span><span>&#8964;</span></div></div>
+          <div class="bar"><div class="bar__pull" style="font-size:13px"><span>Guides and Resources</span><span>&#8964;</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pad l-statement" id="op-end">
+      <div class="display rv rv--rise" id="op-l2">
+        Light enough to travel.<br><span class="mark">Rich enough to specify.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       SECTION 1 — THE SYSTEM CARD — 0:14 to 1:20
+       One card, one link, five pairs of hands.
+       ══════════════════════════════════════════════════════════════════ -->
+  <div class="scene t-light" id="sc-s1">
+    <div class="pad l-chain">
+      <div class="s1-main">
+
+        <!-- ── left column: who is holding it right now ── -->
+        <div class="s1-copy">
+          <div class="beat" id="s1c1">
+            <div class="col">
+              <div class="eyebrow rv rv--up" id="s1c1a">Discovered</div>
+              <div class="h1 rv rv--up" id="s1c1b">It starts<br>with a glance.</div>
+              <div class="lede rv rv--up" id="s1c1c" style="max-width:470px">
+                A house goes past on a phone screen. The cladding is the thing they remember.
+              </div>
+            </div>
+          </div>
+
+          <div class="beat" id="s1c2">
+            <div class="col">
+              <div class="eyebrow rv rv--up" id="s1c2a">One tap</div>
+              <div class="h1 rv rv--up" id="s1c2b">The whole system,<br>on one card.</div>
+              <div class="stack rv rv--up" id="s1c2c" style="margin-top:8px;gap:11px">
+                <div class="row"><span class="chip">Colours. Profiles. Finishes.</span></div>
+                <div class="row"><span class="chip">Applications</span><span class="chip">Guides and Resources</span></div>
+                <div class="row"><span class="chip">Components and Accessories</span><span class="chip">Stockists</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="beat" id="s1c3">
+            <div class="col">
+              <div class="s1-reader rv rv--up" id="s1c3a">
+                <div class="s1-avatar">M</div>
+                <div><div class="s1-role">Shared with</div><div class="s1-who">Their partner</div></div>
+              </div>
+              <div class="h2 rv rv--up" id="s1c3b" style="margin-top:6px">
+                The colour conversation<br>happens on the card.
+              </div>
+              <div class="lede rv rv--up" id="s1c3c" style="max-width:460px">
+                Five colourways, photographed, side by side.
+              </div>
+            </div>
+          </div>
+
+          <div class="beat" id="s1c4">
+            <div class="col">
+              <div class="s1-reader rv rv--up" id="s1c4a">
+                <div class="s1-avatar s1-avatar--t">A</div>
+                <div><div class="s1-role">Shared with</div><div class="s1-who">Their architect</div></div>
+              </div>
+              <div class="h2 rv rv--up" id="s1c4b" style="margin-top:6px">
+                The ratings are<br>already there.
+              </div>
+              <div class="row rv rv--up" id="s1c4c" style="flex-wrap:wrap;gap:9px;margin-top:6px">
+                <span class="pill pill--bal">BAL 12.5</span>
+                <span class="pill pill--moist">Moisture resistant</span>
+                <span class="pill pill--au">Australian made</span>
+                <span class="pill pill--col">5 colourways</span>
+              </div>
+              <div class="lede rv rv--up" id="s1c4d" style="max-width:460px;margin-top:6px">
+                With the installation guide one tap below.
+              </div>
+            </div>
+          </div>
+
+          <div class="beat" id="s1c5">
+            <div class="col">
+              <div class="s1-reader rv rv--up" id="s1c5a">
+                <div class="s1-avatar s1-avatar--o">B</div>
+                <div><div class="s1-role">Shared with</div><div class="s1-who">Their builder</div></div>
+              </div>
+              <div class="h2 rv rv--up" id="s1c5b" style="margin-top:6px">
+                Profiles and components,<br>ticked as they read.
+              </div>
+              <div class="lede rv rv--up" id="s1c5c" style="max-width:470px">
+                Every part number on the card is already a line item, with its own
+                unit of measure and pack quantity.
+              </div>
+            </div>
+          </div>
+
+          <div class="beat" id="s1c6">
+            <div class="col">
+              <div class="eyebrow eyebrow--o rv rv--up" id="s1c6a">Quantified</div>
+              <div class="h1 rv rv--up" id="s1c6b">A materials list,<br>ready to price.</div>
+              <div class="lede rv rv--up" id="s1c6c" style="max-width:470px">
+                Quantities adjusted on the phone, in the car, at the gate.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── right: one phone, one card, evolving ── -->
+        <div class="s1-phone fade" id="s1phonewrap">
+          <div class="device device--phone">
+            <div class="device__screen">
+
+              <!-- the feed the card is discovered in -->
+              <figure class="slot slot--fill fade" id="s1feed" data-shot="S1-01"
+                      style="position:absolute;inset:0;z-index:4"></figure>
+
+              <!-- ══ THE LIVE SYSTEM CARD ══ real BQ CompForm data ══ -->
+              <div class="card__scroll">
+                <div class="card__inner" id="s1inner">
+                  <div class="card">
+                    <div class="card__hero">
+                      <figure class="slot slot--fill" data-shot="CLAD-HERO"></figure>
+                      <div class="card__share" id="s1share">&#8593;</div>
+                      <div class="card__dots"><i class="is-on"></i><i></i><i></i><i></i></div>
+                    </div>
+
+                    <div class="card__head">
+                      <div class="card__mfr">BQ CompForm</div>
+                      <div class="card__name">BQ CladMax Composite Cladding</div>
+                      <div class="card__cat">Cladding &middot; Composite timber-look facade cladding</div>
+                      <div class="card__statement">BQ CladMax is a co-extruded composite facade
+                        cladding system with a UV-stable polymer cap layer and timber fibre core.</div>
+                    </div>
+
+                    <div class="card__bars">
+                      <!-- 1 -->
+                      <div class="bar" id="s1bar1">
+                        <div class="bar__pull"><span>Colours. Profiles. Finishes.</span><span>&#8964;</span></div>
+                        <div class="bar__panel"><div class="bar__clip"><div class="bar__body">
+                          <div class="flabel">Select colour</div>
+                          <div class="sw">
+                            <div class="sw__i" id="s1sw1"><div class="sw__chip" style="--sw:linear-gradient(150deg,#6b4a33,#452c1d)"></div><span class="sw__n">Ironbark</span></div>
+                            <div class="sw__i"><div class="sw__chip" style="--sw:linear-gradient(150deg,#9aa4a6,#6d7679)"></div><span class="sw__n">Coastal Grey</span></div>
+                            <div class="sw__i"><div class="sw__chip" style="--sw:linear-gradient(150deg,#c08d5c,#96613a)"></div><span class="sw__n">Brushbox Natural</span></div>
+                            <div class="sw__i"><div class="sw__chip" style="--sw:linear-gradient(150deg,#4a4f53,#24282b)"></div><span class="sw__n">Slate Black</span></div>
+                            <div class="sw__i"><div class="sw__chip" style="--sw:linear-gradient(150deg,#efe7d9,#d6cab5)"></div><span class="sw__n">Warm White</span></div>
+                          </div>
+                          <div class="flabel" style="margin-top:17px">Profile</div>
+                          <div class="prow" id="s1p1">
+                            <div class="prow__m">
+                              <div class="prow__role">Main profile</div>
+                              <div class="prow__n">90mm Vertical Batten</div>
+                              <div class="prow__meta"><span>Specs <b>5,400 &times; 90 &times; 32mm</b></span>
+                                <span>Part number <b>BQ-CLADMAX-VB-90</b></span><span>UOM <b>lm</b></span></div>
+                            </div><div class="prow__tick">&#10003;</div>
+                          </div>
+                          <div class="prow" id="s1p2">
+                            <div class="prow__m">
+                              <div class="prow__role">Additional profile</div>
+                              <div class="prow__n">150mm Shadowline</div>
+                              <div class="prow__meta"><span>Specs <b>5,400 &times; 150 &times; 20mm</b></span>
+                                <span>Part number <b>BQ-CLADMAX-SL-150</b></span><span>UOM <b>lm</b></span></div>
+                            </div><div class="prow__tick">&#10003;</div>
+                          </div>
+                          <div class="prow" id="s1p3">
+                            <div class="prow__m">
+                              <div class="prow__role">Additional profile</div>
+                              <div class="prow__n">300mm Shadowline</div>
+                              <div class="prow__meta"><span>Specs <b>5,400 &times; 300 &times; 20mm</b></span>
+                                <span>Part number <b>BQ-CLADMAX-SL-300</b></span><span>UOM <b>lm</b></span></div>
+                            </div><div class="prow__tick">&#10003;</div>
+                          </div>
+                        </div></div></div>
+                      </div>
+
+                      <!-- 2 -->
+                      <div class="bar" id="s1bar2">
+                        <div class="bar__pull"><span>Applications</span><span>&#8964;</span></div>
+                        <div class="bar__panel"><div class="bar__clip"><div class="bar__body">
+                          <div class="flabel">Performance</div>
+                          <div class="pills">
+                            <span class="pill pill--moist">Moisture resistant</span>
+                            <span class="pill pill--bal">BAL 12.5</span>
+                            <span class="pill pill--au">Australian made</span>
+                            <span class="pill pill--col">5 colourways</span>
+                          </div>
+                        </div></div></div>
+                      </div>
+
+                      <!-- 3 -->
+                      <div class="bar" id="s1bar3">
+                        <div class="bar__pull"><span>Guides and Resources</span><span>&#8964;</span></div>
+                        <div class="bar__panel"><div class="bar__clip"><div class="bar__body">
+                          <div class="gbtn"><small>Installation guide &middot; buildquote.com.au</small><b>Installation guide</b></div>
+                          <div class="gbtn"><small>Website &middot; buildquote.com.au</small><b>BQ CompForm website</b></div>
+                        </div></div></div>
+                      </div>
+
+                      <!-- 4 -->
+                      <div class="bar" id="s1bar4">
+                        <div class="bar__pull"><span>Components and Accessories</span><span>&#8964;</span></div>
+                        <div class="bar__panel"><div class="bar__clip"><div class="bar__body">
+                          <div class="prow" id="s1k1">
+                            <div class="prow__m">
+                              <div class="prow__role">Fasteners</div>
+                              <div class="prow__n">BQ CladMax Concealed Fixing Clip</div>
+                              <div class="prow__meta"><span>Part number <b>BQ-CM-CLIP-CONC</b></span><span>UOM <b>bag</b></span></div>
+                            </div><div class="prow__tick">&#10003;</div>
+                          </div>
+                          <div class="prow" id="s1k2">
+                            <div class="prow__m">
+                              <div class="prow__role">Accessories</div>
+                              <div class="prow__n">BQ CladMax Aluminium Starter Strip 5400mm</div>
+                              <div class="prow__meta"><span>Part number <b>BQ-CM-STARTER-AL</b></span><span>UOM <b>length</b></span></div>
+                            </div><div class="prow__tick">&#10003;</div>
+                          </div>
+                          <div class="prow" id="s1k3">
+                            <div class="prow__m">
+                              <div class="prow__role">Trims &amp; Flashings</div>
+                              <div class="prow__n">BQ CladMax Internal Corner Trim 3000mm</div>
+                              <div class="prow__meta"><span>Part number <b>BQ-CM-ICORNER-AL</b></span><span>UOM <b>length</b></span></div>
+                            </div><div class="prow__tick">&#10003;</div>
+                          </div>
+                        </div></div></div>
+                      </div>
+
+                      <!-- 5 -->
+                      <div class="bar" id="s1bar5">
+                        <div class="bar__pull"><span>Stockists</span><span>&#8964;</span></div>
+                        <div class="bar__panel"><div class="bar__clip"><div class="bar__body">
+                          <div class="flabel">Local stockists</div>
+                          <div class="prow" style="border-color:var(--c-accent)">
+                            <div class="prow__m">
+                              <div class="prow__n" id="s1stockist">Southwest Building Supplies</div>
+                              <div class="prow__meta"><span>Dunsborough, WA</span>
+                                <span style="color:#15803d;font-weight:700">&#10003; Services your area</span></div>
+                            </div>
+                          </div>
+                        </div></div></div>
+                      </div>
+                    </div>
+
+                    <!-- materials bar, deliberately outside the accordion -->
+                    <div class="mbar">
+                      <div class="mbar__t">Your materials list</div>
+                      <div class="mbar__empty" id="s1mEmpty">Select a profile or component above to add it here.</div>
+                      <div id="s1mRows">
+                        <div class="mbar__row"><span>1</span><b>90mm Vertical Batten</b><code>BQ-CLADMAX-VB-90</code><span>lm</span></div>
+                        <div class="mbar__row"><span>2</span><b>150mm Shadowline</b><code>BQ-CLADMAX-SL-150</code><span>lm</span></div>
+                        <div class="mbar__row"><span>3</span><b>Concealed Fixing Clip</b><code>BQ-CM-CLIP-CONC</code><span>bag</span></div>
+                        <div class="mbar__row"><span>4</span><b>Aluminium Starter Strip</b><code>BQ-CM-STARTER-AL</code><span>length</span></div>
+                        <div class="mbar__row"><span>5</span><b>Internal Corner Trim</b><code>BQ-CM-ICORNER-AL</code><span>length</span></div>
+                        <div class="mbar__cta" id="s1cta">Request a Quote &rarr;</div>
+                      </div>
+                    </div>
+                    <div style="height:120px"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- the navy bar pinned over the card -->
+              <div class="cartbar fade" id="s1cart">
+                <span>Your materials list <span style="opacity:.7">&middot; <span id="s1count">5</span> items</span></span>
+                <span class="cartbar__pill">View &amp; edit</span>
+                <span class="cartbar__badge fade" id="s1badge">+5 added</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- the link leaving the phone -->
+          <div class="s1-link fade" id="s1link">
+            <span style="font-size:22px">&#128279;</span>
+            <div><b>BQ CladMax Composite Cladding</b>
+              <small>buildquote.com.au/library/bq-compform</small></div>
+          </div>
+        </div>
+
+        <!-- ── final beat of the section: what the supplier opens ── -->
+        <div class="beat" id="s1mail">
+          <div style="display:grid;grid-template-columns:520px 1fr;gap:var(--s6);align-items:center;height:100%">
+            <div class="col">
+              <div class="eyebrow eyebrow--o rv rv--up" id="s1m1">Quoted</div>
+              <div class="h1 rv rv--up" id="s1m2">It arrives<br>ready to price.</div>
+              <div class="lede rv rv--up" id="s1m3" style="max-width:450px">
+                Itemised, referenced, with a PDF and a CSV attached, and the builder
+                on reply-to.
+              </div>
+            </div>
+            <div class="media">
+              <div class="mail rv rv--rise" id="s1m4" style="width:640px">
+                <div class="mail__head">
+                  <div class="mail__eyebrow">Request for Quotation</div>
+                  <div class="mail__co">Hartley Building Co</div>
+                </div>
+                <div class="mail__accent"></div>
+                <div class="mail__b">
+                  <div>Dear <b>Southwest Building Supplies</b>,</div>
+                  <table class="mail__tbl">
+                    <tr><th>#</th><th>Product</th><th>SKU</th><th>UOM</th><th>Qty</th></tr>
+                    <tr><td>1</td><td>90mm Vertical Batten</td><td>BQ-CLADMAX-VB-90</td><td>lm</td><td>168</td></tr>
+                    <tr><td>2</td><td>150mm Shadowline</td><td>BQ-CLADMAX-SL-150</td><td>lm</td><td>92</td></tr>
+                    <tr><td>3</td><td>Concealed Fixing Clip</td><td>BQ-CM-CLIP-CONC</td><td>bag</td><td>14</td></tr>
+                    <tr><td>4</td><td>Aluminium Starter Strip</td><td>BQ-CM-STARTER-AL</td><td>length</td><td>9</td></tr>
+                    <tr><td>5</td><td>Internal Corner Trim</td><td>BQ-CM-ICORNER-AL</td><td>length</td><td>6</td></tr>
+                  </table>
+                  <div class="mail__att">
+                    <span>&#128196; RFQ-2026-4821.pdf</span><span>&#128202; RFQ-2026-4821.csv</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── the chain rail, lit beat by beat ── -->
+      <div class="chain" id="s1chain">
+        <div class="chain__rail"><i class="chain__fill" id="s1fill"></i></div>
+        <div class="chain__node" id="s1n1"><div class="chain__dot">&#128241;</div><div class="chain__label">Discovered</div></div>
+        <div class="chain__node" id="s1n2"><div class="chain__dot">&#128279;</div><div class="chain__label">Shared</div></div>
+        <div class="chain__node" id="s1n3"><div class="chain__dot">&#128207;</div><div class="chain__label">Specified</div></div>
+        <div class="chain__node" id="s1n4"><div class="chain__dot">&#128203;</div><div class="chain__label">Quantified</div></div>
+        <div class="chain__node" id="s1n5"><div class="chain__dot">&#9993;</div><div class="chain__label">Quoted</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       SECTION 2 — THE TRADE DESK ASSISTANT — 1:20 to 2:24
+       ══════════════════════════════════════════════════════════════════ -->
+  <div class="scene t-light" id="sc-s2">
+    <div class="pad">
+
+      <!-- the counter -->
+      <div class="beat" id="s2b1">
+        <div style="display:grid;grid-template-columns:1fr 640px;gap:var(--s6);align-items:center;height:100%">
+          <div class="col">
+            <div class="eyebrow rv rv--up" id="s2b1a">At the counter</div>
+            <div class="h1 rv rv--up" id="s2b1b">A customer arrives<br>with a question.</div>
+            <div class="say rv rv--pop" id="s2b1c" style="margin-top:18px">
+              &ldquo;We need decking rated to BAL&nbsp;29.&rdquo;
+            </div>
+          </div>
+          <div class="media">
+            <figure class="slot rv rv--rise" id="s2b1d" data-shot="S2-01" style="--ar:4/3"></figure>
+          </div>
+        </div>
+      </div>
+
+      <!-- the search -->
+      <div class="beat" id="s2b2">
+        <div style="display:flex;flex-direction:column;justify-content:center;gap:var(--s3);height:100%">
+          <div class="s2-head">
+            <div>
+              <div class="eyebrow rv rv--up" id="s2b2a">Trade Desk Search</div>
+              <div class="h2 rv rv--up" id="s2b2b" style="margin-top:10px">
+                Typed exactly as it was said.
+              </div>
+            </div>
+            <div class="chip rv rv--up" id="s2b2c" style="background:#fff;color:var(--nav);font-weight:700">
+              Scoped to what this store stocks
+            </div>
+          </div>
+
+          <div class="searchbar rv rv--up" id="s2b2d">
+            <span style="color:#8098ac;font-size:24px">&#128269;</span>
+            <span id="s2query"></span><span class="caret"></span>
+          </div>
+
+          <div class="body rv rv--up" id="s2b2e" style="color:#4a637a;font-weight:600">
+            <span id="s2count">3</span> suggested stocked matches &mdash; confirm with customer before adding
+          </div>
+
+          <div class="s2-results">
+            <div class="tile rv rv--rise" id="s2t1">
+              <div class="tile__img"><figure class="slot slot--fill" data-shot="DECK-HERO"></figure>
+                <div class="tile__tick">&#10003;</div></div>
+              <div class="tile__b">
+                <div class="tile__mfr">BQ CompForm</div>
+                <div class="tile__n">BQ DeckMax Composite Decking</div>
+                <div class="pills"><span class="pill pill--bal">BAL 29</span>
+                  <span class="pill pill--deck">Decking</span></div>
+              </div>
+            </div>
+            <div class="tile rv rv--rise" id="s2t2">
+              <div class="tile__img"><figure class="slot slot--fill" data-shot="SCREEN-HERO"></figure>
+                <div class="tile__tick">&#10003;</div></div>
+              <div class="tile__b">
+                <div class="tile__mfr">BQ CompForm</div>
+                <div class="tile__n">BQ ScreenMax Privacy Screening</div>
+                <div class="pills"><span class="pill pill--bal">BAL 12.5</span>
+                  <span class="pill pill--au">Australian made</span></div>
+              </div>
+            </div>
+            <div class="tile rv rv--rise" id="s2t3">
+              <div class="tile__img"><figure class="slot slot--fill" data-shot="PERG-HERO"></figure>
+                <div class="tile__tick">&#10003;</div></div>
+              <div class="tile__b">
+                <div class="tile__mfr">BQ TimberLock</div>
+                <div class="tile__n">BQ Glulam Hardwood Pergola</div>
+                <div class="pills"><span class="pill pill--bal">BAL 12.5</span>
+                  <span class="pill pill--au">Australian made</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="s2-xsell rv rv--up" id="s2xsell">
+            <span class="s2-xsell__l">You may also be interested in</span>
+            <span class="chip" style="background:#d1fae5;border-color:#a7f3d0;color:#065f46">Deck Oils &amp; Stains (6)</span>
+            <span class="chip" style="background:#fef3c7;border-color:#fde68a;color:#92400e">Screening &amp; Fencing (4)</span>
+            <span class="chip" style="background:#dbeafe;border-color:#bfdbfe;color:#1e40af">Fasteners (11)</span>
+          </div>
+
+          <div class="row rv rv--up" id="s2send" style="justify-content:flex-end">
+            <span class="btn btn--nav">Send review link &mdash; <span id="s2sel">3</span> selected</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- send by the channel the customer prefers -->
+      <div class="beat" id="s2b3">
+        <div style="display:grid;grid-template-columns:1fr 430px 376px;gap:var(--s5);align-items:center;height:100%">
+          <div class="col">
+            <div class="eyebrow rv rv--up" id="s2b3a">Sent, then and there</div>
+            <div class="h1 rv rv--up" id="s2b3b">By text.<br>By WhatsApp.<br>By email.</div>
+            <div class="lede rv rv--up" id="s2b3c" style="max-width:400px">
+              With the store's name on it, and the products they just talked through.
+            </div>
+          </div>
+
+          <div class="s2-modal rv rv--rise" id="s2b3d">
+            <div style="font:800 24px/1.1 var(--font-disp)">Send review link</div>
+            <div style="font:600 15px/1 var(--font-body);color:#7d93a5;margin-top:7px">3 products selected</div>
+            <div class="flabel" style="margin-top:20px;color:#7d93a5">Customer details</div>
+            <div class="frow" style="padding:10px 13px;margin-bottom:8px">
+              <div class="frow__l" style="width:110px">Name</div><div class="frow__v">Sarah</div></div>
+            <div class="frow" style="padding:10px 13px">
+              <div class="frow__l" style="width:110px">Mobile</div><div class="frow__v">04&#8226;&#8226; &#8226;&#8226;&#8226; &#8226;&#8226;&#8226;</div></div>
+            <div class="flabel" style="margin-top:18px;color:#7d93a5">Send via</div>
+            <div class="s2-chan">
+              <div>Email</div><div class="is-on" id="s2chanSms">SMS</div><div>WhatsApp</div>
+            </div>
+            <div class="btn btn--nav" style="width:100%;justify-content:center">Send via SMS</div>
+          </div>
+
+          <div class="device device--phone rv rv--rise" id="s2b3e" style="transform:scale(.86);transform-origin:center">
+            <div class="device__screen" style="background:#f4f6f8;padding:70px 18px 18px">
+              <div class="sms">
+                Hi Sarah, thanks for visiting <b>Southwest Building Supplies</b> today!
+                Here are the product options we discussed:
+                <span class="sms__link">buildquote.com.au/r/8f2a</span>
+                &mdash; have a look, chat it over with your builder, and come back to us
+                whenever you're ready to move forward.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- the kitchen table -->
+      <div class="beat" id="s2b4">
+        <div style="display:grid;grid-template-columns:1fr 560px;gap:var(--s6);align-items:center;height:100%">
+          <div class="col">
+            <div class="eyebrow rv rv--up" id="s2b4a">Later that evening</div>
+            <div class="h1 rv rv--up" id="s2b4b">The conversation<br>continues at home.</div>
+            <div class="lede rv rv--up" id="s2b4c" style="max-width:460px">
+              They tick what they want quoted, add their measurements and their timing,
+              and send it back.
+            </div>
+            <div class="row rv rv--up" id="s2b4d" style="gap:11px;flex-wrap:wrap;margin-top:6px">
+              <span class="chip chip--sel">BQ DeckMax &middot; Blackbutt</span>
+              <span class="chip chip--sel">BQ ScreenMax</span>
+            </div>
+          </div>
+          <div class="media">
+            <figure class="slot rv rv--rise" id="s2b4e" data-shot="S2-08" style="--ar:4/3"></figure>
+          </div>
+        </div>
+      </div>
+
+      <!-- back to the same counter -->
+      <div class="beat" id="s2b5">
+        <div style="display:grid;grid-template-columns:1fr 700px;gap:var(--s6);align-items:center;height:100%">
+          <div class="col">
+            <div class="eyebrow eyebrow--o rv rv--up" id="s2b5a">Returned</div>
+            <div class="h1 rv rv--up" id="s2b5b">Straight back to<br>the store that<br>started it.</div>
+            <div class="lede rv rv--up" id="s2b5c" style="max-width:450px">
+              Into the same trade desk, with the customer's measurements attached.
+            </div>
+          </div>
+          <div class="media">
+            <div class="panel panel--light rv rv--rise" id="s2b5d" style="width:100%;padding:0;overflow:hidden">
+              <div style="background:var(--nav);color:#fff;padding:16px 22px;
+                          font:800 22px/1 var(--font-disp)">Enquiries
+                <span style="background:var(--orange);border-radius:999px;padding:3px 11px;
+                             font:700 14px/1 var(--font-body);margin-left:10px">1 new</span></div>
+              <div style="padding:22px">
+                <div class="frow is-ok" style="align-items:flex-start">
+                  <div style="flex:1">
+                    <div style="font:800 22px/1.2 var(--font-disp);color:#0c1a26">Sarah &mdash; backyard deck &amp; screen</div>
+                    <div style="font:600 15px/1.5 var(--font-body);color:#4a637a;margin-top:8px">
+                      BQ DeckMax Composite Decking &middot; Blackbutt &middot; 42&nbsp;m&sup2;<br>
+                      BQ ScreenMax Privacy Screening &middot; 11 lm<br>
+                      Required by mid-March &middot; Delivery to Dunsborough
+                    </div>
+                  </div>
+                  <span class="btn btn--nav" style="padding:11px 18px;font-size:15px">Reply</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       SECTION 3 — DATA STUDIO — 2:24 to 3:00
+       ══════════════════════════════════════════════════════════════════ -->
+  <div class="scene t-light" id="sc-s3">
+    <div class="pad">
+
+      <div class="beat" id="s3b1">
+        <div style="display:grid;grid-template-columns:1fr 620px;gap:var(--s6);align-items:center;height:100%">
+          <div class="col">
+            <div class="eyebrow rv rv--up" id="s3b1a">Upstream</div>
+            <div class="h1 rv rv--up" id="s3b1b">The manufacturer<br>is invited in.</div>
+            <div class="lede rv rv--up" id="s3b1c" style="max-width:450px">
+              BQ CompForm makes both of the products we have just watched travel.
+            </div>
+          </div>
+          <div class="media">
+            <div class="panel panel--light rv rv--rise" id="s3b1d" style="width:100%;padding:0;overflow:hidden">
+              <div style="background:linear-gradient(135deg,#185D7A,#1a7a9e);color:#fff;padding:26px 30px">
+                <div style="font:700 13px/1 var(--font-body);letter-spacing:.2em;text-transform:uppercase;opacity:.8">BuildQuote Data Studio</div>
+                <div style="font:800 32px/1.15 var(--font-disp);margin-top:10px">Welcome to your Manufacturer Portal</div>
+              </div>
+              <div style="padding:26px 30px;font:500 19px/1.5 var(--font-body);color:#0c1a26">
+                Your catalogue is staged and ready for your review. Sign in to refresh
+                your imagery and verify your product information.
+                <div class="btn btn--nav" style="margin-top:20px">Sign in to Data Studio</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="beat" id="s3b2">
+        <div style="display:flex;flex-direction:column;justify-content:center;gap:var(--s4);height:100%">
+          <div class="col" style="gap:12px">
+            <div class="eyebrow rv rv--up" id="s3b2a">BQ CompForm &middot; Dashboard</div>
+            <div class="h2 rv rv--up" id="s3b2b">Their own catalogue, exactly as it stands.</div>
+          </div>
+          <div class="s3-stats">
+            <div class="s3-stat rv rv--rise" id="s3s1"><b id="s3n1">4</b><span>Catalogues</span></div>
+            <div class="s3-stat rv rv--rise" id="s3s2"><b id="s3n2">4</b><span>Cards staged</span></div>
+            <div class="s3-stat rv rv--rise" id="s3s3"><b id="s3n3">2</b><span>Verified</span></div>
+            <div class="s3-stat rv rv--rise" id="s3s4"><b id="s3n4">2</b><span>BuildQuote approved</span></div>
+          </div>
+          <div class="panel panel--light rv rv--up" id="s3rail" style="margin-top:8px">
+            <div class="flabel" style="color:#7d93a5">BQ DeckMax Composite Decking</div>
+            <div class="prail">
+              <div class="prail__seg" id="s3r1"><i></i></div>
+              <div class="prail__seg" id="s3r2"><i></i></div>
+              <div class="prail__seg" id="s3r3"><i></i></div>
+              <div class="prail__seg" id="s3r4"><i></i></div>
+            </div>
+            <div class="prail__labels">
+              <span id="s3l1">Submitted</span><span id="s3l2">Under Review</span>
+              <span id="s3l3">Manufacturer Verified</span><span id="s3l4">BuildQuote Approved</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="beat" id="s3b3">
+        <div style="display:grid;grid-template-columns:1fr 600px;gap:var(--s6);align-items:center;height:100%">
+          <div class="col">
+            <div class="eyebrow rv rv--up" id="s3b3a">Asset picker</div>
+            <div class="h1 rv rv--up" id="s3b3b">Their imagery,<br>their photography.</div>
+            <div class="lede rv rv--up" id="s3b3c" style="max-width:450px">
+              Hero shots, galleries and colour swatches &mdash; supplied by the people
+              who make the product.
+            </div>
+          </div>
+          <div class="media">
+            <div class="panel panel--light rv rv--rise" id="s3b3d" style="width:100%">
+              <div class="flabel" style="color:#7d93a5">Hero image</div>
+              <figure class="slot" data-shot="DECK-HERO" style="--ar:16/9"></figure>
+              <div class="flabel" style="color:#7d93a5;margin-top:22px">Colour swatches</div>
+              <div class="s3-swaps">
+                <div class="s3-swap" id="s3w1"><div class="s3-swap__c" style="--sw:linear-gradient(150deg,#b9b3a8,#8d8880)">
+                  <figure class="slot slot--fill" data-shot="DECK-HERO"></figure></div><span>Silvertop Ash</span></div>
+                <div class="s3-swap" id="s3w2"><div class="s3-swap__c" style="--sw:linear-gradient(150deg,#7d5a3c,#513724)">
+                  <figure class="slot slot--fill" data-shot="DECK-HERO"></figure></div><span>Blackbutt</span></div>
+                <div class="s3-swap" id="s3w3"><div class="s3-swap__c" style="--sw:linear-gradient(150deg,#a8794c,#7a5330)">
+                  <figure class="slot slot--fill" data-shot="DECK-HERO"></figure></div><span>Spotted Gum</span></div>
+                <div class="s3-swap" id="s3w4"><div class="s3-swap__c" style="--sw:linear-gradient(150deg,#4d5155,#2b2e31)">
+                  <figure class="slot slot--fill" data-shot="DECK-HERO"></figure></div><span>Charcoal</span></div>
+                <div class="s3-swap" id="s3w5"><div class="s3-swap__c" style="--sw:linear-gradient(150deg,#6b3b2c,#43231a)">
+                  <figure class="slot slot--fill" data-shot="DECK-HERO"></figure></div><span>Merbau Dark</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="beat" id="s3b4">
+        <div style="display:grid;grid-template-columns:1fr 720px;gap:var(--s5);align-items:center;height:100%">
+          <div class="col">
+            <div class="eyebrow rv rv--up" id="s3b4a">Verify systems</div>
+            <div class="h1 rv rv--up" id="s3b4b">Every field,<br>confirmed by<br>its owner.</div>
+            <div class="lede rv rv--up" id="s3b4c" style="max-width:400px">
+              Tick if correct, edit if wrong, flag if unsure.
+            </div>
+          </div>
+          <div class="media">
+            <div class="panel panel--light rv rv--rise" id="s3b4d" style="width:100%">
+              <div class="s3-fields">
+                <div class="frow" id="s3f1">
+                  <div class="frow__l">System name</div>
+                  <div class="frow__v">BQ DeckMax Composite Decking</div>
+                  <div class="frow__acts"><span class="fbtn fbtn--ok" id="s3f1a">&#10003;</span>
+                    <span class="fbtn fbtn--ed">&#9998;</span><span class="fbtn fbtn--fl">&#9873;</span></div>
+                </div>
+                <div class="frow" id="s3f2">
+                  <div class="frow__l">Product code</div>
+                  <div class="frow__v">BQ-DECKMAX-COMPOSITE</div>
+                  <div class="frow__acts"><span class="fbtn fbtn--ok" id="s3f2a">&#10003;</span>
+                    <span class="fbtn fbtn--ed">&#9998;</span><span class="fbtn fbtn--fl">&#9873;</span></div>
+                </div>
+                <div class="frow" id="s3f3">
+                  <div class="frow__l">BAL rating</div>
+                  <div class="frow__v">29</div>
+                  <div class="frow__acts"><span class="fbtn fbtn--ok" id="s3f3a">&#10003;</span>
+                    <span class="fbtn fbtn--ed">&#9998;</span><span class="fbtn fbtn--fl">&#9873;</span></div>
+                </div>
+                <div class="frow" id="s3f4">
+                  <div class="frow__l">Profile &middot; 138mm Std</div>
+                  <div class="frow__v">5,400 &times; 138 &times; 25mm &middot; <span id="s3f4v">lm</span></div>
+                  <div class="frow__acts"><span class="fbtn fbtn--ok">&#10003;</span>
+                    <span class="fbtn fbtn--ed" id="s3f4a">&#9998;</span><span class="fbtn fbtn--fl">&#9873;</span></div>
+                </div>
+                <div class="frow" id="s3f5">
+                  <div class="frow__l">Australian made</div>
+                  <div class="frow__v">Yes</div>
+                  <div class="frow__acts"><span class="fbtn fbtn--ok" id="s3f5a">&#10003;</span>
+                    <span class="fbtn fbtn--ed">&#9998;</span><span class="fbtn fbtn--fl">&#9873;</span></div>
+                </div>
+              </div>
+              <div class="row fade" id="s3sign" style="margin-top:22px;gap:14px">
+                <span style="font:700 16px/1 var(--font-body);color:#7d93a5">Initials</span>
+                <span style="border:1.5px solid #cfdae2;border-radius:9px;padding:11px 20px;
+                             font:800 18px/1 var(--font-mono);color:#0c1a26">RJ</span>
+                <span class="btn btn--green" style="font-size:16px;padding:13px 20px">Submit &mdash; verified and ready for BuildQuote review</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="beat" id="s3b5">
+        <div style="display:flex;flex-direction:column;justify-content:center;gap:var(--s4);height:100%">
+          <div class="col col--c" style="align-self:center;text-align:center">
+            <div class="eyebrow eyebrow--t rv rv--up" id="s3b5a">Published</div>
+            <div class="h1 rv rv--up" id="s3b5b" style="text-align:center">
+              One verified card. <span class="mark--n">Every surface at once.</span>
+            </div>
+          </div>
+          <div class="s3-fan" style="margin-top:14px">
+            <div class="s3-fan__i rv rv--rise" id="s3fan1">
+              <div class="s3-fan__box"><figure class="slot slot--fill" data-shot="CLAD-HERO"></figure></div>
+              <span>The Library</span>
+            </div>
+            <div class="s3-fan__i rv rv--rise" id="s3fan2">
+              <div class="s3-fan__box"><figure class="slot slot--fill" data-shot="S3-WIDGET"></figure></div>
+              <span>Your website</span>
+            </div>
+            <div class="s3-fan__i rv rv--rise" id="s3fan3">
+              <div class="s3-fan__box"><figure class="slot slot--fill" data-shot="S3-DESK"></figure></div>
+              <span>Your trade desk</span>
+            </div>
+            <div class="s3-fan__i rv rv--rise" id="s3fan4">
+              <div class="s3-fan__box"><figure class="slot slot--fill" data-shot="S3-RFQ"></figure></div>
+              <span>The quote request</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       THE CASE — 3:00 to 3:14
+       ══════════════════════════════════════════════════════════════════ -->
+  <div class="scene" id="sc-case">
+    <div class="pad" style="grid-template-rows:auto 1fr;gap:var(--s5)">
+      <div class="col rv rv--up" id="casehead" style="gap:14px">
+        <div class="eyebrow eyebrow--o">What it means at your counter</div>
+        <div class="h1">Three things you keep.</div>
+      </div>
+      <div class="case-cols">
+        <div class="case-col rv rv--rise" id="case1">
+          <h3>Specification<br>captured early</h3>
+          <p>The choice is made on your product data, and it reaches your counter
+             already itemised, with part numbers and units of measure intact.</p>
+        </div>
+        <div class="case-col rv rv--rise" id="case2">
+          <h3>Every conversation<br>attributed</h3>
+          <p>A customer who walks your aisle leaves with your store attached to their
+             decision, and their quote request comes back to you.</p>
+        </div>
+        <div class="case-col rv rv--rise" id="case3">
+          <h3>Catalogue accuracy,<br>supplied</h3>
+          <p>Manufacturers maintain their own product truth in Data Studio, and your
+             counter inherits it the moment it is approved.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       CLOSE — 3:14 to 3:26
+       ══════════════════════════════════════════════════════════════════ -->
+  <div class="scene" id="sc-end">
+    <div class="pad l-statement" style="gap:var(--s4)">
+      <div class="rv rv--up" id="end1">
+        <div id="end-logo"><span>Build</span><span class="q">Quote</span></div>
+      </div>
+      <div class="stack" style="gap:14px;margin-top:8px">
+        <div class="end-line rv rv--up" id="end2"><b>Homeowner</b><span>inspiration becomes a specification.</span></div>
+        <div class="end-line rv rv--up" id="end3"><b>Merchant</b><span>every conversation becomes a quote.</span></div>
+        <div class="end-line rv rv--up" id="end4"><b>Manufacturer</b><span>the catalogue stays true.</span></div>
+      </div>
+      <div class="h2 rv rv--up" id="end5" style="margin-top:26px;color:var(--teal)">
+        The whole system. One card.
+      </div>
+      <div class="rv rv--up" id="end6"><div id="end-url">buildquote.com.au</div></div>
+    </div>
+  </div>
+
+  <!-- ══ CHROME ══ -->
+  <div class="chapmark" id="chapmark"></div>
+  <div class="bug" id="bug"><span>Build</span><span class="q">Quote</span></div>
+  <div class="cap" id="cap"><div class="cap__t" id="capT"></div></div>
+
+  <!-- ══ PLAY GATE ══ -->
+  <div id="gate">
+    <div class="glogo"><span>Build</span><span class="q">Quote</span></div>
+    <div class="gsub">The whole system. One card.</div>
+    <div id="gplay"></div>
+    <div id="gresume">
+      <button class="btn btn--ghost" id="gresumeBtn"></button>
+      <button class="btn btn--ghost" id="gstartBtn">Start from the beginning</button>
+    </div>
+    <div class="ghint">Click to play &middot; space to pause &middot; 1 2 3 for sections</div>
+  </div>
+</div>
+</div>
+
+<!-- ══ TRANSPORT ══ -->
+<div id="transport">
+  <div class="tp__track" id="tpTrack">
+    <div class="tp__chaps" id="tpChaps"></div>
+    <div class="tp__head" id="tpHead"></div>
+    <div class="tp__tip" id="tpTip"></div>
+  </div>
+  <div class="tp__row">
+    <button class="tp__btn" id="tpPlay" title="Play / pause (space)">&#9658;</button>
+    <div class="tp__time"><span id="tpNow">0:00</span> / <span id="tpTotal">0:00</span></div>
+    <div class="tp__now" id="tpChapter"></div>
+    <div class="tp__jump" id="tpJump"></div>
+    <button class="tp__btn" id="tpCap" title="Captions (c)">CC</button>
+    <button class="tp__btn" id="tpFull" title="Fullscreen (f)">&#9974;</button>
+    <button class="tp__btn" id="tpReplay" title="Replay (r)">&#8635;</button>
+  </div>
+</div>
+
+<div id="report"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ═══ 1 · CONFIG ══════════════════════════════════════════════════════ */
+
+const Q = new URLSearchParams(location.search);
+const FORCE_PH   = Q.has('shots');
+const WANT_SCRIPT= Q.has('script');
+const WANT_AUDIT = Q.has('audit');
+const WANT_LIST  = Q.has('shotlist');
+const AUTOPLAY   = Q.has('autoplay');
+const VERSION    = 'v2.0';
+
+/* The merchant shown in Section 2. One line to retitle. */
+const STORE = { name:'Southwest Building Supplies', short:'Southwest Building' };
+
+const WPS_MAX = 2.6;   /* words per second the audit flags above */
+
+/* ═══ 2 · SHOTS ═══════════════════════════════════════════════════════
+   Image manifest. `src` empty ⇒ styled placeholder carrying id + title.
+   Fill in one `src` to ship a real asset.                               */
+
+const SHOTS = {
+  /* ── wired from assets already in the repo ── */
+  'DOC-1':      { src:'shots/doc-1.png',            title:'Data sheet',            ar:'823/916' },
+  'DOC-2':      { src:'shots/doc-2.png',            title:'Data sheet',            ar:'814/906' },
+  'DOC-3':      { src:'shots/doc-3.jpg',            title:'Install diagram',       ar:'1/1' },
+  'DOC-4':      { src:'shots/doc-4.jpg',            title:'Spec detail',           ar:'3/2' },
+  'DOC-5':      { src:'shots/doc-5.jpg',            title:'Install detail',        ar:'3/2' },
+  'CLAD-HERO':  { src:'shots/cladmax-hero.jpg',     title:'BQ CladMax hero',       ar:'3/2' },
+  'DECK-HERO':  { src:'shots/deckmax-hero.jpg',     title:'BQ DeckMax hero',       ar:'3/2' },
+  'SCREEN-HERO':{ src:'shots/screenmax-hero.jpg',   title:'BQ ScreenMax hero',     ar:'3/2' },
+  'PERG-HERO':  { src:'shots/pergola-hero.jpg',     title:'BQ Glulam Pergola hero',ar:'4/3' },
+  'S3-WIDGET':  { src:'shots/supplier-website.png', title:'Widget on a merchant site', ar:'813/817' },
+  'S3-DESK':    { src:'shots/trade-desk-search.png',title:'Trade Desk search',     ar:'1011/727' },
+  'S3-RFQ':     { src:'shots/rfq-supplier.png',     title:'RFQ as the supplier sees it', ar:'812/764' },
+
+  /* ── to produce · see SHOTLIST.md ── */
+  'S1-01': { src:'', title:'Feed on a phone — vertical batten cladding', ar:'9/19.5',
+             note:'Portrait. Thumb mid-scroll, a BuildQuote card link in the caption.' },
+  'S2-01': { src:'', title:'Trade counter — a couple and a rep', ar:'4/3',
+             note:'Landscape. Warm, real store, real people.' },
+  'S2-08': { src:'', title:'Kitchen table — customer and builder over a phone', ar:'4/3',
+             note:'Landscape. The review page open, evening light.' },
+};
+
+/* ═══ 3 · CHAPTERS ════════════════════════════════════════════════════
+   `t` in seconds. `end` is DERIVED — never author it.                   */
+
+const CHAPTERS = [
+  { id:'open', label:'Cold open',        t:0,   key:null, scene:'sc-open' },
+  { id:'s1',   label:'1 · System Card',  t:14,  key:'1',  scene:'sc-s1'   },
+  { id:'s2',   label:'2 · Trade Desk',   t:80,  key:'2',  scene:'sc-s2'   },
+  { id:'s3',   label:'3 · Data Studio',  t:144, key:'3',  scene:'sc-s3'   },
+  { id:'case', label:'The case',         t:180, key:null, scene:'sc-case' },
+  { id:'end',  label:'Close',            t:194, key:null, scene:'sc-end'  },
+];
+const DURATION = 206;                 /* seconds */
+const DUR_MS   = DURATION * 1000;
+
+/* ═══ 4 · TIMELINE ════════════════════════════════════════════════════
+   THE FILM. Each cue declares an interval, never an event.
+
+     t       seconds, required
+     dur     seconds; omitted ⇒ holds to the end of its chapter
+     hold    survives the chapter boundary (logo bug etc.)
+     el      selector or [selectors]
+     cls     classes carried while active
+     motion  key into MOTIONS
+     fn      pure function of ctx {t,p,active,seeking}
+     say     narration → caption AND voiceover script
+     note    direction for the voice artist / editor                     */
+
+function typer(sel, text){
+  return function(ctx){
+    const el = document.querySelector(sel); if (!el) return;
+    el.textContent = text.slice(0, Math.round(ctx.p * text.length));
+  };
+}
+/* Scroll the System Card so `sel` sits near the top of the phone screen.
+   Measured live rather than hard-coded, so the move stays correct when
+   the card copy changes — and exact under scrub, because .seeking has
+   already settled the layout by the time we measure. */
+function cardTo(sel, margin){
+  return function(ctx){
+    if (!ctx.active) return;
+    const inner = document.querySelector('#s1inner');
+    const tgt   = sel ? document.querySelector(sel) : null;
+    if (!inner) return;
+    const screen = inner.parentNode.clientHeight || 634;
+    const max    = Math.max(0, inner.offsetHeight - screen);
+    const y      = tgt ? Math.min(Math.max(0, tgt.offsetTop - (margin||58)), max) : 0;
+    inner.style.transform = 'translateY(' + (-y) + 'px)';
+  };
+}
+function counter(sel, to){
+  return function(ctx){
+    const el = document.querySelector(sel); if (!el) return;
+    el.textContent = String(Math.round(ctx.p * to));
+  };
+}
+
+const TIMELINE = [
+
+/* ══════════ COLD OPEN · 0 – 14 ══════════════════════════════════════ */
+{ t:0,    el:'#sc-open', cls:'is-on' },
+{ t:0.3,  el:'#op-eye',  cls:'on' },
+{ t:0.7,  el:'#op-l1',   cls:'on',
+  say:'One building product carries a great deal of information.',
+  note:'Unhurried. This is a room the audience already knows.' },
+{ t:2.4,  el:'#op-p1', cls:'on' },
+{ t:2.9,  el:'#op-p2', cls:'on' },
+{ t:3.4,  el:'#op-p3', cls:'on' },
+{ t:3.9,  el:'#op-p4', cls:'on' },
+{ t:4.4,  el:'#op-p5', cls:'on' },
+{ t:6.6,  el:['#op-eye','#op-l1'], cls:'off' },
+{ t:7.4,
+  say:'BuildQuote holds all of it on one card — light enough to travel, rich enough to specify.',
+  note:'Two halves. Breathe between them; the second half lands on the title.' },
+{ t:8.4,  dur:1.3, motion:'pileCollapse' },
+{ t:9.4,  el:'#op-card', cls:'on', dur:3.4 },
+{ t:11.2, el:'#op-l2',   cls:'on' },
+{ t:11.2, el:'#bug', cls:'on', dur:2.8 },
+
+/* ══════════ 1 · THE SYSTEM CARD · 14 – 80 ═══════════════════════════ */
+{ t:14,   el:'#sc-s1', cls:'is-on' },
+{ t:14,   el:'#s1phonewrap', cls:'on', dur:52 },
+{ t:14,   dur:52, motion:'chainFill' },
+
+/* — the card scroll: one cue owns every instant from 14s to 66s, so a
+     scrub always lands on a defined position — */
+{ t:14.0, dur:8.0, fn:cardTo(null) },
+{ t:22.0, dur:1.4, fn:cardTo('#s1bar1') },
+{ t:23.4, dur:1.4, fn:cardTo('#s1bar2') },
+{ t:24.8, dur:1.4, fn:cardTo('#s1bar3') },
+{ t:26.2, dur:1.4, fn:cardTo('#s1bar4') },
+{ t:27.6, dur:6.4, fn:cardTo('#s1bar5') },
+{ t:34.0, dur:7.0, fn:cardTo('#s1sw1', 96) },
+{ t:41.0, dur:8.0, fn:cardTo('#s1bar2') },
+{ t:49.0, dur:4.4, fn:cardTo('#s1p1', 96) },
+{ t:53.4, dur:4.6, fn:cardTo('#s1k1', 96) },
+{ t:58.0, dur:8.0, fn:cardTo('#s1inner .mbar', 56) },
+
+/* — discovered — */
+{ t:14.2, el:'#s1feed', cls:'on', dur:5.6 },
+{ t:14.2, el:'#s1c1',   cls:'on', dur:5.8 },
+{ t:14.4, el:'#s1c1a',  cls:'on', dur:5.4 },
+{ t:14.8, el:'#s1c1b',  cls:'on', dur:5.0,
+  say:'It starts with a glance.',
+  note:'Light. Almost throwaway.' },
+{ t:15.6, el:'#s1c1c',  cls:'on', dur:4.2 },
+{ t:15.0, el:'#s1n1',   cls:'is-lit', dur:5 },
+{ t:20.0, el:'#s1n1',   cls:'is-done' },
+
+/* — the anatomy — */
+{ t:20.0, el:'#s1c2',  cls:'on', dur:13.6 },
+{ t:20.2, el:'#s1c2a', cls:'on', dur:13.2 },
+{ t:20.5, el:'#s1c2b', cls:'on', dur:12.9,
+  say:'One tap opens the System Card.',
+  note:'The reveal. Slight lift.' },
+{ t:21.4, el:'#s1c2c', cls:'on', dur:12 },
+{ t:22.0, el:'#s1bar1', cls:'is-open' },
+{ t:23.4, el:'#s1bar2', cls:'is-open',
+  say:'Colours and profiles. Performance. Guides. Components. Local stockists.',
+  sayDur:6.4,
+  note:'Five beats, one per bar, in time with them opening.' },
+{ t:24.8, el:'#s1bar3', cls:'is-open' },
+{ t:26.2, el:'#s1bar4', cls:'is-open' },
+{ t:27.6, el:'#s1bar5', cls:'is-open' },
+
+/* — shared — */
+{ t:28.6, el:'#s1link', cls:'on', dur:5.4,
+  say:'And it travels as a single link.',
+  note:'Beat of silence after "link".' },
+{ t:29.0, el:'#s1n2', cls:'is-lit', dur:5.6 },
+{ t:34.6, el:'#s1n2', cls:'is-done' },
+
+/* — the partner, on colour — */
+{ t:34.0, el:'#s1c3',  cls:'on', dur:6.8 },
+{ t:34.2, el:'#s1c3a', cls:'on', dur:6.4 },
+{ t:34.5, el:'#s1c3b', cls:'on', dur:6.1,
+  say:'To the person they are building it with.' },
+{ t:35.4, el:'#s1c3c', cls:'on', dur:5.2 },
+{ t:37.0, el:'#s1sw1',  cls:'is-sel' },
+
+/* — the architect, on ratings — */
+{ t:41.0, el:'#s1c4',  cls:'on', dur:7.8 },
+{ t:41.2, el:'#s1c4a', cls:'on', dur:7.4 },
+{ t:41.5, el:'#s1c4b', cls:'on', dur:7.1,
+  say:'To the architect, who finds the ratings and the guides already there.' },
+{ t:42.4, el:'#s1c4c', cls:'on', dur:6.2 },
+{ t:43.6, el:'#s1c4d', cls:'on', dur:5 },
+{ t:42.0, el:'#s1n3', cls:'is-lit', dur:6.8 },
+{ t:48.8, el:'#s1n3', cls:'is-done' },
+
+/* — the builder, ticking — */
+{ t:49.0, el:'#s1c5',  cls:'on', dur:8.8 },
+{ t:49.2, el:'#s1c5a', cls:'on', dur:8.4 },
+{ t:49.5, el:'#s1c5b', cls:'on', dur:8.1,
+  say:'To the builder, who ticks the profiles and the components.' },
+{ t:50.6, el:'#s1c5c', cls:'on', dur:7 },
+{ t:50.4, el:'#s1p1', cls:'is-sel' },
+{ t:51.4, el:'#s1p2', cls:'is-sel' },
+{ t:54.4, el:'#s1k1', cls:'is-sel' },
+{ t:55.2, el:'#s1k2', cls:'is-sel' },
+{ t:56.0, el:'#s1k3', cls:'is-sel' },
+
+/* — quantified — */
+{ t:58.0, el:'#s1c6',  cls:'on', dur:7.6 },
+{ t:58.2, el:'#s1c6a', cls:'on', dur:7.2 },
+{ t:58.5, el:'#s1c6b', cls:'on', dur:6.9,
+  say:'That selection becomes a materials list.' },
+{ t:59.4, el:'#s1c6c', cls:'on', dur:6 },
+{ t:58.2, el:'#s1mEmpty', cls:'is-gone' },
+{ t:58.2, el:'#s1mRows',  cls:'is-shown' },
+{ t:58.4, el:'#s1cart', cls:'on', dur:7.6 },
+{ t:58.6, el:'#s1cart', cls:'is-pop', dur:1.1 },
+{ t:58.6, el:'#s1badge', cls:'on', dur:1.8 },
+{ t:59.0, el:'#s1n4', cls:'is-lit', dur:6.8 },
+{ t:65.8, el:'#s1n4', cls:'is-done' },
+
+/* — quoted — */
+{ t:66.0, el:'#s1mail', cls:'on' },
+{ t:66.2, el:'#s1m1', cls:'on' },
+{ t:66.6, el:'#s1m2', cls:'on',
+  say:'And the supplier receives a quote-ready request, itemised and referenced.' },
+{ t:67.6, el:'#s1m3', cls:'on' },
+{ t:67.0, el:'#s1m4', cls:'on' },
+{ t:67.0, el:'#s1n5', cls:'is-lit' },
+{ t:74.0,
+  say:'One link, from the first glance to your counter.',
+  note:'Slow. This closes the section.' },
+
+/* ══════════ 2 · THE TRADE DESK · 80 – 144 ═══════════════════════════ */
+{ t:80,   el:'#sc-s2', cls:'is-on' },
+
+/* — the counter — */
+{ t:80.2, el:'#s2b1',  cls:'on', dur:9.6 },
+{ t:80.4, el:'#s2b1a', cls:'on', dur:9.2 },
+{ t:80.7, el:'#s2b1b', cls:'on', dur:8.9,
+  say:'A customer arrives with a question.' },
+{ t:81.0, el:'#s2b1d', cls:'on', dur:8.6 },
+{ t:83.4, el:'#s2b1c', cls:'on', dur:6.2,
+  say:'They need decking rated to BAL 29.',
+  note:'Say it the way a customer would.' },
+
+/* — the search — */
+{ t:90.0, el:'#s2b2',  cls:'on', dur:17.6 },
+{ t:90.2, el:'#s2b2a', cls:'on', dur:17.2 },
+{ t:90.5, el:'#s2b2b', cls:'on', dur:16.9,
+  say:'The rep types it exactly as it was said.' },
+{ t:91.0, el:'#s2b2d', cls:'on', dur:16.4 },
+{ t:91.4, dur:2.2, fn:typer('#s2query','bal 29 decking') },
+{ t:94.2, el:'#s2b2c', cls:'on', dur:13.2 },
+{ t:94.4, el:'#s2b2e', cls:'on', dur:13,
+  say:'Trade Desk searches the range this store already stocks.' },
+{ t:95.0, el:'#s2t1', cls:'on', dur:12.4 },
+{ t:95.5, el:'#s2t2', cls:'on', dur:11.9 },
+{ t:96.0, el:'#s2t3', cls:'on', dur:11.4 },
+{ t:98.6, el:'#s2xsell', cls:'on', dur:8.8,
+  say:'Alongside the ranges that usually travel with it.',
+  note:'This is the basket line. Let it land.' },
+{ t:101.6, el:['#s2t1','#s2t2','#s2t3'], cls:'is-sel', dur:5.8 },
+{ t:102.4, el:'#s2send', cls:'on', dur:5,
+  say:'The rep selects three, and sends them to the customer.' },
+
+/* — the channel — */
+{ t:108.0, el:'#s2b3',  cls:'on', dur:11.6 },
+{ t:108.2, el:'#s2b3a', cls:'on', dur:11.2 },
+{ t:108.5, el:'#s2b3b', cls:'on', dur:10.9,
+  say:'By text, by WhatsApp, or by email.' },
+{ t:109.4, el:'#s2b3c', cls:'on', dur:10 },
+{ t:109.0, el:'#s2b3d', cls:'on', dur:10.4 },
+{ t:112.6, el:'#s2b3e', cls:'on', dur:6.8,
+  say:'With the store’s name on it, and the products they just talked through.',
+  note:'Warm. This is the relationship beat.' },
+
+/* — the kitchen table — */
+{ t:120.0, el:'#s2b4',  cls:'on', dur:9.6 },
+{ t:120.2, el:'#s2b4a', cls:'on', dur:9.2 },
+{ t:120.5, el:'#s2b4b', cls:'on', dur:8.9,
+  say:'The conversation continues at the kitchen table.' },
+{ t:121.0, el:'#s2b4e', cls:'on', dur:8.4 },
+{ t:121.6, el:'#s2b4c', cls:'on', dur:7.8 },
+{ t:124.4, el:'#s2b4d', cls:'on', dur:5,
+  say:'They tick what they want quoted, and add their measurements.' },
+
+/* — home again — */
+{ t:130.0, el:'#s2b5',  cls:'on' },
+{ t:130.2, el:'#s2b5a', cls:'on' },
+{ t:130.5, el:'#s2b5b', cls:'on',
+  say:'And the quote request returns to the very store that started it.' },
+{ t:131.4, el:'#s2b5c', cls:'on' },
+{ t:131.0, el:'#s2b5d', cls:'on' },
+{ t:137.0,
+  say:'Every conversation at your counter stays attached to your store.',
+  note:'The commercial line of the section.' },
+
+/* ══════════ 3 · DATA STUDIO · 144 – 180 ═════════════════════════════ */
+{ t:144,   el:'#sc-s3', cls:'is-on' },
+
+{ t:144.2, el:'#s3b1',  cls:'on', dur:6.6 },
+{ t:144.4, el:'#s3b1a', cls:'on', dur:6.2 },
+{ t:144.7, el:'#s3b1b', cls:'on', dur:5.9,
+  say:'The manufacturer is invited into Data Studio.' },
+{ t:145.4, el:'#s3b1c', cls:'on', dur:5 },
+{ t:145.0, el:'#s3b1d', cls:'on', dur:5.6 },
+
+{ t:151.0, el:'#s3b2',  cls:'on', dur:6.6 },
+{ t:151.2, el:'#s3b2a', cls:'on', dur:6.2 },
+{ t:151.4, el:'#s3b2b', cls:'on', dur:6,
+  say:'They see their own catalogue, exactly as it stands.' },
+{ t:151.8, el:'#s3s1', cls:'on', dur:5.6 },
+{ t:152.0, el:'#s3s2', cls:'on', dur:5.4 },
+{ t:152.2, el:'#s3s3', cls:'on', dur:5.2 },
+{ t:152.4, el:'#s3s4', cls:'on', dur:5 },
+{ t:151.8, dur:1.2, fn:counter('#s3n1',4) },
+{ t:152.0, dur:1.2, fn:counter('#s3n2',4) },
+{ t:152.2, dur:1.2, fn:counter('#s3n3',2) },
+{ t:152.4, dur:1.2, fn:counter('#s3n4',2) },
+{ t:153.4, el:'#s3rail', cls:'on', dur:4 },
+{ t:153.8, el:['#s3r1','#s3l1'], cls:'is-on', dur:3.6 },
+{ t:154.4, el:['#s3r2','#s3l2'], cls:'is-on', dur:3 },
+
+{ t:158.0, el:'#s3b3',  cls:'on', dur:6.6 },
+{ t:158.2, el:'#s3b3a', cls:'on', dur:6.2 },
+{ t:158.5, el:'#s3b3b', cls:'on', dur:5.9,
+  say:'They refresh the imagery with their own photography.' },
+{ t:159.4, el:'#s3b3c', cls:'on', dur:5 },
+{ t:159.0, el:'#s3b3d', cls:'on', dur:5.6 },
+{ t:160.6, el:'#s3w1', cls:'is-photo', dur:4 },
+{ t:160.9, el:'#s3w2', cls:'is-photo', dur:3.7 },
+{ t:161.2, el:'#s3w3', cls:'is-photo', dur:3.4 },
+{ t:161.5, el:'#s3w4', cls:'is-photo', dur:3.1 },
+{ t:161.8, el:'#s3w5', cls:'is-photo', dur:2.8,
+  say:'Colour swatches gain real photographs.',
+  note:'Quick. This is the payoff for Section 1.' },
+
+{ t:165.0, el:'#s3b4',  cls:'on', dur:8.6 },
+{ t:165.2, el:'#s3b4a', cls:'on', dur:8.2 },
+{ t:165.5, el:'#s3b4b', cls:'on', dur:7.9,
+  say:'They verify every field — tick if correct, edit if wrong, flag if unsure.',
+  note:'The app’s own instruction, word for word. Three even beats at the end.' },
+{ t:166.4, el:'#s3b4c', cls:'on', dur:7 },
+{ t:166.0, el:'#s3b4d', cls:'on', dur:7.6 },
+{ t:167.2, el:['#s3f1','#s3f1a'], cls:'is-ok', dur:6.4 },
+{ t:167.8, el:['#s3f2','#s3f2a'], cls:'is-ok', dur:5.8 },
+{ t:168.4, el:['#s3f3','#s3f3a'], cls:'is-ok', dur:5.2 },
+{ t:169.0, el:'#s3f4',   cls:'is-edit', dur:4.6 },
+{ t:169.0, el:'#s3f4a',  cls:'is-on', dur:4.6 },
+{ t:169.6, el:['#s3f5','#s3f5a'], cls:'is-ok', dur:4 },
+{ t:170.6, el:'#s3sign', cls:'on', dur:3 },
+{ t:171.0,
+  say:'They sign it off, and BuildQuote approves it.' },
+{ t:171.0, el:['#s3r3','#s3l3'], cls:'is-on', hold:true },
+{ t:172.0, el:['#s3r4','#s3l4'], cls:'is-on', hold:true },
+
+{ t:174.0, el:'#s3b5',  cls:'on' },
+{ t:174.2, el:'#s3b5a', cls:'on' },
+{ t:174.4, el:'#s3b5b', cls:'on',
+  say:'One verified card, on every surface at once.' },
+{ t:175.0, el:'#s3fan1', cls:'on' },
+{ t:175.4, el:'#s3fan2', cls:'on' },
+{ t:175.8, el:'#s3fan3', cls:'on' },
+{ t:176.2, el:'#s3fan4', cls:'on' },
+{ t:177.6,
+  say:'The manufacturer owns the truth. Everyone downstream inherits it.',
+  note:'Slow. This is the Data Studio argument in one line.' },
+
+/* ══════════ THE CASE · 180 – 194 ════════════════════════════════════ */
+{ t:180,   el:'#sc-case', cls:'is-on' },
+{ t:180,   el:'#bug', cls:'on', dur:14 },
+{ t:180.3, el:'#casehead', cls:'on' },
+{ t:181.4, el:'#case1', cls:'on',
+  say:'Specification captured early.',
+  note:'Three columns, three beats. Even weight.' },
+{ t:184.4, el:'#case2', cls:'on', say:'Every conversation attributed.' },
+{ t:187.4, el:'#case3', cls:'on', say:'Catalogue accuracy, supplied.' },
+
+/* ══════════ CLOSE · 194 – 206 ═══════════════════════════════════════ */
+{ t:194,   el:'#sc-end', cls:'is-on' },
+{ t:194.3, el:'#end1', cls:'on' },
+{ t:195.0, el:'#end2', cls:'on', say:'Homeowner — inspiration becomes a specification.' },
+{ t:197.7, el:'#end3', cls:'on', say:'Merchant — every conversation becomes a quote.' },
+{ t:200.5, el:'#end4', cls:'on', say:'Manufacturer — the catalogue stays true.' },
+{ t:203.0, el:'#end5', cls:'on',
+  say:'BuildQuote. The whole system, on one card.',
+  note:'Land it and stop.' },
+{ t:204.4, el:'#end6', cls:'on' },
+];
+
+/* ═══ 5 · MOTIONS ═════════════════════════════════════════════════════
+   Anything sustained. WAAPI so it stays seekable; CSS keyframes cannot
+   be scrubbed and restart whenever their class is applied.              */
+
+const MOTIONS = {
+  /* the cold-open pile snapping shut into a single card */
+  pileCollapse:{
+    el:'#op-pile',
+    frames:[{ transform:'scale(1) rotate(0deg)', opacity:1 },
+            { transform:'scale(.05) rotate(9deg)', opacity:0 }],
+    opts:{ duration:1300, easing:'cubic-bezier(.55,-.15,.85,.4)', fill:'both' },
+  },
+  /* the chain rail filling across the whole of Section 1 */
+  chainFill:{
+    el:'#s1fill',
+    frames:[{ transform:'scaleX(0)' }, { transform:'scaleX(1)' }],
+    opts:{ duration:52000, easing:'linear', fill:'both' },
+    rm:{ easing:'steps(5, end)' },
+  },
+};
+
+/* ═══ 6 · DOM ═════════════════════════════════════════════════════════ */
+
+/* Where this page's own assets live. Correct for file://, for
+   /explainer-v2/index.html, and for the rewritten /explainer-v2 — the last
+   of which has no trailing slash, so plain relative URLs would resolve
+   against the site root. */
+const BASE = (function(){
+  const p = location.pathname;
+  if (/\.html?$/i.test(p)) return p.replace(/[^/]*$/, '');
+  return p.charAt(p.length-1) === '/' ? p : p + '/';
+})();
+function assetURL(src){
+  return /^(https?:|data:|blob:|\/)/i.test(src) ? src : BASE + src;
+}
+
+/* Barlow · SIL Open Font License 1.1 */
+const FONTS = [
+  ['Barlow', 500, 'fonts/barlow-500.woff2'],
+  ['Barlow', 600, 'fonts/barlow-600.woff2'],
+  ['Barlow', 700, 'fonts/barlow-700.woff2'],
+  ['Barlow', 800, 'fonts/barlow-800.woff2'],
+  ['Barlow Condensed', 700, 'fonts/barlow-cond-700.woff2'],
+  ['Barlow Condensed', 800, 'fonts/barlow-cond-800.woff2'],
+];
+function injectFonts(){
+  const css = FONTS.map(function(f){
+    return "@font-face{font-family:'" + f[0] + "';font-style:normal;font-weight:" + f[1] +
+           ";font-display:swap;src:url('" + assetURL(f[2]) + "') format('woff2')}";
+  }).join('');
+  const el = document.createElement('style');
+  el.textContent = css;
+  document.head.appendChild(el);
+}
+
+const $  = (s,r) => (r||document).querySelector(s);
+const $$ = (s,r) => Array.prototype.slice.call((r||document).querySelectorAll(s));
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+
+const stage = $('#stage');
+const capT  = $('#capT');
+const chapmark = $('#chapmark');
+
+/* localStorage on file:// has a null origin and may be disabled. */
+const store = (function(){
+  try { localStorage.setItem('__t','1'); localStorage.removeItem('__t');
+        return localStorage; }
+  catch(e){ const m={}; return { getItem:k=>k in m?m[k]:null,
+                                 setItem:(k,v)=>{m[k]=String(v)},
+                                 removeItem:k=>{delete m[k]} }; }
+})();
+
+let scale = 1;
+function fit(){
+  scale = Math.min(innerWidth/1600, innerHeight/900);
+  stage.style.transform = 'scale(' + scale + ')';
+  const bar = $('#transport').offsetHeight;
+  stage.style.setProperty('--bar-lift', ((bar + 16) / scale) + 'px');
+}
+new ResizeObserver(fit).observe($('#stagewrap'));
+addEventListener('resize', fit);
+
+/* reduced motion — honoured by default, presenter-overridable */
+const RM_SYS = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let RM = store.getItem('bq_xp_motion') !== null
+       ? store.getItem('bq_xp_motion') === 'reduced'
+       : RM_SYS;
+function applyRM(){ document.documentElement.classList.toggle('rm', RM); }
+
+/* ═══ 7 · SLOTS ═══════════════════════════════════════════════════════ */
+
+function hydrateSlots(){
+  $$('.slot').forEach(function(fig){
+    const meta = SHOTS[fig.dataset.shot] || {};
+    if (meta.ar && !fig.style.getPropertyValue('--ar'))
+      fig.style.setProperty('--ar', meta.ar);
+    if (meta.pos) fig.style.setProperty('--pos', meta.pos);
+    const src = meta.src || fig.dataset.src || '';
+    if (!src || FORCE_PH) return markMissing(fig, meta);
+    /* built in JS, never authored — avoids src="" requests and needs no
+       inline onerror attribute, which a strict CSP would block. */
+    const img = new Image();
+    img.className = 'slot__img'; img.alt = ''; img.decoding = 'async';
+    img.addEventListener('error', function(){ markMissing(fig, meta); }, { once:true });
+    img.src = assetURL(src);
+    fig.appendChild(img);
+  });
+}
+function markMissing(fig, meta){
+  fig.classList.add('is-missing');
+  fig.innerHTML =
+    '<span class="slot__id">' + (fig.dataset.shot||'??') + '</span>' +
+    '<span class="slot__title">' + (meta.title || 'Ready for artwork') + '</span>' +
+    (meta.note ? '<span class="slot__note">' + meta.note + '</span>' : '');
+}
+
+/* ═══ 8 · INDEX ═══════════════════════════════════════════════════════ */
+
+/* A GROUP is one (element, class) pair and every interval that claims it.
+   The class is present when ANY interval covers t — so two cues may hand
+   the same class back and forth without the result depending on the order
+   they happen to sit in the array. */
+const idx = { groups:[], tracks:[], bounds:[], motions:[], fns:[], says:[], warnings:[] };
+const groupMap = new Map();   /* Element → Map<class, group> */
+
+function groupFor(el, cls){
+  let byCls = groupMap.get(el);
+  if (!byCls){ byCls = new Map(); groupMap.set(el, byCls); }
+  let g = byCls.get(cls);
+  if (!g){
+    g = { el:el, cls:cls, ivs:[], i:idx.groups.length };
+    byCls.set(cls, g); idx.groups.push(g);
+  }
+  return g;
+}
+function groupOn(g, ms){
+  for (let i=0;i<g.ivs.length;i++)
+    if (ms >= g.ivs[i].a && ms < g.ivs[i].b) return true;
+  return false;
+}
+
+function chapterAt(ms){
+  let c = CHAPTERS[0];
+  for (let i=0;i<CHAPTERS.length;i++) if (ms >= CHAPTERS[i].t*1000) c = CHAPTERS[i];
+  return c;
+}
+function chapterEndMs(ms){
+  const c = chapterAt(ms), i = CHAPTERS.indexOf(c);
+  return i+1 < CHAPTERS.length ? CHAPTERS[i+1].t*1000 : DUR_MS;
+}
+
+function buildIndex(){
+  CHAPTERS.forEach(function(c,i){
+    c.ms  = c.t*1000;
+    c.end = (i+1 < CHAPTERS.length ? CHAPTERS[i+1].t : DURATION)*1000;
+    c.dur = c.end - c.ms;
+  });
+
+  TIMELINE.forEach(function(cue, ci){
+    const a = cue.t*1000;
+    const b = cue.hold ? DUR_MS
+            : cue.dur != null ? a + cue.dur*1000
+            : chapterEndMs(a);
+
+    if (cue.el){
+      const sels = [].concat(cue.el);
+      sels.forEach(function(sel){
+        const els = $$(sel);
+        if (!els.length) idx.warnings.push('cue #'+ci+' @'+cue.t+'s — selector matches nothing: '+sel);
+        els.forEach(function(el){
+          const g = groupFor(el, cue.cls || 'on');
+          g.ivs.push({ a:a, b:b });
+          idx.tracks.push({ el:el, cls:cue.cls||'on', a:a, b:b, cue:cue, g:g });
+        });
+      });
+    }
+    if (cue.motion) idx.motions.push({ key:cue.motion, a:a, b:b, cue:cue });
+    if (cue.fn)     idx.fns.push({ fn:cue.fn, a:a, b:b, cue:cue });
+    if (cue.say)    idx.says.push({ a:a, b:null, text:cue.say, cue:cue });
+  });
+
+  /* a say runs until the next say begins, unless it declares sayDur */
+  idx.says.sort(function(x,y){ return x.a - y.a; });
+  idx.says.forEach(function(s,i){
+    s.b = s.cue.sayDur != null ? s.a + s.cue.sayDur*1000
+        : (idx.says[i+1] ? idx.says[i+1].a : DUR_MS);
+  });
+
+  /* a boundary points at a GROUP to recompute, never at a class to flip */
+  idx.groups.forEach(function(g){
+    g.ivs.forEach(function(iv){
+      idx.bounds.push({ t:iv.a, g:g });
+      idx.bounds.push({ t:iv.b, g:g });
+    });
+  });
+  idx.bounds.sort(function(x,y){ return x.t - y.t; });
+
+  buildMotions();
+  if (idx.warnings.length) idx.warnings.forEach(function(w){ console.warn('[explainer] '+w); });
+}
+
+function buildMotions(){
+  idx.motions.forEach(function(M){
+    const spec = MOTIONS[M.key];
+    if (!spec){ idx.warnings.push('unknown motion: '+M.key); return; }
+    const el = $(spec.el);
+    if (!el){ idx.warnings.push('motion '+M.key+' — selector matches nothing: '+spec.el); return; }
+    const opts = Object.assign({ fill:'both' }, spec.opts, RM && spec.rm ? spec.rm : {});
+    M.anim = el.animate(spec.frames, opts);
+    M.anim.pause();
+    M.anim.currentTime = 0;
+    M.len = opts.duration;
+  });
+}
+
+/* ═══ 9 · RENDER ══════════════════════════════════════════════════════ */
+
+let lastT = -1, bptr = 0;
+
+function renderFull(ms){
+  for (let i=0;i<idx.groups.length;i++){
+    const g = idx.groups[i];
+    g.el.classList.toggle(g.cls, groupOn(g, ms));
+  }
+  bptr = 0;
+  while (bptr < idx.bounds.length && idx.bounds[bptr].t <= ms) bptr++;
+}
+
+function renderStep(from, to){
+  while (bptr < idx.bounds.length && idx.bounds[bptr].t <= to){
+    const g = idx.bounds[bptr].g;
+    g.el.classList.toggle(g.cls, groupOn(g, to));
+    bptr++;
+  }
+}
+
+function syncMotions(ms){
+  for (let i=0;i<idx.motions.length;i++){
+    const M = idx.motions[i];
+    if (!M.anim) continue;
+    const live = ms >= M.a && ms < M.b;
+    const want = clamp(ms - M.a, 0, M.len);
+    if (!live){
+      if (M.anim.playState === 'running') M.anim.pause();
+      M.anim.currentTime = ms < M.a ? 0 : M.len;
+      continue;
+    }
+    const drift = Math.abs(M.anim.currentTime - want);
+    if (drift > 60 || seeking || !playing) M.anim.currentTime = want;
+    if (playing && !seeking && M.anim.playState !== 'running') M.anim.play();
+    if ((!playing || seeking) && M.anim.playState === 'running') M.anim.pause();
+  }
+}
+
+function runFns(ms){
+  for (let i=0;i<idx.fns.length;i++){
+    const F = idx.fns[i];
+    const active = ms >= F.a && ms < F.b;
+    const span = Math.max(F.b - F.a, 1);
+    F.fn({ t:ms, p:clamp((ms - F.a)/span, 0, 1), active:active, seeking:seeking });
+  }
+}
+
+function renderCaption(ms){
+  let text = '';
+  for (let i=0;i<idx.says.length;i++)
+    if (ms >= idx.says[i].a && ms < idx.says[i].b){ text = idx.says[i].text; break; }
+  if (capT.dataset.text !== text){
+    capT.dataset.text = text;
+    capT.textContent = text;
+    capT.classList.toggle('on', !!text);
+  }
+  const ch = chapterAt(ms);
+  if (chapmark.dataset.id !== ch.id){
+    chapmark.dataset.id = ch.id;
+    chapmark.textContent = ch.key ? ch.label : '';
+    chapmark.classList.toggle('on', !!ch.key);
+  }
+}
+
+function render(ms, opts){
+  opts = opts || {};
+  if (opts.full || ms < lastT || ms - lastT > 1000) renderFull(ms);
+  else renderStep(lastT, ms);
+  syncMotions(ms);
+  runFns(ms);
+  renderCaption(ms);
+  renderTransport(ms);
+  lastT = ms;
+}
+
+/* ═══ 10 · CLOCK ══════════════════════════════════════════════════════ */
+
+let t = 0, playing = false, seeking = false, scrubbing = false,
+    wasPlaying = false, lastFrame = 0, started = false;
+
+function frame(now){
+  if (playing){
+    /* clamped so a backgrounded tab pauses rather than leaping forward */
+    const dt = Math.min(now - lastFrame, 100);
+    t = Math.min(t + dt, DUR_MS);
+    if (t >= DUR_MS){ t = DUR_MS; playing = false; onEnd(); }
+    if (started) saveSoon();
+  }
+  lastFrame = now;
+  render(t);
+  requestAnimationFrame(frame);
+}
+
+function play(){ if (t >= DUR_MS) t = 0; playing = true; started = true; syncPlayBtn(); poke(); }
+function pause(){ playing = false; syncPlayBtn(); poke(); }
+function toggle(){ playing ? pause() : play(); }
+
+function seek(ms, o){
+  o = o || {};
+  t = clamp(ms, 0, DUR_MS);
+  seeking = true;
+  stage.classList.add('seeking');
+  render(t, { full:true });
+  if (!o.scrub) releaseSeek();
+}
+function releaseSeek(){
+  void stage.offsetHeight;              /* commit the snapped state first */
+  stage.classList.remove('seeking');
+  seeking = false;
+}
+function nudge(sec){ seek(t + sec*1000); }
+function jump(id){
+  const c = CHAPTERS.filter(function(x){ return x.id === id; })[0];
+  if (!c) return;
+  location.hash = id;
+  seek(c.ms);
+  if (!playing) play();
+}
+function replay(){ seek(0); play(); }
+function onEnd(){ syncPlayBtn(); document.body.classList.remove('idle'); }
+
+let saveTick = 0;
+function saveSoon(){
+  if (t - saveTick < 2000 && t > saveTick) return;
+  saveTick = t;
+  store.setItem('bq_xp_t', String(Math.round(t)));
+  store.setItem('bq_xp_v', VERSION);
+}
+
+/* ═══ 11 · TRANSPORT ══════════════════════════════════════════════════ */
+
+const tpTrack = $('#tpTrack'), tpChaps = $('#tpChaps'), tpHead = $('#tpHead'),
+      tpTip = $('#tpTip'), tpNow = $('#tpNow'), tpTotal = $('#tpTotal'),
+      tpChapter = $('#tpChapter'), tpJump = $('#tpJump'), tpPlay = $('#tpPlay');
+
+function mmss(ms){
+  const s = Math.max(0, Math.round(ms/1000));
+  return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+}
+
+function buildTransport(){
+  tpChaps.innerHTML = CHAPTERS.map(function(c){
+    return '<div class="tp__chap" data-ch="'+c.id+'" style="flex-grow:'+c.dur+'"><i></i></div>';
+  }).join('');
+  tpJump.innerHTML = CHAPTERS.filter(function(c){ return c.key; }).map(function(c){
+    return '<button data-ch="'+c.id+'">'+c.key+'</button>';
+  }).join('');
+  tpTotal.textContent = mmss(DUR_MS);
+
+  $$('.tp__chap', tpChaps).forEach(function(seg){ seg._fill = $('i', seg); });
+  tpJump.addEventListener('click', function(e){
+    const b = e.target.closest('button'); if (!b) return;
+    jump(b.dataset.ch); b.blur();
+  });
+}
+
+function renderTransport(ms){
+  const segs = $$('.tp__chap', tpChaps);
+  for (let i=0;i<CHAPTERS.length;i++){
+    const c = CHAPTERS[i], seg = segs[i]; if (!seg) continue;
+    seg._fill.style.setProperty('--p', clamp((ms - c.ms)/c.dur, 0, 1));
+  }
+  tpHead.style.left = (ms/DUR_MS*100) + '%';
+  tpNow.textContent = mmss(ms);
+  const ch = chapterAt(ms);
+  if (tpChapter.textContent !== ch.label) tpChapter.textContent = ch.label;
+  $$('#tpJump button').forEach(function(b){ b.classList.toggle('is-on', b.dataset.ch === ch.id); });
+}
+
+function syncPlayBtn(){ tpPlay.innerHTML = playing ? '&#10074;&#10074;' : '&#9658;'; }
+
+function posToMs(e){
+  const r = tpTrack.getBoundingClientRect();
+  return ((e.clientX - r.left) / r.width) * DUR_MS;
+}
+tpTrack.addEventListener('pointerdown', function(e){
+  wasPlaying = playing; playing = false; scrubbing = true;
+  tpTrack.setPointerCapture(e.pointerId);
+  seek(posToMs(e), { scrub:true });
+});
+tpTrack.addEventListener('pointermove', function(e){
+  const ms = posToMs(e);
+  tpTip.style.left = (ms/DUR_MS*100) + '%';
+  tpTip.textContent = chapterAt(clamp(ms,0,DUR_MS)).label + ' — ' + mmss(clamp(ms,0,DUR_MS));
+  if (scrubbing) seek(ms, { scrub:true });
+});
+function endScrub(){
+  if (!scrubbing) return;
+  scrubbing = false; releaseSeek();
+  if (wasPlaying) play(); else syncPlayBtn();
+}
+tpTrack.addEventListener('pointerup', endScrub);
+tpTrack.addEventListener('pointercancel', endScrub);
+
+/* auto-hide */
+let hideTimer, barHover = false;
+$('#transport').addEventListener('pointerenter', function(){ barHover = true; poke(); });
+$('#transport').addEventListener('pointerleave', function(){ barHover = false; poke(); });
+function poke(){
+  document.body.classList.remove('idle');
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(function(){
+    if (playing && !scrubbing && !barHover) document.body.classList.add('idle');
+  }, 2500);
+}
+addEventListener('pointermove', poke);
+
+tpPlay.addEventListener('click', function(){ toggle(); tpPlay.blur(); });
+$('#tpReplay').addEventListener('click', function(){ replay(); this.blur(); });
+$('#tpFull').addEventListener('click', function(){ goFull(); this.blur(); });
+$('#tpCap').addEventListener('click', function(){ toggleCaps(); this.blur(); });
+
+function toggleCaps(){
+  const off = document.body.classList.toggle('captions-off');
+  store.setItem('bq_xp_caps', off ? 'off' : 'on');
+  $('#tpCap').style.opacity = off ? '.5' : '1';
+}
+function goFull(){
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+}
+
+addEventListener('keydown', function(e){
+  if (e.target.closest && e.target.closest('button,input,textarea')) {
+    if (e.key === ' ' || e.key === 'Enter') return;
+  }
+  const k = e.key.toLowerCase();
+  if (e.key === ' ' || k === 'k'){ e.preventDefault(); started ? toggle() : begin(); return; }
+  if (!started && (k === 'enter')) { begin(); return; }
+  switch(k){
+    case 'arrowleft':  e.preventDefault(); nudge(-5); break;
+    case 'arrowright': e.preventDefault(); nudge(5);  break;
+    case 'j': nudge(-10); break;
+    case 'l': nudge(10);  break;
+    case ',': nudge(-0.1); break;
+    case '.': nudge(0.1);  break;
+    case '0': case 'home': jump('open'); break;
+    case '1': jump('s1'); break;
+    case '2': jump('s2'); break;
+    case '3': jump('s3'); break;
+    case 'c': toggleCaps(); break;
+    case 'm': RM = !RM; store.setItem('bq_xp_motion', RM ? 'reduced' : 'full'); applyRM(); break;
+    case 'f': goFull(); break;
+    case 'r': replay(); break;
+  }
+  poke();
+});
+
+/* ═══ 12 · DEVTOOLS ═══════════════════════════════════════════════════ */
+
+function words(s){ return (s||'').trim().split(/\s+/).filter(Boolean).length; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>]/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+
+function showReport(html){
+  const r = $('#report');
+  r.innerHTML = html; r.classList.add('on');
+  $('#stagewrap').style.display = 'none';
+  $('#transport').style.display = 'none';
+}
+
+function reportScript(){
+  let rows = '', total = 0;
+  idx.says.forEach(function(s){
+    const w = words(s.text); total += w;
+    const secs = (s.b - s.a)/1000;
+    rows += '<tr><td class="tc">'+mmss(s.a)+'</td><td>'+esc(chapterAt(s.a).label)+'</td>'+
+            '<td>'+esc(s.text)+'</td><td class="note">'+esc(s.cue.note||'')+'</td>'+
+            '<td class="tc">'+w+'w / '+secs.toFixed(1)+'s</td></tr>';
+  });
+  showReport('<h1>Narration script</h1><p class="note">'+total+' words across '+
+    DURATION+'s. Generated from the same cue table that drives the picture.</p>'+
+    '<table><tr><th>Time</th><th>Chapter</th><th>Line</th><th>Direction</th><th>Length</th></tr>'+
+    rows+'</table>');
+}
+
+function reportAudit(){
+  const issues = [];
+  idx.warnings.forEach(function(w){ issues.push(['bad','Selector', w]); });
+
+  idx.says.forEach(function(s){
+    const secs = (s.b - s.a)/1000, w = words(s.text), wps = w/secs;
+    if (wps > WPS_MAX)
+      issues.push(['warn','Pace', mmss(s.a)+' — '+wps.toFixed(2)+' words/sec ('+w+
+        'w in '+secs.toFixed(1)+'s): "'+esc(s.text)+'"']);
+  });
+
+  let prev = 0;
+  idx.says.forEach(function(s){
+    if (s.a - prev > 6000)
+      issues.push(['warn','Dead air', mmss(prev)+' → '+mmss(s.a)+' — '+
+        ((s.a-prev)/1000).toFixed(1)+'s with no narration']);
+    prev = s.b;
+  });
+
+  TIMELINE.forEach(function(cue,i){
+    const a = cue.t*1000;
+    const b = cue.hold ? DUR_MS : cue.dur != null ? a + cue.dur*1000 : chapterEndMs(a);
+    if (!cue.hold && b > chapterEndMs(a) + 1)
+      issues.push(['warn','Chapter', 'cue #'+i+' @'+cue.t+'s runs past its chapter end']);
+    if (cue.motion && MOTIONS[cue.motion] && cue.dur != null){
+      const md = MOTIONS[cue.motion].opts.duration;
+      if (Math.abs(md - cue.dur*1000) > 100)
+        issues.push(['warn','Motion','cue #'+i+' dur '+(cue.dur*1000)+'ms vs motion '+
+          cue.motion+' '+md+'ms']);
+    }
+  });
+
+  /* seek correctness: renderFull at N points vs a stepped walk */
+  const N = 200, snap = [];
+  const state = function(){
+    return idx.groups.map(function(g){ return g.el.classList.contains(g.cls)?1:0; }).join('');
+  };
+  for (let i=0;i<=N;i++){ renderFull(i/N*DUR_MS); snap.push(state()); }
+  renderFull(0); lastT = 0;
+  let mismatch = 0;
+  for (let i=0;i<=N;i++){
+    const ms = i/N*DUR_MS;
+    renderStep(lastT, ms); lastT = ms;
+    if (state() !== snap[i]) mismatch++;
+  }
+  if (mismatch) issues.push(['bad','Seek', mismatch+' of '+(N+1)+
+    ' sample points differ between renderFull and a stepped walk']);
+
+  const totalWords = idx.says.reduce(function(a,s){ return a + words(s.text); }, 0);
+
+  showReport('<h1>Audit</h1>'+
+    '<p class="'+(issues.length?'warn':'ok')+'">'+
+      (issues.length ? issues.length+' item(s) to look at' : 'Everything checks out')+'</p>'+
+    '<h2>Budget</h2><table>'+
+      '<tr><th>Runtime</th><td>'+DURATION+'s</td></tr>'+
+      '<tr><th>Narration</th><td>'+totalWords+' words ('+
+        (totalWords/DURATION).toFixed(2)+' w/s average — '+WPS_MAX+' is the ceiling)</td></tr>'+
+      '<tr><th>Cues</th><td>'+TIMELINE.length+'</td></tr>'+
+      '<tr><th>Tracks</th><td>'+idx.tracks.length+'</td></tr>'+
+      '<tr><th>Seek check</th><td class="'+(mismatch?'bad':'ok')+'">'+
+        (mismatch ? mismatch+' mismatches' : (N+1)+'/'+(N+1)+' sample points agree')+'</td></tr>'+
+    '</table>'+
+    (issues.length ? '<h2>Items</h2><table><tr><th>Kind</th><th>Detail</th></tr>'+
+      issues.map(function(x){ return '<tr><td class="'+x[0]+'">'+x[1]+'</td><td>'+x[2]+'</td></tr>'; }).join('')+
+      '</table>' : ''));
+}
+
+function reportShotlist(){
+  const used = {};
+  $$('.slot').forEach(function(f){ used[f.dataset.shot] = true; });
+  let rows = '';
+  Object.keys(SHOTS).forEach(function(id){
+    const s = SHOTS[id];
+    rows += '<tr><td class="tc">'+id+'</td><td>'+esc(s.title||'')+'</td>'+
+            '<td>'+esc(s.ar||'')+'</td>'+
+            '<td class="'+(s.src?'ok':'warn')+'">'+(s.src?'wired':'to produce')+'</td>'+
+            '<td class="note">'+esc(s.note||'')+'</td></tr>';
+  });
+  showReport('<h1>Shot list</h1><table>'+
+    '<tr><th>Id</th><th>Shot</th><th>Ratio</th><th>State</th><th>Notes</th></tr>'+rows+'</table>');
+}
+
+/* ═══ 13 · BOOT ═══════════════════════════════════════════════════════ */
+
+const gate = $('#gate');
+function begin(from){
+  if (started && from == null) return;
+  gate.classList.add('gone');
+  if (from != null) seek(from);
+  play();
+}
+
+function boot(){
+  injectFonts();
+  applyRM();
+  if (store.getItem('bq_xp_caps') !== 'on') document.body.classList.add('captions-off');
+
+  hydrateSlots();
+  buildIndex();
+  buildTransport();
+  fit();
+  syncPlayBtn();
+  $('#tpCap').style.opacity = document.body.classList.contains('captions-off') ? '.5' : '1';
+
+  if (WANT_SCRIPT) return reportScript();
+  if (WANT_AUDIT)  return reportAudit();
+  if (WANT_LIST)   return reportShotlist();
+
+  /* resume offer */
+  const saved = parseInt(store.getItem('bq_xp_t')||'0', 10);
+  if (store.getItem('bq_xp_v') === VERSION && saved > 5000 && saved < DUR_MS - 5000){
+    $('#gresume').classList.add('on');
+    $('#gresumeBtn').textContent = 'Resume ' + mmss(saved);
+    $('#gresumeBtn').addEventListener('click', function(e){ e.stopPropagation(); begin(saved); });
+    $('#gstartBtn').addEventListener('click', function(e){ e.stopPropagation(); begin(0); });
+  }
+
+  gate.addEventListener('click', function(){ begin(); });
+
+  /* deep links */
+  const qt = parseFloat(Q.get('t'));
+  const hashCh = CHAPTERS.filter(function(c){ return '#'+c.id === location.hash; })[0];
+  if (!isNaN(qt)) { render(qt*1000, { full:true }); t = qt*1000; }
+  else if (hashCh){ render(hashCh.ms, { full:true }); t = hashCh.ms; }
+  else render(0, { full:true });
+
+  if (AUTOPLAY || !isNaN(qt) || hashCh) begin(t);
+
+  lastFrame = performance.now();
+  requestAnimationFrame(frame);
+}
+
+if (document.readyState === 'loading') addEventListener('DOMContentLoaded', boot);
+else boot();
+
+/* exposed for console poking while authoring */
+window.XP = { seek:seek, play:play, pause:pause, jump:jump,
+              get t(){ return t; }, idx:idx, CHAPTERS:CHAPTERS };
+
+})();
+</script>
+</body>
+</html>

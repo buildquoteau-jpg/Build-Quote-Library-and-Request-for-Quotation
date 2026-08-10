@@ -71,6 +71,14 @@ const nextConfig: NextConfig = {
         source: '/explainer',
         destination: '/explainer/index.html',
       },
+      {
+        // Clean URL for the 2026 explainer film (public/explainer-v2/index.html).
+        // The rewrite keeps the browser on '/explainer-v2' with no trailing
+        // slash, so the page resolves its own assets against a computed base
+        // rather than relying on relative URLs.
+        source: '/explainer-v2',
+        destination: '/explainer-v2/index.html',
+      },
     ]
   },
 
