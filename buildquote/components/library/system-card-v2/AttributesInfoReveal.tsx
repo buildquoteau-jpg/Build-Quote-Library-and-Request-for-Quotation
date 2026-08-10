@@ -20,34 +20,31 @@ export function hasAttributesContent(system: LibrarySystem): boolean {
   return false
 }
 
-type RatingTone = 'moisture' | 'bal' | 'fire' | 'acoustic' | 'structural' | 'australian'
+type PillTone = 'moisture' | 'bal' | 'fire' | 'acoustic' | 'structural' | 'australian' | 'colourways' | 'custom'
 
 export function AttributesInfoReveal({ system }: { system: LibrarySystem }) {
-  // Colour-coded pills, one per attribute type -- restores the look
-  // SystemCardUI.tsx (V1) used (see AttributePills there): each rating
-  // gets its own hue rather than sitting in a shared label/value table.
-  const ratings: { text: string; tone: RatingTone }[] = []
-  if (system.moisture_resistant) ratings.push({ text: 'Moisture resistant', tone: 'moisture' })
-  if (system.bal_rating) ratings.push({ text: system.bal_rating, tone: 'bal' })
-  if (system.fire_rating) ratings.push({ text: `FRL ${system.fire_rating}`, tone: 'fire' })
-  if (system.acoustic_rating) ratings.push({ text: system.acoustic_rating, tone: 'acoustic' })
-  if (system.structural_grade) ratings.push({ text: system.structural_grade, tone: 'structural' })
-  if (system.australian_made) ratings.push({ text: 'Australian made', tone: 'australian' })
-
-  const badges: { label: string; tone: 'performance' | 'neutral' }[] = []
-  if (system.moisture_resistant) badges.push({ label: 'Moisture resistant', tone: 'performance' })
+  // Every attribute-like fact about the system as one flat list of pills --
+  // previously split three ways (a floating badge row, a Performance pill
+  // row, and an Additional specification table), which Melia flagged as a
+  // "triple up". Moisture resistant, in particular, used to appear in both
+  // the badge row and Performance at once. Now there's exactly one pill per
+  // fact, all under the Performance heading.
+  const pills: { text: string; tone: PillTone }[] = []
+  if (system.moisture_resistant) pills.push({ text: 'Moisture resistant', tone: 'moisture' })
+  if (system.bal_rating) pills.push({ text: system.bal_rating, tone: 'bal' })
+  if (system.fire_rating) pills.push({ text: `FRL ${system.fire_rating}`, tone: 'fire' })
+  if (system.acoustic_rating) pills.push({ text: system.acoustic_rating, tone: 'acoustic' })
+  if (system.structural_grade) pills.push({ text: system.structural_grade, tone: 'structural' })
+  if (system.australian_made) pills.push({ text: 'Australian made', tone: 'australian' })
   if (system.system_colours.length > 0) {
-    badges.push({ label: `${system.system_colours.length} colourway${system.system_colours.length !== 1 ? 's' : ''}`, tone: 'neutral' })
+    pills.push({ text: `${system.system_colours.length} colourway${system.system_colours.length !== 1 ? 's' : ''}`, tone: 'colourways' })
+  }
+  for (const attr of system.custom_technical_attributes ?? []) {
+    pills.push({ text: `${attr.label}: ${attr.value}`, tone: 'custom' })
   }
 
   return (
     <>
-      {badges.length > 0 && (
-        <div className={styles.badgeRow}>
-          {badges.map(b => <span key={b.label} className={styles.badge} data-tone={b.tone}>{b.label}</span>)}
-        </div>
-      )}
-
       {system.description && (
         <div className={styles.specGroup}>
           <p className={styles.specGroupLabel}>Description</p>
@@ -57,26 +54,12 @@ export function AttributesInfoReveal({ system }: { system: LibrarySystem }) {
         </div>
       )}
 
-      {ratings.length > 0 && (
+      {pills.length > 0 && (
         <div className={styles.specGroup}>
           <p className={styles.specGroupLabel}>Performance</p>
           <div className={styles.attributePillRow}>
-            {ratings.map(r => (
-              <span key={r.tone} className={styles.attributePill} data-tone={r.tone}>{r.text}</span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {system.custom_technical_attributes && system.custom_technical_attributes.length > 0 && (
-        <div className={styles.specGroup}>
-          <p className={styles.specGroupLabel}>Additional specification</p>
-          <div className={styles.specBox}>
-            {system.custom_technical_attributes.map(a => (
-              <div key={a.label} className={styles.specRow}>
-                <span className={styles.specRowLabel}>{a.label}</span>
-                <span className={styles.specRowValue}>{a.value}</span>
-              </div>
+            {pills.map((p, i) => (
+              <span key={`${p.tone}-${i}`} className={styles.attributePill} data-tone={p.tone}>{p.text}</span>
             ))}
           </div>
         </div>

@@ -372,13 +372,6 @@
 
 /* ── Attributes and Information ───────────────────────────────────────── */
 
-.badgeRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-bottom: 1.75rem;
-}
-
 .badge {
   display: inline-block;
   font-size: 0.76rem;
@@ -386,11 +379,6 @@
   letter-spacing: 0.03em;
   border-radius: 999px;
   padding: 0.3rem 0.7rem;
-}
-
-.badge[data-tone='performance'] {
-  background: var(--accent);
-  color: #ffffff;
 }
 
 .badge[data-tone='neutral'] {
@@ -403,9 +391,9 @@
   color: #ffffff;
 }
 
-/* Performance ratings -- one pill per attribute type, each its own hue
-   (ported from SystemCardUI.tsx's AttributePills) rather than a shared
-   single-tone badge, so BAL/fire/moisture/etc read apart at a glance. */
+/* Every attribute as one pill, each fact its own soft hue -- solid pastel
+   fills (not a tinted/alpha wash) so they read as clearly coloured rather
+   than faded, with a same-hue solid border instead of a translucent one. */
 .attributePillRow {
   display: flex;
   flex-wrap: wrap;
@@ -423,39 +411,51 @@
 }
 
 .attributePill[data-tone='moisture'] {
-  background: #f0f9ff;
-  color: #0369a1;
-  border-color: #0369a133;
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
 }
 
 .attributePill[data-tone='bal'] {
-  background: #fff7ed;
+  background: #ffedd5;
   color: #c2410c;
-  border-color: #c2410c33;
+  border-color: #fed7aa;
 }
 
 .attributePill[data-tone='fire'] {
-  background: #fef2f2;
-  color: #b91c1c;
-  border-color: #b91c1c33;
+  background: #fce7f3;
+  color: #be185d;
+  border-color: #fbcfe8;
 }
 
 .attributePill[data-tone='acoustic'] {
-  background: #faf5ff;
+  background: #f3e8ff;
   color: #7e22ce;
-  border-color: #7e22ce33;
+  border-color: #e9d5ff;
 }
 
 .attributePill[data-tone='structural'] {
-  background: #f0fdf4;
-  color: #15803d;
-  border-color: #15803d33;
+  background: #fef9c3;
+  color: #a16207;
+  border-color: #fde68a;
 }
 
 .attributePill[data-tone='australian'] {
-  background: #f0fdf4;
-  color: #166534;
-  border-color: #16653433;
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+
+.attributePill[data-tone='colourways'] {
+  background: #ccfbf1;
+  color: #0f766e;
+  border-color: #99f6e4;
+}
+
+.attributePill[data-tone='custom'] {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #e2e8f0;
 }
 
 .specGroup {
@@ -491,29 +491,6 @@
 
 .specBox + .specBox {
   margin-top: 0.7rem;
-}
-
-.specRow {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--line);
-  font-size: 0.95rem;
-}
-
-.specRow:last-child {
-  border-bottom: none;
-}
-
-.specRowLabel {
-  color: var(--ink);
-  font-weight: 600;
-}
-
-.specRowValue {
-  color: var(--ink-soft);
-  text-align: right;
 }
 
 .specTableScroll {
