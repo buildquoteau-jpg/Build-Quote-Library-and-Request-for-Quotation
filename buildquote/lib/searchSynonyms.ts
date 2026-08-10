@@ -361,6 +361,34 @@ function systemMeetsBalRequirement(s: LibrarySystem, req: BalRequirement): boole
   return rating.replace(/^bal[\s-]*/, '').trim() === req.level
 }
 
+// ── Compound-query concept gate ──────────────────────────────────────────────
+// expandSearchTerms pools every fired concept's expansion words into one flat
+// OR list, so a compound query like "BAL 29 decking" only ever required ONE
+// term match total, against every field including subcategory/description/
+// accessory component names. That's leaky: generic words like "post",
+// "screws" or "panel" aren't exclusive to decking/cladding — a screening
+// system's "Steel Post" component or "batten screen panel" subcategory match
+// just as well — and fuzzy typo-tolerance closes the gap further (a fibre-
+// cement "FC Joint Sealant" component fuzzy-matches "joist" at edit-distance
+// 1). Gated on `category` alone — the one field this catalogue's own taxonomy
+// treats as authoritative (it's what the Browse-by-Category pills use) — with
+// plain substring matching against the concept's own triggers only, no fuzz,
+// no loose discovery vocabulary. A product-type word only "counts" when the
+// product is genuinely filed as that type. Only engaged once 2+ facets are in
+// play (BAL + a product type, or 2+ product concepts); a lone "waterproofing"
+// or "decking" query is untouched, still relying on the existing scored
+// OR-match so single-concept search keeps its recall. BAL itself is excluded
+// — it already has the dedicated, more precise attribute gate above
+// (bal_rating is a bare number like "29", so the word "bal" itself often
+// never appears in the data).
+function conceptOwnTermsMatchSystem(concept: Concept, s: LibrarySystem): boolean {
+  const categoryText = [
+    s.category || '',
+    s.moisture_resistant ? 'moisture resistant water resistant wet area waterproof' : '',
+  ].filter(Boolean).join(' ').toLowerCase()
+  return concept.triggers.some(term => categoryText.includes(term.toLowerCase()))
+}
+
 /**
  * The main entry point. Returns relevance-ranked systems plus the parsed intent
  * and a confidence flag. Never throws; an empty/whitespace query returns all
@@ -377,11 +405,19 @@ export function searchLibrarySystems(raw: string, systems: LibrarySystem[]): Lib
   }
 
   const balRequirement = parseBalRequirement(cleaned)
+  // Only engage the stricter identity gate once 2+ facets are actually in
+  // play (BAL + a product type, or 2+ product concepts) — a lone "decking" or
+  // "waterproofing" query keeps relying on the existing scored OR-match, so
+  // single-concept search recall is untouched.
+  const nonBalFired = firedConcepts(cleaned).filter(c => c.id !== 'bal')
+  const totalFacets = nonBalFired.length + (balRequirement ? 1 : 0)
+  const gateConcepts = totalFacets >= 2 ? nonBalFired : []
 
   const scored = systems
     .map(s => scoreSystem(s, baseTerms, allTerms, cleaned))
     .filter(r => r.score > 0)
     .filter(r => !balRequirement || systemMeetsBalRequirement(r.system, balRequirement))
+    .filter(r => gateConcepts.every(c => conceptOwnTermsMatchSystem(c, r.system)))
     .sort((a, b) =>
       b.score - a.score ||
       (a.system.sort_order ?? 0) - (b.system.sort_order ?? 0) ||
