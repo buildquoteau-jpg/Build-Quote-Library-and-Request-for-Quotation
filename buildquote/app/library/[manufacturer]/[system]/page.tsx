@@ -62,7 +62,13 @@ export async function generateMetadata({
   return {
     title: `${system.name} — System Card`,
     description,
-    alternates: { canonical: canonicalUrl },
+    // AI knowledge layer (design doc §11/§14 step 12) — a machine-readable
+    // sibling of this page, mirrored from Data Studio. Purely additive: no
+    // visual change, nothing else on this page reads or renders it.
+    alternates: {
+      canonical: canonicalUrl,
+      types: { 'application/ld+json': `https://buildquote.com.au/api/library/${manufacturer}/${systemSlug}/knowledge.jsonld` },
+    },
     openGraph: {
       type: 'website',
       siteName: 'BuildQuote',

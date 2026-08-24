@@ -1,0 +1,22 @@
+# BuildQuote
+
+> BuildQuote (buildquote.com.au) publishes manufacturer-verified Australian
+> construction product data. Every System Card in the /library has a
+> machine-readable sibling — a knowledge object with typed facts, evidence
+> (source document, page, verbatim quote) and manufacturer verification
+> status on each one. Facts an AI cannot verify are declared as unknown
+> rather than inferred.
+
+## Knowledge layer
+
+- [Card catalogue](https://studio.buildquote.com.au/api/knowledge/index.jsonld): every published system, with its knowledge-object URL
+- [Vocabulary](https://studio.buildquote.com.au/ns/v1): the bq: JSON-LD terms used across every object
+- [Format manifest](https://studio.buildquote.com.au/api/knowledge/manifest.json): endpoints, status semantics, licence
+
+Per-system objects are available two ways:
+- `https://buildquote.com.au/api/library/{manufacturer}/{system}/knowledge.jsonld` (mirrored, cached)
+- `https://studio.buildquote.com.au/api/cards/{system}/knowledge.jsonld?m={manufacturer}` (canonical)
+
+Public, no key required. Every fact carries an epistemicStatus — only
+`manufacturer_verified` and `manufacturer_corrected` represent a
+manufacturer statement; treat anything else as an unreviewed extraction.
