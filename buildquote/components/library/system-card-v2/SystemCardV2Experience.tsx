@@ -22,6 +22,7 @@ import { AttributesInfoReveal, hasAttributesContent } from './AttributesInfoReve
 import { GuidesResourcesReveal } from './GuidesResourcesReveal'
 import { ComponentsAccessoriesReveal } from './ComponentsAccessoriesReveal'
 import { StockistsReveal } from './StockistsReveal'
+import { AskAboutProductReveal } from './AskAboutProductReveal'
 import { MaterialsListBar } from './MaterialsListBar'
 import type { ShoppingListItem } from './useMaterialsListRows'
 import { shareSystemCard } from './shareCard'
@@ -37,7 +38,7 @@ function ShareIcon() {
 }
 
 
-const SECTION_IDS = ['choose', 'attributes', 'guides', 'components', 'stockists'] as const
+const SECTION_IDS = ['choose', 'attributes', 'ask', 'guides', 'components', 'stockists'] as const
 type SectionId = typeof SECTION_IDS[number]
 
 export function SystemCardV2Experience({ system, stockists = [], onAddToList, cardUrl }: {
@@ -105,6 +106,17 @@ export function SystemCardV2Experience({ system, stockists = [], onAddToList, ca
               >
                 <AttributesInfoReveal system={system} />
               </SystemCardSection>
+
+              {system.manufacturer?.slug && (
+                <SystemCardSection
+                  id="ask"
+                  title="Ask about this product"
+                  open={openSections.has('ask')}
+                  onToggle={() => toggleSection('ask')}
+                >
+                  <AskAboutProductReveal manufacturerSlug={system.manufacturer.slug} systemSlug={system.slug} />
+                </SystemCardSection>
+              )}
 
               <SystemCardSection
                 id="guides"
