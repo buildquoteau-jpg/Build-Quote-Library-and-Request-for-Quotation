@@ -1,5 +1,49 @@
 # BuildQuote — Claude Code Project Guide
 
+## NEXT SESSION — open-source README rewrite (do this first, read before anything else)
+
+Melia's explicit ask (2026-08-29, end of the AI-knowledge-layer/System-Card-V2 session): rewrite the
+README for **all three BuildQuote repos** as prep for open-sourcing them. Requirements, verbatim intent:
+- **Point form**, not prose essays.
+- **Sell the repo** — make a stranger want to use/fork it.
+- Explain **concrete use cases** for three audiences: the **manufacturer**, the **supplier**, and the
+  **builder** — including "I only want to use one part of one repo" scenarios, not just the full
+  three-repo picture.
+- Explain the **links between the repos** (how data/flow moves between them).
+- Link out to the **live product surfaces**: buildquote.com.au, buildquote.com.au/library,
+  search.buildquote.com.au, studio.buildquote.com.au.
+
+**The three repos** (GitHub renamed all three mid-session on 2026-08-29 — do NOT change local git
+remote URLs to the new names; GitHub's redirect keeps `git fetch`/`git push` working transparently
+against the ORIGINAL remote URL, and this sandbox's auth/proxy is scoped to the original names only):
+
+| Local repo | Original GitHub name | Current GitHub name | Visibility |
+|---|---|---|---|
+| `Build-Quote-v6` (this repo) | `Build-Quote-v6` | `Build-Quote-Library-and-Request-for-Quotation` | **Private** |
+| `buildquote-data-studio` | `buildquote-data-studio` | `BuildQuote-Manufacturer-Data-Studio` | Public |
+| *(not attached this session — `add_repo` it)* | `BuildQuote-Supplier-Trade-Desk` | *(same)* | Public — internally called "manufacturer-portal"/"Trade Desk"; serves search.buildquote.com.au (supplier directory + RFQ inbox) |
+
+Before writing anything, **read each repo's current README (if any) and top-level structure fresh** —
+don't rely solely on this summary. Suggested content per README, per Melia's requirements above:
+- One-paragraph "what this is and does."
+- Use cases, in point form, split by audience (manufacturer / supplier / builder), each including a
+  "just this one feature" angle.
+- How the three repos relate: Data Studio ingests manufacturer catalogues → AI-parses + human-verifies
+  into System Cards + a machine-readable `knowledge.jsonld` object → publishes to the shared RFQ/
+  production Supabase project → v6's `/library` renders the public System Card and sends RFQs to
+  suppliers found via the Trade Desk directory → Trade Desk is where suppliers manage their listing and
+  incoming RFQs.
+- Live links: buildquote.com.au · buildquote.com.au/library · search.buildquote.com.au ·
+  studio.buildquote.com.au.
+- Self-host/setup notes if genuinely going open source: required env vars (see below), which Supabase
+  project each repo needs, and flag that **a secrets audit is required before flipping any repo public**
+  (Build-Quote-v6 still is) — never commit real API keys/service-role keys in the README or example env
+  files. License choice is undecided — ask Melia before picking one.
+- This open-sourcing goal was previously noted as "heard, not acted on — needs its own secrets/licensing
+  pass" (Addendum 3, §C1 in the design plan) — that pass is exactly this task.
+
+---
+
 ## Project Overview
 BuildQuote (buildquote.com.au) is a Next.js web app for Southwest WA builders. It turns handwritten or uploaded materials lists into professional RFQ (Request for Quotation) emails sent directly to suppliers.
 
