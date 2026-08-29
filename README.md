@@ -121,8 +121,9 @@ npm run dev   # http://localhost:3000
 Required env vars (see [`CLAUDE.md`](CLAUDE.md#environment-variables) for the
 full annotated list): Supabase URL/anon/service-role keys, `OPENAI_API_KEY`,
 `RESEND_API_KEY` (+ `RESEND_FROM_EMAIL`), `NEXT_PUBLIC_APP_URL`,
-`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, `NEXT_PUBLIC_MFP_URL`. No `.env.example`
-exists yet in this repo — see Open source status below.
+`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, `NEXT_PUBLIC_MFP_URL`. Copy
+[`buildquote/.env.example`](buildquote/.env.example) → `buildquote/.env.local`
+and fill in values.
 
 ⚠️ `ANTHROPIC_API_KEY` is **not used** by this app (parsing was migrated to
 OpenAI) — don't add it to your env config.
@@ -141,5 +142,3 @@ OpenAI) — don't add it to your env config.
 - **License:** not yet chosen — **TODO**. Until a `LICENSE` file with a real
   license is added, standard copyright applies (no reuse rights are granted).
   See [`LICENSE`](LICENSE).
-- No `.env.example` exists yet in this repo — add one (variable names only) as
-  part of making this genuinely self-hostable.
