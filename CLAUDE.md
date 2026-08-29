@@ -263,6 +263,18 @@ system_colours             — id, system_id, colour_name, image_url, is_stocked
   only writes are owner-checked. Consider owner-scoping reads if draft ids ever leak.
 - **Passkey flow** — not tested end-to-end
 - **Hero image data** — some records have trailing `\r\n` in `hero_image_url`; guarded with `.trim()` in UI but fix at source in Supabase
+- **WebMCP (watch, don't build yet)** — a W3C Community Group draft (`navigator.modelContext`, jointly Google/Microsoft)
+  that lets a website register structured tools an agent-driven browser can call directly (name + description +
+  JSON schema + execute callback), instead of the agent scraping the DOM/clicking through the UI. Chrome shipped a
+  flag-gated early preview in Feb 2026; real browser support isn't expected until H2 2026, and as of July 2026 it
+  has near-zero real deployment and no mainstream agent actually calling WebMCP tools yet. **This is a different
+  job from the AI knowledge layer** (design doc extending `buildquote-data-studio/docs/sourced-system-card-architecture.md`)
+  — the JSON-LD `knowledge.jsonld` object already makes a System Card readable/citable by any agent today, no browser needed.
+  WebMCP would only matter for the RFQ *action* surface — an agentic browser on `/library` calling an
+  `addToRFQ`/`submitQuoteRequest` tool directly instead of using the shopping-list UI. When it's worth building,
+  it should be cheap: `createDraft`, `saveDraftItems` and the shopping-list actions already exist as clean
+  server actions/API routes; WebMCP would just be a thin declarative wrapper on top, not new plumbing. Revisit
+  once browser support and real agent adoption actually show up — not before.
 
 ---
 
