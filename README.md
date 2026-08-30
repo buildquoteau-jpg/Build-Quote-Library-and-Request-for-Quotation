@@ -17,12 +17,58 @@ someone turns a messy list into a structured supplier quote request.
 - **One send, three formats:** a single `/api/send` call builds the HTML email,
   a branded PDF, and a CSV, and dispatches via Resend — reusable pattern for any
   "structured data → email + attachments" flow.
-- **Public product library is a real product surface, not a demo:** search/filter
-  a manufacturer catalogue, build a shopping list (localStorage-backed, no login
-  required), share it as a PNG, then one click converts it straight into an RFQ
-  draft.
+- **Public product library — real, working mechanism, demo data for now:**
+  search/filter a product catalogue, build a shopping list (localStorage-backed,
+  no login required), share it as a PNG, then one click converts it straight
+  into an RFQ draft. The library here runs on a small set of demo companies,
+  not live manufacturer data — see [Open source status](#open-source-status).
 - Draft-based RFQ flow (`?draft=<uuid>` in the URL, no hidden localStorage state)
   is a clean, resumable, shareable pattern for any multi-step form.
+
+---
+
+## About the creator
+
+I spent a year working in administration at a local hardware supply store.
+Answering a customer enquiry — by phone, email, or in person — often meant
+drawing on several separate sources for the same product: a printed
+catalogue, the manufacturer's website, our point-of-sale system. Each held
+part of the picture.
+
+Manufacturers face the same challenge from the other side. Product packaging
+can only carry so much, and install training reaches staff, not always the
+end customer directly. Communicating everything a product's specifications,
+applications, and compatibility require — completely, to everyone who needs
+it — is a genuinely hard problem.
+
+When I later had time between roles, I used it to think through a solution
+properly: what if a product's complete system information — profiles,
+specifications, install guides, components, everything — lived in one
+structured place instead of several?
+
+I'm not a technical person by background. I taught myself, largely through
+following developments in AI-assisted coding and testing ideas as I went. AI
+was a capable collaborator on the code itself, but the architecture — the
+System Card, its five-part structure, how the pieces fit together — is my own
+design throughout. That part had to be directed, decision by decision; it
+wasn't something existing tools or models could originate.
+
+I think the timing is right, for three reasons: manufacturers retain control
+of verifying their own data, the resulting data container is genuinely
+modular and portable, and — particularly with the machine-readable layer I've
+added most recently — AI agents are about to need exactly this kind of small,
+verified, structured product data at scale.
+
+I'm releasing this openly so it can reach the people it was built for —
+manufacturers, suppliers, and developers working on related problems —
+whether they adopt the full system or select the components of the code and
+architecture that align with and enhance what their own company is building
+digitally.
+
+If you do put any part of this to use, I'd welcome hearing about it —
+feedback from real-world use would be genuinely valuable.
+
+**— Melia Knapp** · [meliagrace@gmail.com](mailto:meliagrace@gmail.com)
 
 ---
 
@@ -40,8 +86,9 @@ someone turns a messy list into a structured supplier quote request.
   product library.
 
 ### Anyone browsing products (no login required)
-- Search/filter a public library of manufacturer systems
-  (`/library`) — sourced from **Data Studio**'s verified System Cards.
+- Search/filter a public library of manufacturer systems (`/library`) — the
+  same shape of data **Data Studio** publishes as verified System Cards,
+  currently populated with demo companies rather than live manufacturer data.
 - Build a shopping list, share it as an image, or convert it directly into a
   pre-filled RFQ draft.
 - **Just this piece:** `/library` is public and unauthenticated — usable as a
