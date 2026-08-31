@@ -15,6 +15,8 @@ searchable product library builders can quote straight from.
 Built for Southwest WA builders; the pattern generalises to any trade where
 someone turns a messy list into a structured supplier quote request.
 
+<img src="docs/screenshots/system-card-collage.png" alt="A BuildQuote System Card — photo collage, colours/profiles picker, and materials list — for the NewTechWood Terrace Decking Range" width="900">
+
 ---
 
 ## Why fork this
