@@ -90,10 +90,26 @@ feedback from real-world use would be genuinely valuable.
 
 **— Melia Knapp** · [meliagrace@gmail.com](mailto:meliagrace@gmail.com)
 
-See it live: [buildquote.com.au](https://buildquote.com.au) ·
-[buildquote.com.au/library](https://buildquote.com.au/library) ·
-[search.buildquote.com.au](https://search.buildquote.com.au) ·
-[studio.buildquote.com.au](https://studio.buildquote.com.au)
+## Try it live
+
+This isn't run as an open public service — it's a showcase of what's possible,
+built so other people and companies can see it, fork it, and run it
+themselves.
+
+- **[buildquote.com.au/library](https://buildquote.com.au/library)** — open
+  to everyone, no account needed. Browse the demo product library and build a
+  shopping list.
+- **[buildquote.com.au/register](https://buildquote.com.au/register)** — free,
+  open self-serve signup for a Builder account. Sign up yourself to walk the
+  full RFQ flow — upload a list, get it parsed, and send a real RFQ.
+- **[search.buildquote.com.au](https://search.buildquote.com.au)** (Trade
+  Desk) and **[studio.buildquote.com.au](https://studio.buildquote.com.au)**
+  (Data Studio) are **not** open self-serve — supplier and manufacturer
+  accounts are created manually to keep a lid on the AI/processing costs
+  those flows can trigger if left open to the public. Email
+  [meliagrace@gmail.com](mailto:meliagrace@gmail.com) for a demo login, or
+  fork the repo and run it on your own infrastructure to try the full thing
+  yourself.
 
 ---
 
