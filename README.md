@@ -35,23 +35,35 @@ drawing on several separate sources for the same product: a printed
 catalogue, the manufacturer's website, our point-of-sale system. Each held
 part of the picture.
 
-Manufacturers face the same challenge from the other side. Product packaging
-can only carry so much, and install training reaches staff, not always the
-end customer directly. Communicating everything a product's specifications,
-applications, and compatibility require — completely, to everyone who needs
-it — is a genuinely hard problem.
-
 When I later had time between roles, I used it to think through a solution
 properly: what if a product's complete system information — profiles,
 specifications, install guides, components, everything — lived in one
 structured place instead of several?
 
-I'm not a technical person by background. I taught myself, largely through
-following developments in AI-assisted coding and testing ideas as I went. AI
-was a capable collaborator on the code itself, but the architecture — the
-System Card, its five-part structure, how the pieces fit together — is my own
-design throughout. That part had to be directed, decision by decision; it
-wasn't something existing tools or models could originate.
+Manufacturers reach the market through a wide mix of channels — websites,
+printed brochures, product packaging, QR codes, flyers, take-cards, sample
+boards, printed PDFs, and staff training. Each does its job well for its own
+purpose. What [Data Studio](https://github.com/buildquoteau-jpg/BuildQuote-Manufacturer-Data-Studio)
+aims to do is take that same information — wherever it currently lives — and
+format it into one consistent, human-readable and machine-readable structure
+that works across many categories of Australian building products.
+
+I'm not a technical person by background. I educated myself on the latest
+developments in AI-assisted technology by listening to podcasts, then
+experimenting — taking what I'd learned and applying it directly to build. I
+found this way of learning and building particularly suited me; there's
+something about how AI-assisted development works that I connect with and
+understand instinctively. It gave me a way to take the systems and solutions
+that had existed only in my head and actually build working prototypes of
+them.
+
+Every part of the design and architecture across all three repositories —
+not just the System Card itself, but how each system works and how they
+connect — is my own, directed decision by decision at every step. There's a
+real temptation, working this way, to keep iterating, pivoting, and adding
+features indefinitely. Part of choosing to open-source this now is
+recognising that process could continue forever — I'd rather ship something
+genuinely useful than keep chasing a perfect result that never ships.
 
 I think the timing is right, for three reasons: manufacturers retain control
 of verifying their own data, the resulting data container is genuinely
@@ -69,6 +81,11 @@ If you do put any part of this to use, I'd welcome hearing about it —
 feedback from real-world use would be genuinely valuable.
 
 **— Melia Knapp** · [meliagrace@gmail.com](mailto:meliagrace@gmail.com)
+
+See it live: [buildquote.com.au](https://buildquote.com.au) ·
+[buildquote.com.au/library](https://buildquote.com.au/library) ·
+[search.buildquote.com.au](https://search.buildquote.com.au) ·
+[studio.buildquote.com.au](https://studio.buildquote.com.au)
 
 ---
 
