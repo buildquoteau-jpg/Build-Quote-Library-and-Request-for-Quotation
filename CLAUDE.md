@@ -47,7 +47,7 @@ don't rely solely on this summary. Suggested content per README, per Melia's req
 ## Project Overview
 BuildQuote (buildquote.com.au) is a Next.js web app for Southwest WA builders. It turns handwritten or uploaded materials lists into professional RFQ (Request for Quotation) emails sent directly to suppliers.
 
-**Working directory:** `C:\Users\Melia Borg\Desktop\Repositries\Build-Quote-v6\Build-Quote-v6\buildquote\`
+**Working directory:** `<repo-root>\buildquote\`
 **Run dev server:** `cd buildquote && npm run dev` → http://localhost:3000
 **Branch:** `main` (all features merged — no active feature branches)
 
