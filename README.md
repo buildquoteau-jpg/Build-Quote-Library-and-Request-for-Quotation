@@ -43,12 +43,11 @@ drawing on several separate sources for the same product: a printed
 catalogue, the manufacturer's website, our point-of-sale system. Each held
 part of the picture.
 
-When I later had time between roles, I used it to think through a solution
-properly: what if a product's complete system information — profiles,
+When I later had time between roles, I used it to think through a solution: what if a product's complete system information — profiles,
 specifications, install guides, components, everything — lived in one
-structured place instead of several?
+structured source?
 
-Manufacturers reach the market through a wide mix of channels — websites,
+Australian building materials manufacturers reach the market through a wide mix of channels — websites,
 printed brochures, product packaging, QR codes, flyers, take-cards, sample
 boards, printed PDFs, and staff training. Each does its job well for its own
 purpose. What [Data Studio](https://github.com/buildquoteau-jpg/BuildQuote-Manufacturer-Data-Studio)
@@ -73,17 +72,15 @@ features indefinitely. Part of choosing to open-source this now is
 recognising that process could continue forever — I'd rather ship something
 genuinely useful than keep chasing a perfect result that never ships.
 
-I think the timing is right, for three reasons: manufacturers retain control
-of verifying their own data, the resulting data container is genuinely
+I think the timing is right, for three reasons: Inside the three GIT repositories I have designed, manufacturers retain control
+of verifying their own data, the resulting data container is
 modular and portable, and — particularly with the machine-readable layer I've
-added most recently — AI agents are about to need exactly this kind of small,
-verified, structured product data at scale.
+added most recently — AI agents can directly access verified, structured product data at scale.
 
 I'm releasing this openly so it can reach the people it was built for —
-manufacturers, suppliers, and developers working on related problems —
-whether they adopt the full system or select the components of the code and
-architecture that align with and enhance what their own company is building
-digitally.
+manufacturers, suppliers, builders, and system developers working in related digital spaces.
+An individual business may adopt the full system or select the components of the code and
+architecture that align with, and enhance, the digital direction their own company is heading.
 
 If you do put any part of this to use, I'd welcome hearing about it —
 feedback from real-world use would be genuinely valuable.
