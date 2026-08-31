@@ -1,5 +1,13 @@
 # BuildQuote — Library & Request for Quotation
 
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ECF8E?logo=supabase&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-gpt--4o-412991?logo=openai&logoColor=white)
+![Resend](https://img.shields.io/badge/Resend-email-000000?logo=resend&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&logoColor=white)
+
 Turns a handwritten or uploaded materials list into a professional multi-format
 Request for Quotation (RFQ) — sent straight to a supplier — plus a public,
 searchable product library builders can quote straight from.
@@ -92,35 +100,39 @@ See it live: [buildquote.com.au](https://buildquote.com.au) ·
 ## Who this is for
 
 ### Builders
-- Start a quote request from scratch (`/rfq`), from a saved job, from a saved
+- Start a quote request from scratch
+  ([`/rfq`](https://buildquote.com.au/rfq)), from a saved job, from a saved
   supplier, or resume a draft — five different entry points into the same flow.
 - Upload a photo of a handwritten list, a PDF, a spreadsheet, or just type/speak
   it — AI turns it into an editable, structured line-item table.
 - Send one RFQ email that already includes a print-ready PDF and an
   Excel-importable CSV, without building either by hand.
-- **Just this piece:** the `/rfq` wizard alone works as a standalone "structured
-  materials list → email + PDF + CSV" tool, even without ever touching the
-  product library.
+- **Just this piece:** the [`/rfq`](https://buildquote.com.au/rfq) wizard alone
+  works as a standalone "structured materials list → email + PDF + CSV" tool,
+  even without ever touching the product library.
 
 ### Anyone browsing products (no login required)
-- Search/filter a public library of manufacturer systems (`/library`) — the
-  same shape of data **Data Studio** publishes as verified System Cards,
-  currently populated with demo companies rather than live manufacturer data.
+- Search/filter a public library of manufacturer systems
+  ([`/library`](https://buildquote.com.au/library)) — the same shape of data
+  **Data Studio** publishes as verified System Cards, currently populated with
+  demo companies rather than live manufacturer data.
 - Build a shopping list, share it as an image, or convert it directly into a
   pre-filled RFQ draft.
-- **Just this piece:** `/library` is public and unauthenticated — usable as a
-  standalone product-search/spec-reference surface even by someone who never
-  sends an RFQ.
+- **Just this piece:** [`/library`](https://buildquote.com.au/library) is
+  public and unauthenticated — usable as a standalone product-search/
+  spec-reference surface even by someone who never sends an RFQ.
 
 ### Suppliers
 - Don't use this repo directly — they're the *recipients* of what it sends. What
   matters to a supplier: their directory listing and RFQ inbox live in
-  **Trade Desk**, and the account/reply-to details in the email come straight
-  from what the builder filled in here.
+  **[Trade Desk](https://search.buildquote.com.au)**, and the account/reply-to
+  details in the email come straight from what the builder filled in here.
 
 ### Manufacturers
-- Also indirect — what shows up in `/library` is exactly what a manufacturer
-  published in **Data Studio**; nothing about a product's data is editable here.
+- Also indirect — what shows up in
+  [`/library`](https://buildquote.com.au/library) is exactly what a
+  manufacturer published in **Data Studio**; nothing about a product's data is
+  editable here.
 
 ---
 
