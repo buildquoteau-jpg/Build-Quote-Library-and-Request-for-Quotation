@@ -137,6 +137,13 @@ themselves.
   public and unauthenticated — usable as a standalone product-search/
   spec-reference surface even by someone who never sends an RFQ.
 
+<img src="docs/screenshots/library-manufacturer-page.png" alt="A manufacturer's page in the public product library — hero band, description, and every one of their System Cards in a grid" width="900">
+
+Picking a card opens the full System Card — colours and profiles to choose
+from, and a live materials list that builds as you select:
+
+<img src="docs/screenshots/system-card-materials-list.png" alt="An open System Card with a colour and profile selected — the materials list below has picked up the exact SKUs, UOM, and quantities, ready to add to an RFQ" width="900">
+
 ### Suppliers
 - Don't use this repo directly — they're the *recipients* of what it sends. What
   matters to a supplier: their directory listing and RFQ inbox live in
