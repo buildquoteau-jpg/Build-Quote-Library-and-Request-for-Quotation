@@ -403,8 +403,8 @@ OpenAI) — don't add it to your env config.
   before anyone builds against it or you advertise it as self-hostable — a
   pattern scan of tracked files at the time of writing found no committed real
   API keys, only placeholder examples in docs (e.g. `sk-ant-...`,
-  `eyJ...` in `README.md`/`HANDOVER-MFP-CLEANUP.md`), but a scan is not a
-  substitute for a full history audit.
-- **License:** not yet chosen — **TODO**. Until a `LICENSE` file with a real
-  license is added, standard copyright applies (no reuse rights are granted).
-  See [`LICENSE`](LICENSE).
+  `eyJ...`), but a scan is not a substitute for a full history audit.
+- **License:** [MIT](LICENSE) — free to use, modify, and redistribute, no
+  restrictions. If you do use any part of this, a heads-up to
+  [meliagrace@gmail.com](mailto:meliagrace@gmail.com) is genuinely
+  appreciated (not required — see [`LICENSE`](LICENSE)).
