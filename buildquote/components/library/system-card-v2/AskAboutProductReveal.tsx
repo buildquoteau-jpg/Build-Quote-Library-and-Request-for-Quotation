@@ -13,6 +13,13 @@
 // appears when its URL is real, per the spec's own "only show if available"
 // rule. The gap-logged note (§7) says a knowledge gap was recorded, never
 // that the AI was "trained" on this question.
+//
+// NOT CURRENTLY WIRED IN: hidden from the card by request (2026-08-31) — the
+// "Ask about this product" section is commented out at its call site in
+// SystemCardV2Experience.tsx (both here and the byte-for-byte copy in
+// Data Studio). This component and its /ask proxy route are untouched and
+// fully functional; a future developer can re-add the section by
+// uncommenting the <SystemCardSection id="ask"> block there.
 
 import { useState } from 'react'
 import styles from './RevealsBody.module.css'
