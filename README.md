@@ -57,24 +57,10 @@ aims to do is take that same information — wherever it currently lives — and
 format it into one consistent, human-readable and machine-readable structure
 that works across many categories of Australian building products.
 
-I'm not a technical person by background. I educated myself on the latest
-developments in AI-assisted technology by listening to podcasts, then
-experimenting — taking what I'd learned and applying it directly to build. I
-found this way of learning and building particularly suited me; there's
-something about how AI-assisted development works that I connect with and
-understand instinctively. It gave me a way to take the systems and solutions
-that had existed only in my head and actually build working prototypes of
-them.
+The result is a perfect mini-data unit. Verified by the manufacturer. Ready to be consumed across multiple channels, websites, social media, LLM's, AI agents. 
+Ready for the new way in which product discovery will happen in 2027.
 
-Every part of the design and architecture across all three repositories —
-not just the System Card itself, but how each system works and how they
-connect — is my own, directed decision by decision at every step. There's a
-real temptation, working this way, to keep iterating, pivoting, and adding
-features indefinitely. Part of choosing to open-source this now is
-recognising that process could continue forever — I'd rather ship something
-genuinely useful than keep chasing a perfect result that never ships.
-
-I think the timing is right, for three reasons: Inside the three GIT repositories I have designed, manufacturers retain control
+The Data Studio platform is where manufacturers retain control
 of verifying their own data, the resulting data container is
 modular and portable, and — particularly with the machine-readable layer I've
 added most recently — AI agents can directly access verified, structured product data at scale.
@@ -102,10 +88,13 @@ themselves.
   open self-serve signup for a Builder account. Sign up yourself to walk the
   full RFQ flow — upload a list, get it parsed, and send a real RFQ.
 - **[search.buildquote.com.au](https://search.buildquote.com.au)** (Trade
-  Desk) and **[studio.buildquote.com.au](https://studio.buildquote.com.au)**
-  (Data Studio) are **not** open self-serve — supplier and manufacturer
-  accounts are created manually to keep a lid on the AI/processing costs
-  those flows can trigger if left open to the public. Email
+  Desk) https://search.buildquote.com.au/supplier/demo-supplier
+  Email: buildquoteau@gmail.com
+Password: demo2026
+  **[studio.buildquote.com.au](https://studio.buildquote.com.au)**
+  (Data Studio) Email: demo@buildquote.com.au
+Password: demo2026
+Sign in at /login https://studio.buildquote.com.au/login
   [meliagrace@gmail.com](mailto:meliagrace@gmail.com) for a demo login, or
   fork the repo and run it on your own infrastructure to try the full thing
   yourself.
