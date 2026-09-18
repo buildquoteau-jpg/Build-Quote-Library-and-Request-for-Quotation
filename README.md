@@ -8,12 +8,12 @@
 ![Resend](https://img.shields.io/badge/Resend-email-000000?logo=resend&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&logoColor=white)
 
-Turns a handwritten or uploaded materials list into a professional multi-format
-Request for Quotation (RFQ) — sent straight to a supplier — plus a public,
-searchable product library builders can quote straight from.
+About this repositry-
+1. Introduces the 'System-Card' format that is created at BuildQuote Data Studio
+2. Introduces a shareable 'shopping list' feature (ready for a Sunday afternoon trip to Bunnings)
+3. Turns a handwritten or uploaded materials list into a professional multi-format
+Request for Quotation (RFQ) — sent straight to a supplier.
 
-Built for Southwest WA builders; the pattern generalises to any trade where
-someone turns a messy list into a structured supplier quote request.
 
 <img src="docs/screenshots/system-card-collage.png" alt="A BuildQuote System Card — photo collage, colours/profiles picker, and materials list — for the NewTechWood Terrace Decking Range" width="900">
 
@@ -89,8 +89,8 @@ themselves.
  - **[studio.buildquote.com.au](https://studio.buildquote.com.au)**
   (Data Studio) Email: demo@buildquote.com.au Password: demo2026
 Sign in at /login **[https://studio.buildquote.com.au/login](https://studio.buildquote.com.au/login)**
-  [meliagrace@gmail.com](mailto:meliagrace@gmail.com) for a demo login, or
-  fork the repo and run it on your own infrastructure to try the full thing
+ - [meliagrace@gmail.com](mailto:meliagrace@gmail.com) for a casual conversation
+ - Fork the repo and run it on your own infrastructure to try the full thing
   yourself.
 
 ---
