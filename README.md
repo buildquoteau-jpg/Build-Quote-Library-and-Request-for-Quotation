@@ -45,10 +45,6 @@ drawing on several separate sources for the same product: a printed
 catalogue, the manufacturer's website, our point-of-sale system. Each held
 part of the picture.
 
-When I later had time between roles, I used it to think through a solution: what if a product's complete system information — profiles,
-specifications, install guides, components, everything — lived in one
-structured source?
-
 Australian building materials manufacturers reach the market through a wide mix of channels — websites,
 printed brochures, product packaging, QR codes, flyers, take-cards, sample
 boards, printed PDFs, and staff training. Each does its job well for its own
@@ -88,13 +84,11 @@ themselves.
   open self-serve signup for a Builder account. Sign up yourself to walk the
   full RFQ flow — upload a list, get it parsed, and send a real RFQ.
 - **[search.buildquote.com.au](https://search.buildquote.com.au)** (Trade
-  Desk) https://search.buildquote.com.au/supplier/demo-supplier
-  Email: buildquoteau@gmail.com
-Password: demo2026
-  **[studio.buildquote.com.au](https://studio.buildquote.com.au)**
-  (Data Studio) Email: demo@buildquote.com.au
-Password: demo2026
-Sign in at /login https://studio.buildquote.com.au/login
+  Desk) **[https://search.buildquote.com.au/supplier/demo-supplier](https://search.buildquote.com.au/supplier/login)**
+  Email: buildquoteau@gmail.com Password: demo2026
+ - **[studio.buildquote.com.au](https://studio.buildquote.com.au)**
+  (Data Studio) Email: demo@buildquote.com.au Password: demo2026
+Sign in at /login **[https://studio.buildquote.com.au/login](https://studio.buildquote.com.au/login)**
   [meliagrace@gmail.com](mailto:meliagrace@gmail.com) for a demo login, or
   fork the repo and run it on your own infrastructure to try the full thing
   yourself.
