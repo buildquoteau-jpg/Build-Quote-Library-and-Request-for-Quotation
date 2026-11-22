@@ -24,6 +24,7 @@ export type LibraryProfile = {
   supplier_pack_qty: number | null
   supplier_pack_uom: string | null
   sort_order: number
+  image_url?: string | null
 }
 
 export type LibraryComponent = {
@@ -38,6 +39,7 @@ export type LibraryComponent = {
     category: string | null
     uom: string | null
     procurement_route: string | null
+    image_url?: string | null
   } | null
 }
 
