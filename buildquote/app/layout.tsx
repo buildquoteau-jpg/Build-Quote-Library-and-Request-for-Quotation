@@ -19,6 +19,20 @@ const barlowCondensed = Barlow_Condensed({
 export const metadata: Metadata = {
   title: "BuildQuote — Request for Quotation, Made Simple",
   description: "Upload your Bill of Materials and we'll turn it into a professional RFQ sent directly to your suppliers. Built for Southwest WA builders.",
+  ...(process.env.ALLOW_INDEXING === "true"
+    ? {}
+    : {
+        robots: {
+          index: false,
+          follow: false,
+          nocache: true,
+          googleBot: {
+            index: false,
+            follow: false,
+            noimageindex: true,
+          },
+        },
+      }),
   icons: {
     icon: [
       { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },

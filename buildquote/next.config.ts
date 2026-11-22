@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const securityHeaders = [
+  ...(process.env.ALLOW_INDEXING === 'true'
+    ? []
+    : [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive, nosnippet' }]),
   // Prevent clickjacking
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
   // Prevent MIME sniffing
