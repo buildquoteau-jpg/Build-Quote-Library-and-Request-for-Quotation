@@ -611,7 +611,9 @@ export default function ManualEntryScreen({
       {showQtyTip && items.some(i => i.name.trim()) && (
         <div className="flex items-start gap-3 rounded-xl border border-brand/20 bg-brand/[0.04] px-4 py-3">
           <p className="text-sm text-text-secondary flex-1 leading-relaxed">
-            Quantities are set to 1 by default — review each line and adjust to match your project requirements before sending.
+            {items.some(i => Number(i.qty) > 1)
+              ? 'Quantities have been pre-filled from your estimate — review each line and adjust if needed before sending.'
+              : 'Quantities are set to 1 by default — review each line and adjust to match your project requirements before sending.'}
           </p>
           <button
             type="button"

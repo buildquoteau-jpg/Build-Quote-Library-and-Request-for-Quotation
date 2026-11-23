@@ -214,7 +214,8 @@ export default function RFQPage() {
         if (pd?.logo_url) setBuilderLogoUrl(pd.logo_url)
       } else {
         const gp = getGuestProfile()
-        if (gp.builder_name || builderNameParam) setBuilderName(gp.builder_name || builderNameParam || '')
+        // Explicit incoming URL param (e.g. from Decks WA / Decker) always wins over stale guest storage
+        if (builderNameParam || gp.builder_name) setBuilderName(builderNameParam || gp.builder_name || '')
         if (gp.company_name) setBuilderCompany(gp.company_name)
       }
 
@@ -444,7 +445,7 @@ export default function RFQPage() {
           ...(builderNameParam ? {
             builder: {
               ...p.builder,
-              builderName: p.builder.builderName || builderNameParam,
+              builderName: builderNameParam,
             },
           } : {}),
           // Supplier: URL params win (returning from MFP / Decks WA), else the saved draft

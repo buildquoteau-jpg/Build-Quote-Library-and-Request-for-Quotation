@@ -519,8 +519,8 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
               )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <Input label="Builder Name" value={rfqPayload.builder.builderName} onChange={v => setBuilder('builderName', v)} />
-              <Input label="Company Name" value={rfqPayload.builder.company} onChange={v => setBuilder('company', v)} />
+              <Input label="Your Name / Builder" value={rfqPayload.builder.builderName} onChange={v => setBuilder('builderName', v)} />
+              <Input label="Company Name (optional)" value={rfqPayload.builder.company} onChange={v => setBuilder('company', v)} />
             </div>
             <Input label="ABN / ACN" value={rfqPayload.builder.abn} onChange={v => setBuilder('abn', v)} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
