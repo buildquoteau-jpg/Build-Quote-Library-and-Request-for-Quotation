@@ -178,9 +178,16 @@ export default function RFQPage() {
       const guestSupplierId = params.get('guestSupplier')
       const requestedStep = params.get('step')
       const existingDraftId = params.get('draft')
-      // Supplier prefill from manufacturer portal (?supplierName=)
+      // Supplier & project prefill from Decks WA / manufacturer portal (?supplierName=, ?delivery=, etc.)
       const supplierNameParam  = params.get('supplierName')
       const supplierEmailParam = params.get('supplierEmail')
+      const deliveryParam      = params.get('delivery')
+      const siteAddressParam   = params.get('siteAddress')
+      const siteSuburbParam    = params.get('siteSuburb')
+      const siteAccessParam    = params.get('siteAccessNotes')
+      const dateRequiredParam  = params.get('dateRequired')
+      const projectRefParam    = params.get('projectReference')
+      const messageParam       = params.get('message')
 
       // Set context flags for ManualEntryScreen reminder banner
       setContextFlags({
@@ -416,7 +423,8 @@ export default function RFQPage() {
         setPayload(p => ({
           ...p,
           ...(cleaned.length ? { items: cleaned } : {}),
-          // Restore job fields from re-fetched job data (survives MFP navigation)
+          // Restore job fields from re-fetched job data (survives MFP navigation),
+          // falling back to URL prefill params from Decks WA / Decker Guided RFQ.
           ...(jobData ? {
             projectReference: jobData.project_reference || '',
             siteAddress: jobData.project_address || jobData.project_address_manual || '',
@@ -424,10 +432,15 @@ export default function RFQPage() {
             pmPhone: jobData.pm_mobile || '',
             siteAccessNotes: jobData.site_access_notes || '',
           } : {
-            // Fall back to saved draft meta for project ref if no job data
-            projectReference: p.projectReference || draftMeta?.project_reference || '',
+            projectReference: projectRefParam || p.projectReference || draftMeta?.project_reference || '',
+            ...(siteAddressParam ? { siteAddress: siteAddressParam } : {}),
+            ...(siteSuburbParam ? { siteSuburb: siteSuburbParam } : {}),
+            ...(siteAccessParam ? { siteAccessNotes: siteAccessParam } : {}),
           }),
-          // Supplier: URL params win (returning from MFP), else the saved draft
+          ...(deliveryParam === 'pickup' || deliveryParam === 'delivery' ? { delivery: deliveryParam } : {}),
+          ...(dateRequiredParam ? { dateRequired: dateRequiredParam } : {}),
+          ...(messageParam ? { message: messageParam } : {}),
+          // Supplier: URL params win (returning from MFP / Decks WA), else the saved draft
           // snapshot (name + email + account number all survive the round-trip).
           supplier: supplierNameParam ? {
             supplierName: supplierNameParam,

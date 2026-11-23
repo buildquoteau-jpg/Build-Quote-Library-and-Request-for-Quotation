@@ -8,12 +8,14 @@ export async function POST(req: NextRequest) {
     const supplierName: string | null = typeof body.supplierName === 'string' ? body.supplierName : null
     const supplierEmail: string | null = typeof body.supplierEmail === 'string' ? body.supplierEmail : null
     const supplierId: string | null = typeof body.supplierId === 'string' ? body.supplierId : null
+    const projectReference: string | null = typeof body.projectReference === 'string' ? body.projectReference : null
 
     // Base snapshot — columns present on rfq_drafts before the 20260630 migration.
     const insertData: Record<string, string> = {}
     if (builderId) insertData.builder_id = builderId
     if (supplierName) insertData.supplier_name = supplierName
     if (supplierEmail) insertData.supplier_email = supplierEmail
+    if (projectReference) insertData.project_reference = projectReference
 
     const { data, error } = await supabaseService
       .from('rfq_drafts')
