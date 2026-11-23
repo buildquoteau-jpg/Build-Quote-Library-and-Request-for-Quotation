@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import { trackGuestDraftId } from '@/lib/guestWorkspace'
 import { HeroGallery } from '@/components/library/HeroGallery'
 import type { LibrarySystem, LibraryProfile, LibraryColour, LibraryComponent, Stockist } from '@/lib/data/getSystems'
 
@@ -696,9 +697,8 @@ export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: P
     }
   }
 
-  // Start an RFQ pre-addressed to a stockist. Logged-in builders get a draft
-  // seeded with the supplier snapshot + any current selections, then land on
-  // /rfq. Logged-out visitors are sent to log in first (RFQ is gated).
+  // Start an RFQ pre-addressed to a stockist with zero login required.
+  // Logged-in builders get a draft owned by them; guests get a local-tracked draft.
   async function requestQuoteFromStockist(stockist: Stockist) {
     if (rfqStockistId) return
 
@@ -707,22 +707,11 @@ export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: P
     const items = buildSelectedItems()
     if (items.length === 0) return
 
-    if (isLoggedIn === false) {
-      const next = encodeURIComponent(system.manufacturer ? `/library/${system.manufacturer.slug}/${system.slug}` : `/library`)
-      window.location.href = `/login?next=${next}`
-      return
-    }
-
     setRfqStockistId(stockist.id)
     try {
       const supabase = createSupabaseBrowserClient()
       const { data: { session } } = await supabase.auth.getSession()
       const builderId = session?.user?.id ?? null
-      if (!builderId) {
-        const next = encodeURIComponent(system.manufacturer ? `/library/${system.manufacturer.slug}/${system.slug}` : `/library`)
-        window.location.href = `/login?next=${next}`
-        return
-      }
 
       const { draftId } = await fetch('/api/create-draft', {
         method: 'POST',
@@ -734,6 +723,8 @@ export function SystemCardUI({ system, stockists = [], onAddToList, cardUrl }: P
           supplierId: stockist.id,
         }),
       }).then(r => r.json())
+
+      if (!builderId && draftId) trackGuestDraftId(draftId)
 
       await fetch('/api/save-draft-items', {
         method: 'POST',

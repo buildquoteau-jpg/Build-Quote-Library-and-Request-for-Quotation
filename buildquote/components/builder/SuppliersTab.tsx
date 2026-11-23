@@ -3,6 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import {
+  generateGuestId,
+  getGuestSuppliers,
+  saveGuestSuppliers,
+} from '@/lib/guestWorkspace'
 
 
 interface Supplier {
@@ -27,7 +32,7 @@ const emptySupplier: Omit<Supplier, 'id'> = {
   notes: '', rep_name: '', rep_mobile: '',
 }
 
-export default function SuppliersTab({ builderId }: { builderId: string }) {
+export default function SuppliersTab({ builderId }: { builderId: string | null }) {
   const supabase = createSupabaseBrowserClient()
   const router = useRouter()
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
@@ -42,9 +47,14 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
   const mapInstanceRef = useRef<any>(null)
   const autocompleteContainerRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => { loadSuppliers() }, [])
+  useEffect(() => { loadSuppliers() }, [builderId])
 
   async function loadSuppliers() {
+    if (!builderId) {
+      setSuppliers(getGuestSuppliers())
+      setLoaded(true)
+      return
+    }
     const { data } = await supabase.from('builder_suppliers').select('*').eq('builder_id', builderId).order('supplier_name')
     setSuppliers((data || []) as Supplier[])
     setLoaded(true)
@@ -153,6 +163,18 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+
+    if (!builderId) {
+      const next = editing
+        ? suppliers.map(s => (s.id === editing.id ? { ...form, id: editing.id } : s))
+        : [{ ...form, id: generateGuestId('sup') }, ...suppliers]
+      saveGuestSuppliers(next)
+      setSuppliers(next)
+      setShowForm(false)
+      setSaving(false)
+      return
+    }
+
     const payload = { ...form, builder_id: builderId, payment_type: form.payment_type || null }
 
     let saveError: any = null
@@ -186,6 +208,12 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
 
   async function handleDelete(id: string) {
     if (!confirm('Remove this supplier?')) return
+    if (!builderId) {
+      const next = suppliers.filter(x => x.id !== id)
+      saveGuestSuppliers(next)
+      setSuppliers(next)
+      return
+    }
     await supabase.from('builder_suppliers').delete().eq('id', id)
     setSuppliers(s => s.filter(x => x.id !== id))
   }
@@ -265,7 +293,7 @@ export default function SuppliersTab({ builderId }: { builderId: string }) {
               </p>
             )}
             <button
-              onClick={() => router.push(`/rfq?supplier=${s.id}`)}
+              onClick={() => router.push(builderId ? `/rfq?supplier=${s.id}` : `/rfq?guestSupplier=${encodeURIComponent(s.id)}`)}
               className="mt-3 w-full text-center text-xs font-semibold text-brand border border-brand/30 rounded-lg py-1.5 hover:bg-brand hover:text-white transition-colors"
             >
               Send RFQ →

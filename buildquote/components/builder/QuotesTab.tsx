@@ -2,6 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import {
+  getGuestDraftIds,
+  getGuestSentRfqs,
+  untrackGuestDraftId,
+  updateGuestSentRfqStatus,
+} from '@/lib/guestWorkspace'
 
 interface Draft {
   id: string
@@ -139,7 +145,7 @@ export default function QuotesTab({
   highlightProject,
   onClearHighlight,
 }: {
-  builderId: string
+  builderId: string | null
   highlightProject?: string
   onClearHighlight?: () => void
 }) {
@@ -157,6 +163,34 @@ export default function QuotesTab({
 
   const load = useCallback(async () => {
     setLoading(true)
+
+    if (!builderId) {
+      const localDraftIds = getGuestDraftIds()
+      let loadedDrafts: Draft[] = []
+      if (localDraftIds.length > 0) {
+        const [{ data: draftRows }, { data: itemCounts }] = await Promise.all([
+          supabase
+            .from('rfq_drafts')
+            .select('id, supplier_name, project_reference, created_at, updated_at')
+            .in('id', localDraftIds)
+            .eq('status', 'draft')
+            .order('created_at', { ascending: false }),
+          supabase.from('rfq_draft_items').select('draft_id').in('draft_id', localDraftIds),
+        ])
+        const countMap: Record<string, number> = {}
+        for (const row of (itemCounts || []) as { draft_id: string }[]) {
+          countMap[row.draft_id] = (countMap[row.draft_id] || 0) + 1
+        }
+        loadedDrafts = (draftRows || []).map((d: any) => ({
+          ...d,
+          item_count: countMap[d.id] || 0,
+        }))
+      }
+      setDrafts(loadedDrafts)
+      setSent(getGuestSentRfqs())
+      setLoading(false)
+      return
+    }
 
     const { data: draftRows } = await supabase
       .from('rfq_drafts')
@@ -201,6 +235,9 @@ export default function QuotesTab({
       message: 'This will permanently delete the draft and all items. This cannot be undone.',
       confirmLabel: 'Discard draft',
       onConfirm: async () => {
+        if (!builderId) {
+          untrackGuestDraftId(draftId)
+        }
         await supabase.from('rfq_draft_items').delete().eq('draft_id', draftId)
         await supabase.from('rfq_drafts').delete().eq('id', draftId)
         setDrafts(d => d.filter(x => x.id !== draftId))
@@ -217,6 +254,9 @@ export default function QuotesTab({
       onConfirm: async () => {
         setDiscardingEmpty(true)
         const ids = emptyDrafts.map(d => d.id)
+        if (!builderId) {
+          ids.forEach(id => untrackGuestDraftId(id))
+        }
         await supabase.from('rfq_drafts').delete().in('id', ids)
         setDrafts(d => d.filter(x => x.item_count > 0))
         setDiscardingEmpty(false)
@@ -225,6 +265,11 @@ export default function QuotesTab({
   }
 
   async function handleStatusUpdate(rfqId: string, status: 'won' | 'declined' | 'sent') {
+    if (!builderId) {
+      updateGuestSentRfqStatus(rfqId, status)
+      setSent(s => s.map(x => x.id === rfqId ? { ...x, status } : x))
+      return
+    }
     setUpdatingId(rfqId)
     try {
       const res = await fetch(`/api/quotes/${rfqId}`, {

@@ -25,8 +25,14 @@ export default function TopBar({ currentStep, onStepClick }: TopBarProps) {
           </span>
         </a>
 
-        {/* Step indicators */}
+        {/* Step indicators + Portal link */}
         <div className="flex items-center gap-1 sm:gap-2">
+          <a
+            href="/dashboard"
+            className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold text-text-secondary hover:text-heading hover:bg-surface transition-colors whitespace-nowrap mr-1"
+          >
+            Builder Portal
+          </a>
           {steps.map(({ n, label }, idx) => {
             const isActive = n === currentStep
             const isDone = n < currentStep

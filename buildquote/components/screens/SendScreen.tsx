@@ -9,6 +9,7 @@ import SectionLabel from '../ui/SectionLabel'
 import Toggle from '../ui/Toggle'
 import { BuilderDetails, SupplierDetails, RFQPayload } from '@/lib/types'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import { getGuestSuppliers } from '@/lib/guestWorkspace'
 
 interface BuilderSupplierRow {
   id: string
@@ -108,12 +109,21 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
     }
   }, [rfqPayload.builder])
 
-  // Fetch builder profile + personal suppliers if logged in
+  // Fetch builder profile + personal suppliers if logged in; otherwise load local guest suppliers
   useEffect(() => {
     const loadBuilderData = async () => {
       const supabase = createSupabaseBrowserClient()
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
+      if (!session) {
+        const localSup = getGuestSuppliers().map(s => ({
+          id: s.id,
+          supplier_name: s.supplier_name || null,
+          supplier_email: s.supplier_email || null,
+          account_number: s.account_number || null,
+        }))
+        setBuilderSuppliers(localSup)
+        return
+      }
 
       const [profileRes, suppliersRes] = await Promise.all([
         supabase
@@ -688,7 +698,7 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
       {/* Confirmation Modal */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-page/80 px-4 pb-4 sm:pb-0">
-          <div className="bg-surface border border-border rounded-2xl w-full max-w-sm p-5 flex flex-col gap-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-surface border border-border rounded-2xl w-full max-w-md p-5 flex flex-col gap-4 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div>
               <h2 className="text-text-primary font-bold text-lg">Send request to supplier</h2>
             </div>
@@ -698,6 +708,43 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
                 {rfqPayload.supplier.supplierName || 'Selected Supplier'}
               </p>
             </div>
+
+            {!builderProfile && (
+              <div className="rounded-xl border border-navy/25 bg-navy/5 p-3.5 flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold text-navy">Save this quote to a free Builder Portal account?</p>
+                  <span className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-navy">Optional</span>
+                </div>
+                <p className="text-[11.5px] text-text-secondary leading-relaxed">
+                  Sign in or create a free account before sending to keep your quote history, job cards &amp; preferred suppliers synced — or skip and send straight away with no login.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const draft = new URLSearchParams(window.location.search).get('draft')
+                      const returnTo = draft ? `/rfq?draft=${encodeURIComponent(draft)}&step=4` : '/rfq'
+                      window.location.href = `/register?next=${encodeURIComponent(returnTo)}`
+                    }}
+                    className="rounded-lg bg-navy px-3 py-1.5 text-xs font-bold text-white hover:opacity-90 transition"
+                  >
+                    Create free account →
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const draft = new URLSearchParams(window.location.search).get('draft')
+                      const returnTo = draft ? `/rfq?draft=${encodeURIComponent(draft)}&step=4` : '/rfq'
+                      window.location.href = `/login?next=${encodeURIComponent(returnTo)}`
+                    }}
+                    className="rounded-lg border border-navy/30 bg-white px-3 py-1.5 text-xs font-bold text-navy hover:bg-navy/5 transition"
+                  >
+                    Sign in
+                  </button>
+                </div>
+              </div>
+            )}
+
             <p className="text-text-secondary text-xs leading-relaxed">
               This request contains the materials and quantities you have reviewed and approved. Product specifications, pack sizes, availability and pricing may vary between suppliers. Please confirm all product details and suitability directly with the supplier before placing an order. Any updates or changes should be communicated directly between you and your preferred supplier.
             </p>
@@ -727,7 +774,7 @@ export default function SendScreen({ rfqPayload, onChange, onBack, onSend, sendi
                 disabled={!termsConfirmed || sending}
                 className="flex-1 bg-brand hover:bg-brand-hover disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold py-3 rounded-xl transition-colors"
               >
-                {sending ? 'Sending...' : 'Send Quote Request'}
+                {sending ? 'Sending...' : (!builderProfile ? 'Send without login' : 'Send Quote Request')}
               </button>
             </div>
           </div>

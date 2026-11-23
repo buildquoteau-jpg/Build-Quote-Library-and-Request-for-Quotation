@@ -5,16 +5,18 @@ import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 import { startRegistration } from '@simplewebauthn/browser'
+import { getGuestProfile, saveGuestProfile } from '@/lib/guestWorkspace'
 
 
 interface Props {
-  user: User
+  user: User | null
   profile: any
   onClose: () => void
+  onGuestProfileSaved?: (displayName: string) => void
   inline?: boolean
 }
 
-export default function ProfilePanel({ user, profile, onClose, inline = false }: Props) {
+export default function ProfilePanel({ user, profile, onClose, onGuestProfileSaved, inline = false }: Props) {
   const router = useRouter()
   const supabase = createSupabaseBrowserClient()
   const [tab, setTab] = useState<'details' | 'security'>('details')
@@ -27,7 +29,21 @@ export default function ProfilePanel({ user, profile, onClose, inline = false }:
   const [companyAddressPlaceId, setCompanyAddressPlaceId] = useState(profile?.company_address_place_id || '')
   const [officePhone, setOfficePhone] = useState(profile?.office_phone || '')
   const [mobilePhone, setMobilePhone] = useState(profile?.mobile_phone || '')
+  const [guestEmail, setGuestEmail] = useState(user?.email || '')
   const [logoUrl, setLogoUrl] = useState(profile?.logo_url || '')
+
+  useEffect(() => {
+    if (user) return
+    const gp = getGuestProfile()
+    setBuilderName(gp.builder_name)
+    setCompanyName(gp.company_name)
+    setAbn(gp.abn)
+    setCompanyAddress(gp.company_address)
+    setCompanyAddressPlaceId(gp.company_address_place_id)
+    setOfficePhone(gp.office_phone)
+    setMobilePhone(gp.mobile_phone)
+    setGuestEmail(gp.email)
+  }, [user])
 
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
@@ -77,10 +93,21 @@ export default function ProfilePanel({ user, profile, onClose, inline = false }:
     setSaving(true)
     setSaveMsg('')
 
-    // Use the user prop directly — already validated server-side, no extra round-trip
     if (!user?.id) {
-      setSaveMsg('Error: Session not found — please sign out and sign back in.')
+      saveGuestProfile({
+        builder_name: builderName,
+        company_name: companyName,
+        abn,
+        company_address: companyAddress,
+        company_address_place_id: companyAddressPlaceId,
+        office_phone: officePhone,
+        mobile_phone: mobilePhone,
+        email: guestEmail,
+      })
+      onGuestProfileSaved?.(builderName || companyName)
       setSaving(false)
+      setSaveMsg('Details saved locally — ready to pre-fill your quote requests!')
+      setTimeout(() => setSaveMsg(''), 2500)
       return
     }
 
@@ -109,7 +136,7 @@ export default function ProfilePanel({ user, profile, onClose, inline = false }:
 
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file || !user?.id) return
     setLogoUploading(true)
     setLogoError('')
 
@@ -203,7 +230,7 @@ export default function ProfilePanel({ user, profile, onClose, inline = false }:
           )}
           <div>
             <p className="font-bold text-text-primary text-sm">{builderName || 'My Profile'}</p>
-            <p className="text-text-muted text-xs">{user.email}</p>
+            <p className="text-text-muted text-xs">{user?.email || guestEmail || 'Guest Builder (not signed in)'}</p>
           </div>
         </div>
         {!inline && (
@@ -213,37 +240,66 @@ export default function ProfilePanel({ user, profile, onClose, inline = false }:
         )}
       </div>
 
-      {/* Sub-tabs */}
-      <div className="flex border-b border-border-subtle">
-        {(['details', 'security'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 py-3 text-sm font-semibold transition border-b-2 ${tab === t ? 'border-navy text-navy' : 'border-transparent text-text-muted hover:text-text-secondary'}`}>
-            {t === 'details' ? 'My Details' : 'Security'}
-          </button>
-        ))}
-      </div>
+      {/* Sub-tabs (Security only shown for signed-in accounts) */}
+      {user && (
+        <div className="flex border-b border-border-subtle">
+          {(['details', 'security'] as const).map(t => (
+            <button key={t} onClick={() => setTab(t)}
+              className={`flex-1 py-3 text-sm font-semibold transition border-b-2 ${tab === t ? 'border-navy text-navy' : 'border-transparent text-text-muted hover:text-text-secondary'}`}>
+              {t === 'details' ? 'My Details' : 'Security'}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto p-6">
+        {!user && (
+          <div className="mb-5 rounded-xl border border-navy/20 bg-navy/5 p-4">
+            <p className="text-sm font-bold text-navy">Sync your jobs, suppliers &amp; quotes</p>
+            <p className="mt-1 text-xs text-text-secondary leading-relaxed">
+              Your details below are saved in this browser and will auto-fill your quote requests. Create a free account anytime to back up everything across phone &amp; desktop.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <a href="/register?next=%2Fdashboard" className="rounded-lg bg-brand px-3.5 py-2 text-xs font-bold text-white hover:bg-brand-hover transition">
+                Create free account
+              </a>
+              <a href="/login?next=%2Fdashboard" className="rounded-lg border border-navy/30 bg-white px-3.5 py-2 text-xs font-bold text-navy hover:bg-navy/5 transition">
+                Sign in
+              </a>
+            </div>
+          </div>
+        )}
+
         {tab === 'details' && (
           <form onSubmit={handleSaveProfile} className="flex flex-col gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-text-secondary mb-1.5">Company Logo</label>
-              <div className="flex items-center gap-3">
-                {logoUrl && <img src={logoUrl} alt="" className="w-14 h-14 rounded-xl object-cover border border-border-subtle" />}
-                <label className="cursor-pointer border border-border text-text-secondary text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-surface-subtle transition">
-                  {logoUploading ? 'Uploading…' : logoUrl ? 'Change logo' : 'Upload logo'}
-                  <input type="file" accept="image/*,image/heic,image/heif" className="hidden" onChange={handleLogoUpload} disabled={logoUploading} />
-                </label>
+            {user && (
+              <div>
+                <label className="block text-sm font-semibold text-text-secondary mb-1.5">Company Logo</label>
+                <div className="flex items-center gap-3">
+                  {logoUrl && <img src={logoUrl} alt="" className="w-14 h-14 rounded-xl object-cover border border-border-subtle" />}
+                  <label className="cursor-pointer border border-border text-text-secondary text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-surface-subtle transition">
+                    {logoUploading ? 'Uploading…' : logoUrl ? 'Change logo' : 'Upload logo'}
+                    <input type="file" accept="image/*,image/heic,image/heif" className="hidden" onChange={handleLogoUpload} disabled={logoUploading} />
+                  </label>
+                </div>
+                {logoError && (
+                  <p className="text-xs font-semibold text-error mt-1">{logoError}</p>
+                )}
               </div>
-              {logoError && (
-                <p className="text-xs font-semibold text-error mt-1">{logoError}</p>
-              )}
-            </div>
+            )}
             <div>
               <label className="block text-sm font-semibold text-text-secondary mb-1.5">Your name</label>
               <input value={builderName} onChange={e => setBuilderName(e.target.value)}
                 className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-navy focus:ring-2 focus:ring-navy/10 transition" />
             </div>
+            {!user && (
+              <div>
+                <label className="block text-sm font-semibold text-text-secondary mb-1.5">Email</label>
+                <input type="email" value={guestEmail} onChange={e => setGuestEmail(e.target.value)}
+                  placeholder="you@company.com.au"
+                  className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-navy transition" />
+              </div>
+            )}
             <div>
               <label className="block text-sm font-semibold text-text-secondary mb-1.5">Company name</label>
               <input value={companyName} onChange={e => setCompanyName(e.target.value)}

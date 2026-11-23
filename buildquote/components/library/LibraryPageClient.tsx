@@ -315,7 +315,31 @@ export function LibraryPageClient({ initialSystems, categories, manufacturerList
   return (
     <>
       {/* Hero */}
-      <section style={{ background: 'linear-gradient(155deg, #0d3347 0%, #185D7A 55%, #1e7399 100%)', padding: '20px 20px 16px' }}>
+      <section style={{ background: 'linear-gradient(155deg, #0d3347 0%, #185D7A 55%, #1e7399 100%)', padding: '16px 20px 16px' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto 8px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px' }}>
+          <a
+            href="/dashboard"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              fontSize: '12.5px', fontWeight: 700, color: '#fff', textDecoration: 'none',
+              background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.28)',
+              padding: '6px 13px', borderRadius: '999px',
+            }}
+          >
+            Builder Portal
+            <span aria-hidden>→</span>
+          </a>
+          <a
+            href="/rfq"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '5px',
+              fontSize: '12.5px', fontWeight: 700, color: '#fff', textDecoration: 'none',
+              background: '#f97316', padding: '6px 13px', borderRadius: '999px',
+            }}
+          >
+            + New RFQ
+          </a>
+        </div>
         <div style={{ maxWidth: '820px', margin: '0 auto', textAlign: 'center' }}>
 
           <h1 style={{ margin: '0 0 5px', fontSize: 'clamp(24px, 3.2vw, 34px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.1, fontFamily: 'var(--font-barlow-condensed), sans-serif' }}>

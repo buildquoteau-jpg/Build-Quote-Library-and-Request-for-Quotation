@@ -72,28 +72,40 @@ export default async function Home() {
           FREE · NO LOGIN
         </p>
 
-        <a
-          href="/library"
-          style={{
-            display: 'inline-block',
-            background: '#f97316',
-            color: '#fff',
-            fontWeight: 700,
-            fontSize: 'clamp(15px, 2vw, 19px)',
-            padding: 'clamp(13px, 1.6vh, 18px) clamp(30px, 5vw, 48px)',
-            borderRadius: '12px',
-            textDecoration: 'none',
-            boxShadow: '0 10px 26px rgba(0,0,0,0.22)',
-          }}
-        >
-          Browse the Library →
-        </a>
-
-        {user && (
-          <a href="/dashboard" style={{ display: 'block', color: 'rgba(255,255,255,0.82)', fontSize: '13px', fontWeight: 600, marginTop: '16px', textDecoration: 'none' }}>
-            {builderName ? `Welcome back, ${builderName} — Builder Portal →` : 'Go to your Builder Portal →'}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center', alignItems: 'center' }}>
+          <a
+            href="/library"
+            style={{
+              display: 'inline-block',
+              background: '#f97316',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: 'clamp(15px, 2vw, 19px)',
+              padding: 'clamp(13px, 1.6vh, 18px) clamp(30px, 5vw, 48px)',
+              borderRadius: '12px',
+              textDecoration: 'none',
+              boxShadow: '0 10px 26px rgba(0,0,0,0.22)',
+            }}
+          >
+            Browse the Library →
           </a>
-        )}
+          <a
+            href="/dashboard"
+            style={{
+              display: 'inline-block',
+              background: 'rgba(255,255,255,0.12)',
+              border: '1.5px solid rgba(255,255,255,0.38)',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: 'clamp(14px, 1.8vw, 17px)',
+              padding: 'clamp(12px, 1.5vh, 17px) clamp(22px, 4vw, 34px)',
+              borderRadius: '12px',
+              textDecoration: 'none',
+            }}
+          >
+            {user && builderName ? `Builder Portal (${builderName}) →` : 'Open Builder Portal →'}
+          </a>
+        </div>
       </div>
 
       {/* ── Manufacturer marquee (decorative) — hidden for now ── */}

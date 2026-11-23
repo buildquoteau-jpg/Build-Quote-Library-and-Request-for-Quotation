@@ -7,6 +7,14 @@ import SendScreen from '@/components/screens/SendScreen'
 import SuccessScreen from '@/components/screens/SuccessScreen'
 import { LineItem, RFQPayload } from '@/lib/types'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import {
+  addGuestSentRfq,
+  getGuestJobById,
+  getGuestProfile,
+  getGuestSupplierById,
+  trackGuestDraftId,
+  untrackGuestDraftId,
+} from '@/lib/guestWorkspace'
 
 /** Build a dimension string from a raw Supabase draft-item row */
 function buildDimString(row: any): string {
@@ -166,6 +174,9 @@ export default function RFQPage() {
       const params = new URLSearchParams(window.location.search)
       const supplierId = params.get('supplier')
       const jobId = params.get('job')
+      const guestJobId = params.get('guestJob')
+      const guestSupplierId = params.get('guestSupplier')
+      const requestedStep = params.get('step')
       const existingDraftId = params.get('draft')
       // Supplier prefill from manufacturer portal (?supplierName=)
       const supplierNameParam  = params.get('supplierName')
@@ -173,8 +184,8 @@ export default function RFQPage() {
 
       // Set context flags for ManualEntryScreen reminder banner
       setContextFlags({
-        fromJob: !!jobId,
-        fromSupplier: !!supplierId,
+        fromJob: !!(jobId || guestJobId),
+        fromSupplier: !!(supplierId || guestSupplierId),
         fromMfp: !!supplierNameParam,
       })
 
@@ -193,6 +204,52 @@ export default function RFQPage() {
         if (pd?.builder_name) setBuilderName(pd.builder_name)
         if (pd?.company_name) setBuilderCompany(pd.company_name)
         if (pd?.logo_url) setBuilderLogoUrl(pd.logo_url)
+      } else {
+        const gp = getGuestProfile()
+        if (gp.builder_name) setBuilderName(gp.builder_name)
+        if (gp.company_name) setBuilderCompany(gp.company_name)
+      }
+
+      // Guest job or guest supplier launched from the zero-login Builder Portal
+      if (guestJobId || guestSupplierId) {
+        const createdDraftId = existingDraftId || (await getOrCreateDraft(bId))
+        if (!bId && createdDraftId) trackGuestDraftId(createdDraftId)
+
+        const gJob = guestJobId ? getGuestJobById(guestJobId) : null
+        const gSup = guestSupplierId ? getGuestSupplierById(guestSupplierId) : null
+
+        setPayload(p => ({
+          ...p,
+          ...(gJob ? {
+            projectReference: gJob.project_reference || '',
+            siteAddress: gJob.project_address || gJob.project_address_manual || '',
+            pmName: gJob.pm_name || '',
+            pmPhone: gJob.pm_mobile || '',
+            siteAccessNotes: gJob.site_access_notes || '',
+          } : {}),
+          ...(gSup ? {
+            supplier: {
+              supplierName: gSup.supplier_name || '',
+              supplierEmail: gSup.supplier_email || '',
+              accountNumber: gSup.account_number || '',
+            },
+          } : {}),
+        }))
+
+        await saveDraftMeta(
+          {
+            supplierName: gSup?.supplier_name || supplierNameParam || '',
+            supplierEmail: gSup?.supplier_email || supplierEmailParam || '',
+            accountNumber: gSup?.account_number || '',
+            supplierId: null,
+          },
+          gJob?.project_reference || '',
+          null,
+        )
+
+        setStep(2)
+        setInitialLoading(false)
+        return
       }
 
       // From a job card or supplier card — fetch job/supplier data NOW, before
@@ -276,10 +333,13 @@ export default function RFQPage() {
 
       // Fresh session — create draft and show upload screen
       if (!existingDraftId) {
-        await getOrCreateDraft(bId)
+        const freshId = await getOrCreateDraft(bId)
+        if (!bId && freshId) trackGuestDraftId(freshId)
         setInitialLoading(false)
         return
       }
+
+      if (!bId && existingDraftId) trackGuestDraftId(existingDraftId)
 
       // Returning to an existing draft — always land on Enter Items (step 2),
       // even if the draft has no items yet (e.g. resumed before adding anything).
@@ -388,8 +448,8 @@ export default function RFQPage() {
             '',
           )
         }
-        // Always go to Enter Items — this is a resumed draft, not a fresh session
-        setStep(2)
+        // Support returning directly to Step 4 (e.g. right after optional sign-in before send)
+        setStep(requestedStep === '4' && cleaned.length > 0 ? 4 : 2)
       } catch (e) {
         console.error('Draft load failed', e)
       }
@@ -409,12 +469,13 @@ export default function RFQPage() {
     setSending(true)
     setSendError('')
     const id = generateRFQId()
+    const draftId = getDraftId()
     const fullPayload: RFQPayload = {
       ...payload,
       items,
       rfqId: id,
       builderId,
-      draftId: getDraftId(),
+      draftId,
     }
 
     try {
@@ -426,6 +487,19 @@ export default function RFQPage() {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         throw new Error(data.error || `Server error ${res.status}`)
+      }
+      if (!builderId) {
+        addGuestSentRfq({
+          id,
+          rfq_id_short: id,
+          supplier_name: payload.supplier.supplierName || null,
+          supplier_email: payload.supplier.supplierEmail || null,
+          project_reference: payload.projectReference || null,
+          status: 'sent',
+          created_at: new Date().toISOString(),
+          item_count: items.length,
+        })
+        if (draftId) untrackGuestDraftId(draftId)
       }
       setRfqId(id)
       setStep(5)

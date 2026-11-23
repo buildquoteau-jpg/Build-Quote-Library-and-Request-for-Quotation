@@ -3,6 +3,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import {
+  generateGuestId,
+  getGuestJobs,
+  getGuestSentRfqs,
+  saveGuestJobs,
+} from '@/lib/guestWorkspace'
 
 
 const BUILD_TYPES = ['New Home', 'Renovation', 'Extension', 'Swimming Pool', 'Landscape', 'Commercial', 'Other']
@@ -26,7 +32,7 @@ const empty: Omit<Job, 'id'> = {
   site_access_notes: '', build_type: '', image_url: '',
 }
 
-export default function JobsTab({ builderId, onViewQuotesForJob }: { builderId: string; onViewQuotesForJob?: (projectRef: string) => void }) {
+export default function JobsTab({ builderId, onViewQuotesForJob }: { builderId: string | null; onViewQuotesForJob?: (projectRef: string) => void }) {
   const supabase = createSupabaseBrowserClient()
   const router = useRouter()
   const [jobs, setJobs] = useState<Job[]>([])
@@ -42,9 +48,22 @@ export default function JobsTab({ builderId, onViewQuotesForJob }: { builderId: 
   const addressRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<any>(null)
 
-  useEffect(() => { loadJobs() }, [])
+  useEffect(() => { loadJobs() }, [builderId])
 
   async function loadJobs() {
+    if (!builderId) {
+      const localJobs = getGuestJobs()
+      setJobs(localJobs)
+      const counts: Record<string, number> = {}
+      for (const row of getGuestSentRfqs()) {
+        const key = row.project_reference || ''
+        if (key) counts[key] = (counts[key] || 0) + 1
+      }
+      setRfqCounts(counts)
+      setDraftsByJob({})
+      setLoaded(true)
+      return
+    }
     const [{ data: jobRows }, { data: rfqRows }, { data: draftRows }] = await Promise.all([
       supabase.from('builder_jobs').select('*').eq('builder_id', builderId).order('created_at', { ascending: false }),
       supabase.from('rfq_requests').select('project_reference').eq('builder_id', builderId).not('project_reference', 'is', null),
@@ -99,6 +118,18 @@ export default function JobsTab({ builderId, onViewQuotesForJob }: { builderId: 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+
+    if (!builderId) {
+      const next = editing
+        ? jobs.map(j => (j.id === editing.id ? { ...form, id: editing.id } : j))
+        : [{ ...form, id: generateGuestId('job') }, ...jobs]
+      saveGuestJobs(next)
+      setJobs(next)
+      setShowForm(false)
+      setSaving(false)
+      return
+    }
+
     const payload = { ...form, builder_id: builderId, updated_at: new Date().toISOString() }
 
     let saveError: any = null
@@ -126,6 +157,18 @@ export default function JobsTab({ builderId, onViewQuotesForJob }: { builderId: 
     const file = e.target.files?.[0]
     if (!file) return
     setImageUploading(true)
+    if (!builderId) {
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          setForm(f => ({ ...f, image_url: reader.result as string }))
+        }
+        setImageUploading(false)
+      }
+      reader.onerror = () => setImageUploading(false)
+      reader.readAsDataURL(file)
+      return
+    }
     const ext = file.name.split('.').pop()
     const path = `${builderId}/${Date.now()}.${ext}`
     const { error } = await supabase.storage.from('job-images').upload(path, file, { upsert: true })
@@ -141,6 +184,12 @@ export default function JobsTab({ builderId, onViewQuotesForJob }: { builderId: 
 
   async function handleDelete(id: string) {
     if (!confirm('Remove this job?')) return
+    if (!builderId) {
+      const next = jobs.filter(x => x.id !== id)
+      saveGuestJobs(next)
+      setJobs(next)
+      return
+    }
     await supabase.from('builder_jobs').delete().eq('id', id)
     setJobs(j => j.filter(x => x.id !== id))
   }
@@ -212,7 +261,7 @@ export default function JobsTab({ builderId, onViewQuotesForJob }: { builderId: 
                   </a>
                 )}
                 <button
-                  onClick={() => router.push(`/rfq?job=${job.id}`)}
+                  onClick={() => router.push(builderId ? `/rfq?job=${job.id}` : `/rfq?guestJob=${encodeURIComponent(job.id)}`)}
                   className="flex-1 text-center text-xs font-semibold text-brand border border-brand/30 rounded-lg py-1.5 hover:bg-brand hover:text-white transition-colors"
                 >
                   Start a new Request for Quotation

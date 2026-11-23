@@ -6,10 +6,14 @@ export default async function DashboardPage() {
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  if (!user) {
+    return <DashboardClient user={null} profile={null} />
+  }
+
   let { data: profile } = await supabase
     .from('builders')
     .select('*')
-    .eq('id', user!.id)
+    .eq('id', user.id)
     .single()
 
   // Auto-create profile if missing (e.g. registered before SQL migration ran)
@@ -20,11 +24,11 @@ export default async function DashboardPage() {
     )
     const { data: newProfile } = await admin
       .from('builders')
-      .insert({ id: user!.id, email: user!.email })
+      .insert({ id: user.id, email: user.email })
       .select()
       .single()
     profile = newProfile
   }
 
-  return <DashboardClient user={user!} profile={profile} />
+  return <DashboardClient user={user} profile={profile} />
 }

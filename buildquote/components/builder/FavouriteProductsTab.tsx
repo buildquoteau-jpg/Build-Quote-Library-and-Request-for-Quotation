@@ -2,6 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import {
+  generateGuestId,
+  getGuestProducts,
+  saveGuestProducts,
+} from '@/lib/guestWorkspace'
 
 interface FavProduct {
   id: string
@@ -18,7 +23,7 @@ const emptyProduct: Omit<FavProduct, 'id'> = {
   product_id: '', product_name: '', manufacturer: '', sku: '', description: '', uom: '', notes: '',
 }
 
-export default function FavouriteProductsTab({ builderId }: { builderId: string }) {
+export default function FavouriteProductsTab({ builderId }: { builderId: string | null }) {
   const supabase = createSupabaseBrowserClient()
   const [products, setProducts] = useState<FavProduct[]>([])
   const [showForm, setShowForm] = useState(false)
@@ -32,9 +37,14 @@ export default function FavouriteProductsTab({ builderId }: { builderId: string 
 
   const [loaded, setLoaded] = useState(false)
 
-  useEffect(() => { loadProducts() }, [])
+  useEffect(() => { loadProducts() }, [builderId])
 
   async function loadProducts() {
+    if (!builderId) {
+      setProducts(getGuestProducts())
+      setLoaded(true)
+      return
+    }
     const { data } = await supabase.from('builder_favourite_products').select('*').eq('builder_id', builderId).order('product_name')
     setProducts((data || []) as FavProduct[])
     setLoaded(true)
@@ -46,6 +56,16 @@ export default function FavouriteProductsTab({ builderId }: { builderId: string 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    if (!builderId) {
+      const next = editing
+        ? products.map(p => (p.id === editing.id ? { ...form, id: editing.id } : p))
+        : [{ ...form, id: generateGuestId('prod') }, ...products]
+      saveGuestProducts(next)
+      setProducts(next)
+      setShowForm(false)
+      setSaving(false)
+      return
+    }
     const payload = { ...form, builder_id: builderId }
     if (editing) {
       await supabase.from('builder_favourite_products').update(payload).eq('id', editing.id)
@@ -59,6 +79,12 @@ export default function FavouriteProductsTab({ builderId }: { builderId: string 
 
   async function handleDelete(id: string) {
     if (!confirm('Remove this product?')) return
+    if (!builderId) {
+      const next = products.filter(x => x.id !== id)
+      saveGuestProducts(next)
+      setProducts(next)
+      return
+    }
     await supabase.from('builder_favourite_products').delete().eq('id', id)
     setProducts(p => p.filter(x => x.id !== id))
   }
@@ -76,7 +102,6 @@ export default function FavouriteProductsTab({ builderId }: { builderId: string 
       const data = await res.json()
       if (!res.ok || !data.items?.length) throw new Error(data?.error || 'No items found in that file.')
       const rows = (data.items as any[]).map(item => ({
-        builder_id: builderId,
         product_id: item.productId || '',
         product_name: item.name || '',
         manufacturer: item.manufacturer || '',
@@ -86,9 +111,18 @@ export default function FavouriteProductsTab({ builderId }: { builderId: string 
         notes: '',
       })).filter(r => r.product_name.trim())
       if (!rows.length) throw new Error('No named products found in that file.')
-      const { error } = await supabase.from('builder_favourite_products').insert(rows)
-      if (error) throw new Error(error.message)
-      await loadProducts()
+      if (!builderId) {
+        const added = rows.map(r => ({ ...r, id: generateGuestId('prod') }))
+        const next = [...added, ...products]
+        saveGuestProducts(next)
+        setProducts(next)
+      } else {
+        const { error } = await supabase.from('builder_favourite_products').insert(
+          rows.map(r => ({ ...r, builder_id: builderId }))
+        )
+        if (error) throw new Error(error.message)
+        await loadProducts()
+      }
       setImportMsg(`${rows.length} product${rows.length !== 1 ? 's' : ''} imported.`)
     } catch (err: any) {
       setImportMsg(err?.message || 'Import failed.')

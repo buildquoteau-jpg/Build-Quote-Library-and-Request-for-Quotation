@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import { getGuestProfile, syncGuestWorkspaceToAccount } from '@/lib/guestWorkspace'
 
 
 const BUILD_TYPES = [
@@ -35,6 +36,18 @@ export default function RegisterPage() {
 
   const addressRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<any>(null)
+
+  // Pre-fill from guest workspace / SendScreen details so builders don't re-type
+  useEffect(() => {
+    const gp = getGuestProfile()
+    if (gp.email) setEmail(e => e || gp.email)
+    if (gp.builder_name) setBuilderName(v => v || gp.builder_name)
+    if (gp.company_name) setCompanyName(v => v || gp.company_name)
+    if (gp.abn) setAbn(v => v || gp.abn)
+    if (gp.company_address) setCompanyAddress(v => v || gp.company_address)
+    if (gp.office_phone) setOfficePhone(v => v || gp.office_phone)
+    if (gp.mobile_phone) setMobilePhone(v => v || gp.mobile_phone)
+  }, [])
 
   useEffect(() => {
     if (step !== 'profile') return
@@ -115,11 +128,15 @@ export default function RegisterPage() {
     // Sign in immediately after account creation, then return to `next` if the
     // user arrived from a gated flow (e.g. the RFQ "Request a Quote" round-trip).
     const next = new URLSearchParams(window.location.search).get('next')
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
     if (signInError) {
       setError('Account created — please sign in.')
       router.push(next ? `/login?next=${encodeURIComponent(next)}` : '/login')
       return
+    }
+
+    if (signInData?.user?.id) {
+      await syncGuestWorkspaceToAccount(supabase, signInData.user.id)
     }
 
     router.push(next || '/dashboard')

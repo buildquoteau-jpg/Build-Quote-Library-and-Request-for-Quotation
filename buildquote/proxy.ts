@@ -31,23 +31,23 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Protect /dashboard and /rfq — redirect unauthenticated users to /login.
-  // The library and shopping list stay public; only the quote-request flow
-  // requires a builder login. Preserve the full path + query so draft/supplier
-  // params survive the round-trip through login.
-  if ((pathname.startsWith('/dashboard') || pathname.startsWith('/rfq')) && !user) {
-    const loginUrl = request.nextUrl.clone()
-    loginUrl.pathname = '/login'
-    loginUrl.search = '' // drop the original query; carry it only inside `next`
-    loginUrl.searchParams.set('next', pathname + request.nextUrl.search)
-    return NextResponse.redirect(loginUrl)
-  }
+  // Zero-friction entry: /dashboard, /rfq, and /library are open without login.
+  // Guest builders can explore the Builder Portal, manage local jobs/suppliers,
+  // build RFQs, and are offered an optional sign-in / free account before sending.
 
   // Redirect logged-in users away from /login and /register
   if ((pathname === '/login' || pathname === '/register') && user) {
-    const dashboardUrl = request.nextUrl.clone()
-    dashboardUrl.pathname = '/dashboard'
-    return NextResponse.redirect(dashboardUrl)
+    const next = request.nextUrl.searchParams.get('next')
+    const redirectUrl = request.nextUrl.clone()
+    if (next && next.startsWith('/')) {
+      const parsed = new URL(next, request.nextUrl.origin)
+      redirectUrl.pathname = parsed.pathname
+      redirectUrl.search = parsed.search
+    } else {
+      redirectUrl.pathname = '/dashboard'
+      redirectUrl.search = ''
+    }
+    return NextResponse.redirect(redirectUrl)
   }
 
   return supabaseResponse

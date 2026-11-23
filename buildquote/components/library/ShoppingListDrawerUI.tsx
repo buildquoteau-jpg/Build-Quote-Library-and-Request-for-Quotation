@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useShoppingList } from '@/components/library/ShoppingListProvider'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import { trackGuestDraftId } from '@/lib/guestWorkspace'
 
 
 const thStyle: React.CSSProperties = {
@@ -312,9 +313,8 @@ export function ShoppingListDrawerUI() {
     }))
   }
 
-  // Public action: requires a builder login. Logged-out users are sent to
-  // /login and bounced back to finish the conversion (basket persists in
-  // localStorage). Logged-in users get a fresh draft owned by them.
+  // Zero-friction public action: creates a draft directly (owned by builderId if
+  // logged in, or guest draft if anonymous) and flows straight into /rfq.
   async function convertToRFQ() {
     if (converting || shoppingList.length === 0) return
     setConverting(true)
@@ -322,13 +322,6 @@ export function ShoppingListDrawerUI() {
       const supabase = createSupabaseBrowserClient()
       const { data: { session } } = await supabase.auth.getSession()
       const builderId = session?.user?.id ?? null
-
-      // Not logged in — go authenticate, then return to auto-resume the convert.
-      if (!builderId) {
-        const next = encodeURIComponent('/library?convert=1')
-        window.location.href = `/login?next=${next}`
-        return
-      }
 
       const { draftId } = await fetch('/api/create-draft', {
         method: 'POST',
@@ -341,6 +334,8 @@ export function ShoppingListDrawerUI() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ draftId, items: itemsPayload(), mode: 'replace' }),
       })
+
+      if (!builderId && draftId) trackGuestDraftId(draftId)
 
       clearList()
       window.location.href = `/rfq?draft=${draftId}`
