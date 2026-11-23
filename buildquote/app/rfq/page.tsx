@@ -188,6 +188,7 @@ export default function RFQPage() {
       const dateRequiredParam  = params.get('dateRequired')
       const projectRefParam    = params.get('projectReference')
       const messageParam       = params.get('message')
+      const builderNameParam   = params.get('builderName')
 
       // Set context flags for ManualEntryScreen reminder banner
       setContextFlags({
@@ -213,7 +214,7 @@ export default function RFQPage() {
         if (pd?.logo_url) setBuilderLogoUrl(pd.logo_url)
       } else {
         const gp = getGuestProfile()
-        if (gp.builder_name) setBuilderName(gp.builder_name)
+        if (gp.builder_name || builderNameParam) setBuilderName(gp.builder_name || builderNameParam || '')
         if (gp.company_name) setBuilderCompany(gp.company_name)
       }
 
@@ -440,6 +441,12 @@ export default function RFQPage() {
           ...(deliveryParam === 'pickup' || deliveryParam === 'delivery' ? { delivery: deliveryParam } : {}),
           ...(dateRequiredParam ? { dateRequired: dateRequiredParam } : {}),
           ...(messageParam ? { message: messageParam } : {}),
+          ...(builderNameParam ? {
+            builder: {
+              ...p.builder,
+              builderName: p.builder.builderName || builderNameParam,
+            },
+          } : {}),
           // Supplier: URL params win (returning from MFP / Decks WA), else the saved draft
           // snapshot (name + email + account number all survive the round-trip).
           supplier: supplierNameParam ? {
