@@ -108,6 +108,13 @@ export default function SuccessScreen({ rfqId, payload, onReset }: SuccessScreen
           + Start Another RFQ
         </Button>
 
+        <a
+          href="https://decks-wa.vercel.app/decking"
+          className="block w-full rounded-xl border border-[#d7d2c8] bg-white py-2.5 text-center text-sm font-bold text-[#142834] shadow-sm transition hover:border-[#142834]"
+        >
+          ← Back to Decks WA System Cards
+        </a>
+
         <div className="flex w-full gap-2 rounded-xl border border-border bg-ui-darker p-3 text-left">
           <span className="mt-0.5 shrink-0 text-sm">📩</span>
           <p className="text-sm font-medium leading-relaxed text-text-secondary">

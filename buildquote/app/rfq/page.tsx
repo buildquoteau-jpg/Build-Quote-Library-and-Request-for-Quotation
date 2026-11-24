@@ -5,6 +5,7 @@ import TopBar from '@/components/ui/TopBar'
 import ManualEntryScreen from '@/components/screens/ManualEntryScreen'
 import SendScreen from '@/components/screens/SendScreen'
 import SuccessScreen from '@/components/screens/SuccessScreen'
+import DeckerRfqCompanion from '@/components/rfq/DeckerRfqCompanion'
 import { LineItem, RFQPayload } from '@/lib/types'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 import {
@@ -105,6 +106,7 @@ export default function RFQPage() {
   const [builderLogoUrl, setBuilderLogoUrl] = useState('')
   const [contextFlags, setContextFlags] = useState({ fromJob: false, fromSupplier: false, fromMfp: false })
   const [currentJobId, setCurrentJobId] = useState<string | null>(null)
+  const [fromDecksWa, setFromDecksWa] = useState(false)
 
   function getDraftId() {
     return new URLSearchParams(window.location.search).get('draft') ?? undefined
@@ -189,6 +191,18 @@ export default function RFQPage() {
       const projectRefParam    = params.get('projectReference')
       const messageParam       = params.get('message')
       const builderNameParam   = params.get('builderName')
+      const sourceParam        = params.get('source')
+
+      if (sourceParam === 'decks-wa') {
+        setFromDecksWa(true)
+        try { sessionStorage.setItem('bq_source_decks_wa', '1') } catch {}
+      } else {
+        try {
+          if (sessionStorage.getItem('bq_source_decks_wa') === '1' || document.referrer.includes('decks-wa')) {
+            setFromDecksWa(true)
+          }
+        } catch {}
+      }
 
       // Set context flags for ManualEntryScreen reminder banner
       setContextFlags({
@@ -548,14 +562,25 @@ export default function RFQPage() {
   }
 
   return (
-    <div className="min-h-screen bg-page text-text-primary">
-      <TopBar currentStep={step} onStepClick={(s) => { void navigateToStep(s as 2 | 3 | 4 | 5) }} />
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+    <div className="min-h-screen bg-[#f6f4ef] text-[#142834]">
+      <TopBar
+        currentStep={step}
+        fromDecksWa={fromDecksWa}
+        onStepClick={(s) => { void navigateToStep(s as 2 | 3 | 4 | 5) }}
+      />
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-7 sm:py-9">
         {initialLoading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="text-text-secondary text-sm font-medium">Loading your quote...</div>
+            <div className="text-[#5a666d] text-sm font-medium">Loading your quote...</div>
           </div>
         ) : (<>
+        <DeckerRfqCompanion
+          step={step}
+          userName={payload.builder.builderName || builderName}
+          siteAddress={payload.siteAddress || payload.siteSuburb || ''}
+          itemCount={items.filter((i) => i.name.trim()).length}
+          fromDecksWa={fromDecksWa}
+        />
         {step === 2 && (
           <ManualEntryScreen
             items={items}

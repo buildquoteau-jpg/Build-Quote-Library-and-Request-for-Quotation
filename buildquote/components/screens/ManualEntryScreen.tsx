@@ -413,13 +413,13 @@ export default function ManualEntryScreen({
       )}
 
       <div className="px-1">
-        <h1 className="text-heading text-2xl sm:text-4xl font-extrabold tracking-tight">
+        <h1 className="text-[#142834] text-2xl sm:text-4xl font-extrabold tracking-tight" style={{ fontFamily: 'var(--font-barlow-condensed), sans-serif' }}>
           Your materials list
         </h1>
-        <p className="text-text-secondary text-sm sm:text-base font-medium leading-relaxed mt-2">
+        <p className="text-[#5a666d] text-sm sm:text-base font-medium leading-relaxed mt-1.5">
           Review and edit each line before sending your request for quotation.
         </p>
-        <p className="text-text-muted text-sm mt-2">
+        <p className="text-[#6b767c] text-sm mt-1.5">
           {items.filter(i => i.name.trim()).length} item{items.filter(i => i.name.trim()).length !== 1 ? 's' : ''} added.
         </p>
 
@@ -467,7 +467,7 @@ export default function ManualEntryScreen({
 
       {/* RFQ context bar */}
       {(builderName || projectReference || supplierName) && (
-        <div className="rounded-xl border border-border bg-white shadow-sm px-3.5 py-2.5 flex flex-wrap gap-2 items-center">
+        <div className="rounded-xl border border-[#e3dfd6] bg-white shadow-sm px-3.5 py-2.5 flex flex-wrap gap-2 items-center">
           <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-brand/50 shrink-0 mr-0.5">
             Your RFQ
           </span>
@@ -703,10 +703,10 @@ export default function ManualEntryScreen({
       </div>
 
       {/* Desktop table view */}
-      <div className="hidden md:block rounded-2xl border border-border border-t-4 border-t-heading bg-white shadow-[0_8px_24px_rgba(0,0,0,0.05)] overflow-hidden">
+      <div className="hidden md:block rounded-2xl border border-[#e3dfd6] border-t-4 border-t-[#142834] bg-white shadow-[0_6px_22px_rgba(20,40,52,0.06)] overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-[900px]">
-            <div className="grid grid-cols-[40px_2.1fr_1.6fr_1.2fr_0.6fr_0.55fr_38px] gap-3 border-b border-border bg-surface-subtle px-4 py-3">
+            <div className="grid grid-cols-[40px_2.1fr_1.6fr_1.2fr_0.6fr_0.55fr_38px] gap-3 border-b border-[#e3dfd6] bg-[#f6f4ef] px-4 py-3">
               <div className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">#</div>
               <div className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Product</div>
               <div className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">Specs</div>
